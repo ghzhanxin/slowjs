@@ -89,6 +89,8 @@
   - [x] 异常类型提示
   - [ ] 异常位置提示
 
+[可执行代码示例](https://github.com/halolantern/slowjs/blob/main/test.js)
+
 已支持的运行环境特性：（目前竟然全不支持 T_T）
 
 - [ ] Event Loop
@@ -127,9 +129,9 @@
 
    iii. slow 文件没有执行权限，解决方案：在 slow 文件的目录下执行 `$ chmod 777 slow` 。
 
-   iii. 运行时报错，解决方案：大概率是语法错误，根据提示修改语法。
+   iv. 运行时报错，解决方案：大概率是语法错误，根据提示修改语法。
    
-   iv. 其他问题，欢迎提 Issues。
+   v. 其他问题，欢迎提 Issues。
 
 ## 这有什么用
 
