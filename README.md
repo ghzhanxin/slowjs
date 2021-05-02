@@ -21,7 +21,7 @@
   - [x] Undefined
     - [x] undefined
   - [x] Null
-    - [x] Null
+    - [x] null
   - [ ] Object
     - [x] function 普通调用，闭包，支持函数一等公民。暂不支持作为对象的方法。
     - [ ] other
@@ -106,7 +106,7 @@
 2. 否则在终端执行以下命令（注: $ 为命令行指令的意思，不需要输到终端里）。
 
    ```bash
-   $ git clone <repo-url>
+   $ git clone git@github.com:halolantern/slowjs.git
    $ cd slowjs
    $ make
    ```
