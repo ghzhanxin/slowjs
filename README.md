@@ -1,3 +1,5 @@
+[一篇未完成的说明文章](https://github.com/halolantern/blog/blob/main/%E8%8A%B1%E4%BA%86%E5%8D%81%E5%A4%A9%E6%97%B6%E9%97%B4%EF%BC%8C%E5%86%99%E4%BA%86%E4%B8%80%E9%97%A8%E8%A7%A3%E9%87%8A%E5%9E%8B%E8%AF%AD%E8%A8%80.md)
+
 ## 这是什么
 
 这是一个脚本语言（目前是 ECMAScript 5 的子集）的运行时环境，类似于 Node.js，通过命令行方式执行。
