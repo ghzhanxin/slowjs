@@ -135,8 +135,8 @@ Just For Fun
 
 ## 巨人的肩膀
 
-1. 词法分析参考 **[the-super-tiny-compiler](https://github.com/jamiebuilds/the-super-tiny-compiler)**
-2. 语法分析参考 **[acorn](https://github.com/acornjs/acorn)** 和 [编译原理](https://book.douban.com/subject/3296317/)
+1. 词法分析参考 [the-super-tiny-compiler](https://github.com/jamiebuilds/the-super-tiny-compiler)
+2. 语法分析参考 [acorn](https://github.com/acornjs/acorn) 和 [编译原理](https://book.douban.com/subject/3296317/)
 3. 文法结构参考 [ECMAScript5.1 Annex A Grammar](https://262.ecma-international.org/5.1/#sec-A)
 4. 语法树结构参考  [astexplorer](https://astexplorer.net/)
 5. 语言类型参考 [quickjs](https://github.com/bellard/quickjs/blob/master/quickjs.h)
