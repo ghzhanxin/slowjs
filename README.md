@@ -8,7 +8,7 @@
 
 ## 这有什么
 
-已支持的语言特性：
+#### 已支持的语言特性：
 
 - [ ] 类型
   - [x] String
@@ -91,7 +91,7 @@
 
 [可执行代码示例](https://github.com/halolantern/slowjs/blob/main/test.js)
 
-已支持的运行环境特性：（目前竟然全不支持 T_T）
+#### 已支持的运行环境特性：（目前竟然全不支持 T_T）
 
 - [ ] Event Loop
 - [ ] 多进程/多线程
