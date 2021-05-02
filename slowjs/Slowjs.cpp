@@ -52,6 +52,8 @@ JSValue Slowjs::FunctionCall(JSFunction *fo, JSValue thisValue, vector<JSValue> 
         JSValue result = value;
         return result;
     }
+    checkException(normal_Result);
+    ctx_stack->pop();
     return normal_Result;
 }
 void Slowjs::initFunctionExecutionContext(JSFunction *fo, JSValue thisValue, vector<JSValue> args)
