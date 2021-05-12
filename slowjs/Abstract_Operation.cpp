@@ -103,13 +103,13 @@ Reference IdentifierResolution(Lexical_Environment *lex, string name)
 void intrinsicPrint(JSValue value)
 {
     string s;
-    switch (value.tag)
+    switch (value.getTag())
     {
     case JS_TAG_FLOAT64:
         cout << value.getFloat();
         break;
     case JS_TAG_BOOL:
-        cout << value.getBoolString();
+        cout << value.getBooleanString();
         break;
     case JS_TAG_STRING:
         s = value.getString();

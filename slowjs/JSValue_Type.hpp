@@ -51,59 +51,47 @@ class JSObject;
 class JSValue
 {
 public:
-    JSValue()
+    JSValue() : _tag(JS_TAG_FLOAT64), _string(""){};
+    JSValue(int64_t tag, string val) : _tag(tag), _string(val){};
+    JSValue(int64_t tag, double val) : _tag(tag)
     {
-        u.float64 = 0;
-        tag = JS_TAG_FLOAT64;
-        _string = "";
+        _u.float64 = val;
     };
-    JSValue(int64_t tag, double val)
+    JSValue(int64_t tag, bool val) : _tag(tag), _string(val ? "true" : "false")
     {
-        this->tag = tag;
-        u.float64 = val;
+        _u.boolean = val;
     };
-    JSValue(int64_t tag, string val)
+    JSValue(int64_t tag, void *p) : _tag(tag)
     {
-        this->tag = tag;
-        _string = val;
-    };
-    JSValue(int64_t tag, bool val)
-    {
-        this->tag = tag;
-        u.boolean = val;
-        _string = val ? "true" : "false";
-    };
-    JSValue(int64_t tag, void *p)
-    {
-        this->tag = tag;
-        u.ptr = p;
+        _u.ptr = p;
     };
 
-    JSValueUnion u;
-    int64_t tag;
-    string _string;
-
-    int64_t getTag() { return tag; }
-    double getFloat() { return u.float64; }
-    bool getBool() { return u.boolean; }
-    string getBoolString() { return _string; }
+    int64_t getTag() { return _tag; }
+    double getFloat() { return _u.float64; }
+    bool getBoolean() { return _u.boolean; }
+    string getBooleanString() { return _string; }
     string getString() { return _string; }
-    void *getPtr() { return u.ptr; }
+    void *getPtr() { return _u.ptr; }
     JSFunction *getFunction() { return (JSFunction *)getPtr(); }
     JSObject *getObject() { return (JSObject *)getPtr(); }
     string getException() { return _string; }
     string getUndefined() { return _string; }
     string getUninitialized() { return _string; }
 
-    bool isNumber() { return tag == JS_TAG_INT || tag == JS_TAG_FLOAT64; }
-    bool isFloat() { return tag == JS_TAG_FLOAT64; }
-    bool isBool() { return tag == JS_TAG_BOOL; }
-    bool isString() { return tag == JS_TAG_STRING; }
-    bool isUndefined() { return tag == JS_TAG_UNDEFINED; }
-    bool isNull() { return tag == JS_TAG_NULL; }
-    bool isObject() { return tag == JS_TAG_OBJECT; }
-    bool isFunction() { return tag == JS_TAG_FUNCTION; }
-    bool isException() { return tag == JS_TAG_EXCEPTION; }
+    bool isNumber() { return _tag == JS_TAG_INT || _tag == JS_TAG_FLOAT64; }
+    bool isFloat() { return _tag == JS_TAG_FLOAT64; }
+    bool isBool() { return _tag == JS_TAG_BOOL; }
+    bool isString() { return _tag == JS_TAG_STRING; }
+    bool isUndefined() { return _tag == JS_TAG_UNDEFINED; }
+    bool isNull() { return _tag == JS_TAG_NULL; }
+    bool isObject() { return _tag == JS_TAG_OBJECT; }
+    bool isFunction() { return _tag == JS_TAG_FUNCTION; }
+    bool isException() { return _tag == JS_TAG_EXCEPTION; }
+
+protected:
+    JSValueUnion _u;
+    int64_t _tag;
+    string _string;
 };
 
 /* special values */
@@ -118,7 +106,7 @@ class PropertyDescriptor;
 class JSObject : public JSValue
 {
 public:
-    JSObject() { tag = JS_TAG_OBJECT; };
+    JSObject() { _tag = JS_TAG_OBJECT; };
     PropertyDescriptor GetOwnProperty(string P);
     PropertyDescriptor GetProperty(string P);
 
@@ -128,32 +116,33 @@ public:
 class JSFunction : public JSObject
 {
 public:
-    JSFunction(string name)
+    JSFunction(string name) : Name(name), _intrinsic(true)
     {
-        Name = name;
-        tag = JS_TAG_FUNCTION;
-        _intrinsic = true;
+        _tag = JS_TAG_FUNCTION;
     };
     JSFunction(AST_Node *formal_param, AST_Node *func_code, Lexical_Environment *scope, string name)
+        : FormalParameters(formal_param),
+          Code(func_code),
+          Scope(scope),
+          Name(name),
+          _intrinsic(false)
+
     {
-        FormalParameters = formal_param;
-        Code = func_code;
-        Scope = scope;
-        Name = name;
-        tag = JS_TAG_FUNCTION;
-        _intrinsic = false;
+        _tag = JS_TAG_FUNCTION;
     };
     AST_Node *FormalParameters;
     AST_Node *Code;
     Lexical_Environment *Scope;
     string Name;
     JSObject Prototype;
-    bool _intrinsic;
 
     JSValue _Call(JSValue thisValue, vector<JSValue> params);
     JSValue _Construct(JSValue thisValue, vector<JSValue> params);
 
     bool isIntrinsic() { return _intrinsic; };
+
+private:
+    bool _intrinsic;
 };
 
 class Descriptor

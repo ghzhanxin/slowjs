@@ -13,6 +13,7 @@
 //          StatementList Statement
 // Statement :
 //          BreakStatement
+//          ContinueStatement
 //          ReturnStatement
 //          EmptyStatement
 //          IfStatement
@@ -22,6 +23,7 @@
 //          BlockStatement
 //          ExpressionStatement
 // BreakStatement: break ;
+// ContinueStatement: continue ;
 // ReturnStatement:
 //          return ;
 //          return expression ;
@@ -104,11 +106,7 @@
 
 using namespace std;
 
-AST_Node *Parser::root = nullptr;
-Token *Parser::lookahead = nullptr;
-queue<Token *> Parser::tokenQueue;
-
-int throwParseSyntaxError(string s = "Unknown Error")
+int Parser::throwParseSyntaxError(string s = "Unknown Error")
 {
     string msg = SyntaxErrorPrefix;
     throw msg + s;
@@ -170,6 +168,7 @@ vector<AST_Node *> Parser::StatementList()
 
 // Statement :
 //          BreakStatement
+//          ContinueStatement
 //          ReturnStatement
 //          EmptyStatement
 //          IfStatement
@@ -185,6 +184,8 @@ AST_Node *Parser::Statement()
 
     if (lookahead->value == "break")
         return BreakStatement();
+    if (lookahead->value == "continue")
+        return ContinueStatement();
     if (lookahead->value == "return")
         return ReturnStatement();
     if (lookahead->value == ";")
@@ -211,6 +212,16 @@ AST_Node *Parser::BreakStatement()
     }
     else
         throw throwParseSyntaxError("Expect 'break' or ';' in BreakStatement");
+}
+// ContinueStatement: continue ;
+AST_Node *Parser::ContinueStatement()
+{
+    if (match("continue") && match(";"))
+    {
+        return new AST_Node(nt::ContinueStatement);
+    }
+    else
+        throw throwParseSyntaxError("Expect 'continue' or ';' in ContinueStatement");
 }
 // ReturnStatement:
 //          return ;
@@ -460,17 +471,15 @@ AST_Node *Parser::Expression()
     return assign;
 }
 
-queue<Token *> AssignmentExpressionTokenQueue;
-Token *AssignmentExpressionLookahead;
-void storeAssignmentExpression()
+void Parser::storeAssignmentExpression()
 {
-    AssignmentExpressionTokenQueue = Parser::tokenQueue;
-    AssignmentExpressionLookahead = Parser::lookahead;
+    AssignmentExpressionTokenQueue = tokenQueue;
+    AssignmentExpressionLookahead = lookahead;
 }
-void restorAssignmentExpression()
+void Parser::restoreAssignmentExpression()
 {
-    Parser::tokenQueue = AssignmentExpressionTokenQueue;
-    Parser::lookahead = AssignmentExpressionLookahead;
+    tokenQueue = AssignmentExpressionTokenQueue;
+    lookahead = AssignmentExpressionLookahead;
 }
 
 // AssignmentExpression:
@@ -498,7 +507,7 @@ AST_Node *Parser::AssignmentExpression()
     }
     else
     {
-        restorAssignmentExpression();
+        restoreAssignmentExpression();
         return EqualityExpression();
     }
 }
@@ -752,18 +761,17 @@ AST_Node *Parser::NewExpression()
         return nullptr;
 }
 
-queue<Token *> MemberExpressionTokenQueue;
-Token *MemberExpressionLookahead;
-void storeMemberExpression()
+void Parser::storeMemberExpression()
 {
-    MemberExpressionTokenQueue = Parser::tokenQueue;
-    MemberExpressionLookahead = Parser::lookahead;
+    MemberExpressionTokenQueue = tokenQueue;
+    MemberExpressionLookahead = lookahead;
 }
-void restorMemberExpression()
+void Parser::restoreMemberExpression()
 {
-    Parser::tokenQueue = MemberExpressionTokenQueue;
-    Parser::lookahead = MemberExpressionLookahead;
+    tokenQueue = MemberExpressionTokenQueue;
+    lookahead = MemberExpressionLookahead;
 }
+
 // MemberExpression:
 //          PrimaryExpression
 //          Identifier . MemberExpression
@@ -781,7 +789,7 @@ AST_Node *Parser::MemberExpression()
     }
     else
     {
-        restorMemberExpression();
+        restoreMemberExpression();
         return PrimaryExpression();
     }
 }
@@ -877,7 +885,7 @@ AST_Node *Parser::Identifier()
         return nullptr;
 }
 
-void traversal(AST_Node *node, string prefix)
+void Parser::traversal(AST_Node *node, string prefix)
 {
     cout << prefix << node->type << " -> " << node->value << endl;
     prefix += " ";
@@ -887,7 +895,7 @@ void traversal(AST_Node *node, string prefix)
         traversal(childs[i], prefix);
     }
 }
-void printAST(AST_Node *node)
+void Parser::printAST(AST_Node *node)
 {
     string prefix = " ";
     cout << "---------- AST Result ----------" << endl;
@@ -911,6 +919,6 @@ AST_Node *Parser::parse(queue<Token *> que)
              << endl;
     };
 
-//    printAST(root);
+    //    printAST(root);
     return root;
 }

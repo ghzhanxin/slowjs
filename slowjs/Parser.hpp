@@ -31,6 +31,7 @@ namespace nt
         IfStatement,
         BlockStatement,
         BreakStatement,
+        ContinueStatement,
         ReturnStatement,
         AssignmentExpression,
         Literal,
@@ -63,7 +64,7 @@ class AST_Node
 {
 public:
     AST_Node(){};
-    AST_Node(nt::Node_Type nodeType) { type = nodeType; }
+    AST_Node(nt::Node_Type t) : type(t){};
 
     nt::Node_Type type;
     string value;
@@ -74,46 +75,62 @@ public:
 class Parser
 {
 public:
-    static queue<Token *> tokenQueue;
-    static AST_Node *root;
-    static Token *lookahead;
+    AST_Node *root = nullptr;
+    Token *lookahead = nullptr;
+    queue<Token *> tokenQueue;
 
-    static void nextToken();
-    static bool match(string s);
+    void nextToken();
+    bool match(string s);
 
-    static AST_Node *parse(queue<Token *>);
+    AST_Node *parse(queue<Token *>);
 
-    static AST_Node *Program();
-    static vector<AST_Node *> StatementList();
-    static AST_Node *Statement();
-    static AST_Node *EmptyStatement();
-    static AST_Node *BreakStatement();
-    static AST_Node *ReturnStatement();
-    static AST_Node *IfStatement();
-    static AST_Node *ForStatement();
-    static AST_Node *BlockStatement();
-    static AST_Node *ExpressionStatement();
-    static AST_Node *VariableDeclaration();
-    static AST_Node *FunctionDeclaration();
-    static AST_Node *FormalParameters();
-    static vector<AST_Node *> IdentifierList();
+    AST_Node *Program();
+    vector<AST_Node *> StatementList();
+    AST_Node *Statement();
+    AST_Node *EmptyStatement();
+    AST_Node *BreakStatement();
+    AST_Node *ContinueStatement();
+    AST_Node *ReturnStatement();
+    AST_Node *IfStatement();
+    AST_Node *ForStatement();
+    AST_Node *BlockStatement();
+    AST_Node *ExpressionStatement();
+    AST_Node *VariableDeclaration();
+    AST_Node *FunctionDeclaration();
+    AST_Node *FormalParameters();
+    vector<AST_Node *> IdentifierList();
 
-    static AST_Node *Expression();
-    static AST_Node *AssignmentExpression();
-    static AST_Node *EqualityExpression();
-    static AST_Node *RelationalExpression();
-    static AST_Node *AdditiveExpression();
-    static AST_Node *MultiplicativeExpression();
-    static AST_Node *PostfixExpression();
-    static AST_Node *LeftHandSideExpression();
-    static AST_Node *CallExpression();
-    static AST_Node *Arguments();
-    static AST_Node *NewExpression();
-    static AST_Node *MemberExpression();
-    static AST_Node *PrimaryExpression();
-    static vector<AST_Node *> ExpressionList();
-    static AST_Node *Literal();
-    static AST_Node *Identifier();
+    AST_Node *Expression();
+    AST_Node *AssignmentExpression();
+    AST_Node *EqualityExpression();
+    AST_Node *RelationalExpression();
+    AST_Node *AdditiveExpression();
+    AST_Node *MultiplicativeExpression();
+    AST_Node *PostfixExpression();
+    AST_Node *LeftHandSideExpression();
+    AST_Node *CallExpression();
+    AST_Node *Arguments();
+    AST_Node *NewExpression();
+    AST_Node *MemberExpression();
+    AST_Node *PrimaryExpression();
+    vector<AST_Node *> ExpressionList();
+    AST_Node *Literal();
+    AST_Node *Identifier();
+
+    queue<Token *> AssignmentExpressionTokenQueue;
+    Token *AssignmentExpressionLookahead;
+    void storeAssignmentExpression();
+    void restoreAssignmentExpression();
+
+    queue<Token *> MemberExpressionTokenQueue;
+    Token *MemberExpressionLookahead;
+    void storeMemberExpression();
+    void restoreMemberExpression();
+
+    int throwParseSyntaxError(string);
+
+    static void traversal(AST_Node *node, string prefix);
+    static void printAST(AST_Node *node);
 };
 
 #endif /* Parser_hpp */

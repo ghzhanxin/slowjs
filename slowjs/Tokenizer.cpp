@@ -6,12 +6,10 @@
 //
 
 #include "Tokenizer.hpp"
-#include <iostream>
-#include <cctype>
 
 using namespace std;
 
-void throwTokenizeError(char c)
+void Tokenizer::throwTokenizeError(char c)
 {
     string msg = ExceptionTokenPrefix;
     msg.push_back('\'');
@@ -20,7 +18,7 @@ void throwTokenizeError(char c)
     throw msg;
 }
 
-string getNumString(string input, uint *current)
+string Tokenizer::getNumString(string input, uint *current)
 {
     string digitStr = "";
     digitStr.push_back(input[*current]);
@@ -43,13 +41,8 @@ string getNumString(string input, uint *current)
     }
     return digitStr;
 }
-Token::Token(tt::Token_Type t, string v)
-{
-    type = t;
-    value = v;
-}
 
-void printTokenQueue(queue<Token *> q)
+void Tokenizer::printTokenQueue(queue<Token *> q)
 {
     cout << endl
          << "---------- token result ----------" << endl
@@ -62,10 +55,11 @@ void printTokenQueue(queue<Token *> q)
     }
 }
 
-bool isIdentifierStart(char c)
+bool Tokenizer::isIdentifierStart(char c)
 {
     return isalpha(c) || c == '_' || c == '$';
 }
+
 queue<Token *> Tokenizer::tokenize(string input)
 {
     queue<Token *> q;
@@ -111,23 +105,29 @@ queue<Token *> Tokenizer::tokenize(string input)
                 alphaStr += c;
                 c = input[++current];
             }
-            Token *tok = new Token(tt::name, alphaStr);
+
+            tt::Token_Type type = tt::name;
+            Token *tok = new Token(type, alphaStr);
             if (alphaStr == "true")
-                tok->type = tt::_true;
+                type = tt::_true;
             if (alphaStr == "false")
-                tok->type = tt::_false;
+                type = tt::_false;
             if (alphaStr == "null")
-                tok->type = tt::_null;
+                type = tt::_null;
             if (alphaStr == "undefined")
-                tok->type = tt::_undefined;
+                type = tt::_undefined;
             if (alphaStr == "break")
-                tok->type = tt::_break;
+                type = tt::_break;
             if (alphaStr == "return")
-                tok->type = tt::_return;
+                type = tt::_return;
             if (alphaStr == "new")
-                tok->type = tt::_new;
+                type = tt::_new;
             if (alphaStr == "this")
-                tok->type = tt::_this;
+                type = tt::_this;
+            if (alphaStr == "continue")
+                type = tt::_continue;
+
+            tok->type = type;
             q.push(tok);
             continue;
         }
@@ -309,8 +309,8 @@ queue<Token *> Tokenizer::tokenize(string input)
         throwTokenizeError(c);
     };
 
-//    queue<Token *> p = q;
-//    printTokenQueue(p);
+    //    queue<Token *> p = q;
+    //    printTokenQueue(p);
 
     return q;
 };
