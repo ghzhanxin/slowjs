@@ -44,15 +44,20 @@ namespace tt
         question,
 
         // operator
+        prefix,
         eq,
+        assign,
         equality,
-        binOp,
         plus,
         minus,
         star,
         slash,
         inc,
         dec,
+        modulo,
+        relational,
+        logicalOR,
+        logicalAND,
 
         // keyword
         _true,
@@ -80,11 +85,18 @@ class Tokenizer
 {
 public:
     static void throwTokenizeError(char);
-    static string getNumString(string input, uint *current);
-    static void printTokenQueue(queue<Token *> q);
-    static bool isIdentifierStart(char c);
+    static tt::Token_Type getIdentifierType(string);
+
+    string getNumString(string input);
+    void printTokenQueue();
+    bool isIdentifierStart(char c);
+    void pushSingleToken(tt::Token_Type t, char c);
 
     queue<Token *> tokenize(string s);
+
+private:
+    queue<Token *> _q;
+    uint _current;
 };
 
 #endif /* Tokenizer_hpp */
