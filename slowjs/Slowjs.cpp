@@ -310,38 +310,36 @@ JSValue Slowjs::evaluateBinaryExpression(AST_Node *node)
         bool bool_res = false;
 
         if (op == "+")
-        {
             number_res = d_left + d_right;
-        }
         else if (op == "-")
-        {
             number_res = d_left - d_right;
-        }
         else if (op == "*")
-        {
             number_res = d_left * d_right;
-        }
         else if (op == "/")
-        {
             number_res = d_left / d_right;
-        }
         else if (op == ">")
-        {
             bool_res = d_left > d_right;
-        }
+        else if (op == ">=")
+            bool_res = d_left >= d_right;
         else if (op == "<")
-        {
             bool_res = d_left < d_right;
-        }
-
-        if (op == ">" || op == "<")
-        {
-            return JSValue(JS_TAG_BOOL, bool_res);
-        }
+        else if (op == "<=")
+            bool_res = d_left <= d_right;
+        else if (op == "==")
+            bool_res = d_left == d_right;
+        else if (op == "===")
+            bool_res = d_left == d_right;
+        else if (op == "&&")
+            bool_res = d_left && d_right;
+        else if (op == "||")
+            bool_res = d_left || d_right;
         else
-        {
+            return JSValue(JS_TAG_EXCEPTION, string("Unsupported Operator '") + op + "'");
+
+        if (op == "+" || op == "-" || op == "*" || op == "/")
             return JSValue(JS_TAG_FLOAT64, number_res);
-        }
+        else
+            return JSValue(JS_TAG_BOOL, bool_res);
     }
     else if (left.isString() && right.isString() && op == "+")
     {
@@ -471,7 +469,7 @@ JSValue Slowjs::evaluateForStatement(AST_Node *node)
                 testValue = evaluate(test);
                 checkException(testValue);
                 condition = testValue.getBoolean();
-                
+
                 continue;
             }
         }

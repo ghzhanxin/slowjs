@@ -58,6 +58,9 @@ namespace tt
         relational,
         logicalOR,
         logicalAND,
+        bitwiseAND,
+        bitwiseOR,
+        bitwiseXOR,
 
         // keyword
         _true,

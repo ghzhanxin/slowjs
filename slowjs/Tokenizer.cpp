@@ -104,6 +104,12 @@ queue<Token *> Tokenizer::tokenize(string input)
             continue;
         }
 
+        if (c == '^')
+        {
+            pushSingleToken(tt::bitwiseXOR, c);
+            continue;
+        }
+
         if (c == '(')
         {
             pushSingleToken(tt::parenL, c);
@@ -387,6 +393,44 @@ queue<Token *> Tokenizer::tokenize(string input)
                 _q.push(new Token(tt::eq, s));
             else if (s == "==" || s == "===")
                 _q.push(new Token(tt::equality, s));
+            else
+                throwTokenizeError(nextChar);
+            continue;
+        }
+
+        if (c == '&')
+        {
+            string s = "&";
+            char nextChar = input[++_current];
+            while (nextChar == '&')
+            {
+                s += nextChar;
+                nextChar = input[++_current];
+            }
+
+            if (s == "&")
+                _q.push(new Token(tt::bitwiseAND, s));
+            else if (s == "&&")
+                _q.push(new Token(tt::logicalAND, s));
+            else
+                throwTokenizeError(nextChar);
+            continue;
+        }
+
+        if (c == '|')
+        {
+            string s = "|";
+            char nextChar = input[++_current];
+            while (nextChar == '|')
+            {
+                s += nextChar;
+                nextChar = input[++_current];
+            }
+
+            if (s == "|")
+                _q.push(new Token(tt::bitwiseOR, s));
+            else if (s == "||")
+                _q.push(new Token(tt::logicalOR, s));
             else
                 throwTokenizeError(nextChar);
             continue;

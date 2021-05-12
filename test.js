@@ -59,7 +59,7 @@ var falseCount = 0;
 var add1 = addFactory(1);
 for (var i = 0; i < add200(1); i++) {
     if (i < 30) continue;
-    
+
     if (i < 50) {
         trueCount = add1(trueCount);
     } else {
@@ -70,3 +70,16 @@ for (var i = 0; i < add200(1); i++) {
 }
 print('[ for & if trueCount: ]', trueCount);
 print('[ for & if falseCount: ]', falseCount);
+
+print('8 + 2', 8 + 2);
+print('8 - 2', 8 - 2);
+print('8 * 2', 8 * 2);
+print('8 / 2', 8 / 2);
+print('8 > 3', 8 > 3);
+print('8 >= 3', 8 >= 3);
+print('8 < 3', 8 < 3);
+print('8 <= 3', 8 <= 3);
+print('8 == 3', 8 == 3);
+print('8 === 3', 8 === 3);
+print('8 && 0', 8 && 0);
+print('8 || 3', 8 || 3);

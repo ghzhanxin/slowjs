@@ -45,16 +45,24 @@
 
 // Expression : AssignmentExpression
 // AssignmentExpression:
-//          EqualityExpression
+//          LogicalExpression
 //          Identifier = Expression
+// LogicalExpression:
+//          EqualityExpression
+//          EqualityExpression && LogicalExpression
+//          EqualityExpression || LogicalExpression
 // EqualityExpression :
 //          RelationalExpression
 //          RelationalExpression == EqualityExpression
 //          RelationalExpression != EqualityExpression
+//          RelationalExpression === EqualityExpression
+//          RelationalExpression !== EqualityExpression
 // RelationalExpression :
 //          AdditiveExpression
 //          AdditiveExpression > RelationalExpression
 //          AdditiveExpression < RelationalExpression
+//          AdditiveExpression >= RelationalExpression
+//          AdditiveExpression <= RelationalExpression
 // AdditiveExpression :
 //          MultiplicativeExpression
 //          MultiplicativeExpression + AdditiveExpression
@@ -483,7 +491,7 @@ void Parser::restoreAssignmentExpression()
 }
 
 // AssignmentExpression:
-//          EqualityExpression
+//          LogicalExpression
 //          Identifier = Expression
 AST_Node *Parser::AssignmentExpression()
 {
@@ -508,7 +516,7 @@ AST_Node *Parser::AssignmentExpression()
     else
     {
         restoreAssignmentExpression();
-        return EqualityExpression();
+        return LogicalExpression();
     }
 }
 
@@ -520,10 +528,41 @@ AST_Node *buildBinary(AST_Node *left, AST_Node *right, string op)
     node->childs.push_back(right);
     return node;
 }
+
+// LogicalExpression:
+//          EqualityExpression
+//          EqualityExpression && LogicalExpression
+//          EqualityExpression || LogicalExpression
+AST_Node *Parser::LogicalExpression()
+{
+    AST_Node *equality = EqualityExpression();
+    if (!equality)
+        return nullptr;
+
+    if (!lookahead)
+        return nullptr;
+
+    string op = lookahead->value;
+    if (match("&&") || match("||"))
+    {
+        AST_Node *logical = LogicalExpression();
+        if (logical)
+            return buildBinary(equality, logical, op);
+        else
+            throw throwParseSyntaxError("LogicalExpression");
+    }
+    else
+    {
+        return equality;
+    }
+}
+
 // EqualityExpression :
 //          RelationalExpression
 //          RelationalExpression == EqualityExpression
 //          RelationalExpression != EqualityExpression
+//          RelationalExpression === EqualityExpression
+//          RelationalExpression !== EqualityExpression
 AST_Node *Parser::EqualityExpression()
 {
     AST_Node *relational = RelationalExpression();
@@ -534,10 +573,13 @@ AST_Node *Parser::EqualityExpression()
         return nullptr;
 
     string op = lookahead->value;
-    if (match("==") || match("!="))
+    if (match("==") || match("!=") || match("===") || match("!=="))
     {
         AST_Node *equality = EqualityExpression();
-        return buildBinary(relational, equality, op);
+        if (equality)
+            return buildBinary(relational, equality, op);
+        else
+            throw throwParseSyntaxError("EqualityExpression");
     }
     else
     {
@@ -548,6 +590,8 @@ AST_Node *Parser::EqualityExpression()
 //          AdditiveExpression
 //          AdditiveExpression > RelationalExpression
 //          AdditiveExpression < RelationalExpression
+//          AdditiveExpression >= RelationalExpression
+//          AdditiveExpression <= RelationalExpression
 AST_Node *Parser::RelationalExpression()
 {
     AST_Node *add = AdditiveExpression();
@@ -555,10 +599,13 @@ AST_Node *Parser::RelationalExpression()
         return nullptr;
 
     string op = lookahead->value;
-    if (match("<") || match(">"))
+    if (match(">") || match("<") || match(">=") || match("<="))
     {
         AST_Node *relation = RelationalExpression();
-        return buildBinary(add, relation, op);
+        if (relation)
+            return buildBinary(add, relation, op);
+        else
+            throw throwParseSyntaxError("RelationalExpression");
     }
     else
     {
@@ -580,7 +627,10 @@ AST_Node *Parser::AdditiveExpression()
     if (match("+") || match("-"))
     {
         AST_Node *add = AdditiveExpression();
-        return buildBinary(multi, add, op);
+        if (add)
+            return buildBinary(multi, add, op);
+        else
+            throw throwParseSyntaxError("AdditiveExpression");
     }
     else
     {
@@ -603,7 +653,10 @@ AST_Node *Parser::MultiplicativeExpression()
     if (match("*") || match("/") || match("%"))
     {
         AST_Node *multi = MultiplicativeExpression();
-        return buildBinary(postfix, multi, op);
+        if (multi)
+            return buildBinary(postfix, multi, op);
+        else
+            throw throwParseSyntaxError("MultiplicativeExpression");
     }
     else
     {

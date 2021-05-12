@@ -102,6 +102,7 @@ public:
 
     AST_Node *Expression();
     AST_Node *AssignmentExpression();
+    AST_Node *LogicalExpression();
     AST_Node *EqualityExpression();
     AST_Node *RelationalExpression();
     AST_Node *AdditiveExpression();
