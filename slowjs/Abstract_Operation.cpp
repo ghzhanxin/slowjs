@@ -36,7 +36,7 @@ string GetReferencedName(Reference V) { return V.name; };
 bool HasPrimitiveBase(Reference V)
 {
     JSValue *value = V.base.js_value;
-    if (value->isBool() || value->isNumber() || value->isNumber())
+    if (value->isBoolean() || value->isNumber() || value->isNumber())
         return true;
     else
         return false;
@@ -105,10 +105,10 @@ void intrinsicPrint(JSValue value)
     string s;
     switch (value.getTag())
     {
-    case JS_TAG_FLOAT64:
-        cout << value.getFloat();
+    case JS_TAG_NUMBER:
+        cout << value.getNumber();
         break;
-    case JS_TAG_BOOL:
+    case JS_TAG_BOOLEAN:
         cout << value.getBooleanString();
         break;
     case JS_TAG_STRING:

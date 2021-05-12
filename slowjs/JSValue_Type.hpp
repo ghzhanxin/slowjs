@@ -29,19 +29,18 @@ enum
     JS_TAG_FUNCTION = -2,
     JS_TAG_OBJECT = -1,
 
-    JS_TAG_INT = 0,
-    JS_TAG_BOOL = 1,
-    JS_TAG_NULL = 2,
-    JS_TAG_UNDEFINED = 3,
-    JS_TAG_UNINITIALIZED = 4,
-    JS_TAG_EXCEPTION = 6,
-    JS_TAG_FLOAT64 = 7,
-    JS_TAG_STRING = 8,
+    JS_TAG_NUMBER,
+    JS_TAG_BOOLEAN,
+    JS_TAG_STRING,
+    JS_TAG_NULL,
+    JS_TAG_UNDEFINED,
+    JS_TAG_UNINITIALIZED,
+    JS_TAG_EXCEPTION,
 };
 
 typedef union JSValueUnion
 {
-    double float64;
+    double double64;
     bool boolean;
     void *ptr;
 } JSValueUnion;
@@ -51,11 +50,11 @@ class JSObject;
 class JSValue
 {
 public:
-    JSValue() : _tag(JS_TAG_FLOAT64), _string(""){};
+    JSValue() : _tag(JS_TAG_NUMBER), _string("_default_JSValue"){};
     JSValue(int64_t tag, string val) : _tag(tag), _string(val){};
     JSValue(int64_t tag, double val) : _tag(tag)
     {
-        _u.float64 = val;
+        _u.double64 = val;
     };
     JSValue(int64_t tag, bool val) : _tag(tag), _string(val ? "true" : "false")
     {
@@ -67,7 +66,7 @@ public:
     };
 
     int64_t getTag() { return _tag; }
-    double getFloat() { return _u.float64; }
+    double getNumber() { return _u.double64; }
     bool getBoolean() { return _u.boolean; }
     string getBooleanString() { return _string; }
     string getString() { return _string; }
@@ -78,9 +77,8 @@ public:
     string getUndefined() { return _string; }
     string getUninitialized() { return _string; }
 
-    bool isNumber() { return _tag == JS_TAG_INT || _tag == JS_TAG_FLOAT64; }
-    bool isFloat() { return _tag == JS_TAG_FLOAT64; }
-    bool isBool() { return _tag == JS_TAG_BOOL; }
+    bool isNumber() { return _tag == JS_TAG_NUMBER; }
+    bool isBoolean() { return _tag == JS_TAG_BOOLEAN; }
     bool isString() { return _tag == JS_TAG_STRING; }
     bool isUndefined() { return _tag == JS_TAG_UNDEFINED; }
     bool isNull() { return _tag == JS_TAG_NULL; }
@@ -95,9 +93,9 @@ protected:
 };
 
 /* special values */
-#define JS_NULL JSValue(JS_TAG_NULL, 0.0)
-#define JS_FALSE JSValue(JS_TAG_BOOL, false)
-#define JS_TRUE JSValue(JS_TAG_BOOL, true)
+#define JS_TRUE JSValue(JS_TAG_BOOLEAN, true)
+#define JS_FALSE JSValue(JS_TAG_BOOLEAN, false)
+#define JS_NULL JSValue(JS_TAG_NULL, "null")
 #define JS_UNDEFINED JSValue(JS_TAG_UNDEFINED, string("undefined"))
 #define JS_EXCEPTION JSValue(JS_TAG_EXCEPTION, string("Unknow Exception"))
 #define JS_UNINITIALIZED JSValue(JS_TAG_UNINITIALIZED, string("Uninitialized"))
