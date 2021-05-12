@@ -274,7 +274,6 @@ queue<Token *> Tokenizer::tokenize(string input)
             else
             {
                 string s = "/";
-                s += nextChar;
                 while (nextChar == '=')
                 {
                     s += nextChar;
