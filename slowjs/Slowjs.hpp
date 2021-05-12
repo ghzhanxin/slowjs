@@ -57,6 +57,7 @@ public:
     Reference evaluateCallExpressionLeft(AST_Node *);
     JSValue evaluateReturnStatement(AST_Node *);
     JSValue evaluateBreakStatement(AST_Node *);
+    JSValue evaluateContinueStatement(AST_Node *);
     void checkException(JSValue);
 
     vector<JSValue> getParamList(AST_Node *);

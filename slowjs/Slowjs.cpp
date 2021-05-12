@@ -246,6 +246,8 @@ JSValue Slowjs::evaluate(AST_Node *node)
         return evaluateReturnStatement(node);
     case nt::BreakStatement:
         return evaluateBreakStatement(node);
+    case nt::ContinueStatement:
+        return evaluateContinueStatement(node);
     default:
         throw string("Unknown AST Node, tip: console.log is not available");
     }
@@ -401,7 +403,7 @@ JSValue Slowjs::evaluateIfStatement(AST_Node *node)
     vector<AST_Node *> fields = node->childs;
     JSValue test = evaluate(fields[0]);
     checkException(test);
-    if ((test.isBool() && test.getBool()) || (test.isNumber() && test.getFloat() != 0))
+    if ((test.isBool() && test.getBoolean()) || (test.isNumber() && test.getFloat() != 0))
     {
         return evaluate(fields[1]);
     }
@@ -446,7 +448,7 @@ JSValue Slowjs::evaluateForStatement(AST_Node *node)
 
     JSValue testValue = evaluate(test);
     checkException(testValue);
-    bool condition = testValue.getBool();
+    bool condition = testValue.getBoolean();
 
     JSValue updateValue;
 
@@ -457,9 +459,21 @@ JSValue Slowjs::evaluateForStatement(AST_Node *node)
             result = evaluate(block);
             checkException(result);
         }
-        catch (JSValue value)
+        catch (string &value)
         {
-            break;
+            if (value == "break")
+                break;
+            else if (value == "continue")
+            {
+                updateValue = evaluate(update);
+                checkException(updateValue);
+
+                testValue = evaluate(test);
+                checkException(testValue);
+                condition = testValue.getBoolean();
+                
+                continue;
+            }
         }
 
         updateValue = evaluate(update);
@@ -467,7 +481,7 @@ JSValue Slowjs::evaluateForStatement(AST_Node *node)
 
         testValue = evaluate(test);
         checkException(testValue);
-        condition = testValue.getBool();
+        condition = testValue.getBoolean();
     }
     return result;
 }
@@ -558,7 +572,11 @@ JSValue Slowjs::evaluateReturnStatement(AST_Node *node)
 }
 JSValue Slowjs::evaluateBreakStatement(AST_Node *)
 {
-    throw JS_UNDEFINED;
+    throw string("break");
+}
+JSValue Slowjs::evaluateContinueStatement(AST_Node *)
+{
+    throw string("continue");
 }
 vector<string> getIdentifierFromMemberExpression(AST_Node *node, vector<string> idArr)
 {
