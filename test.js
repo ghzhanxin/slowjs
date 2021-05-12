@@ -58,13 +58,15 @@ var trueCount = 0;
 var falseCount = 0;
 var add1 = addFactory(1);
 for (var i = 0; i < add200(1); i++) {
-    if (i > 100) break;
-
+    if (i < 30) continue;
+    
     if (i < 50) {
         trueCount = add1(trueCount);
     } else {
         falseCount = add1(falseCount);
     }
+
+    if (i > 100) break;
 }
 print('[ for & if trueCount: ]', trueCount);
 print('[ for & if falseCount: ]', falseCount);
