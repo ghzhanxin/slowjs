@@ -30,14 +30,15 @@
 - [ ] 语法
   - [ ] 自动分号，暂不支持，目前语句一定要加分号。
   - [x] 语句
+    - [x] 空语句
     - [x] var 声明语句
     - [x] 函数声明语句
+    - [x] 表达式语句
     - [x] return
-    - [x] 空语句
     - [x] if
     - [x] for
     - [x] break
-    - [x] 表达式语句
+    - [x] continue
   - [ ] 表达式
     - [ ] 成员表达式 如 `object.property object[property]`
     - [ ] 算术
