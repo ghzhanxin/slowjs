@@ -89,9 +89,9 @@ class Tokenizer
 public:
     static void throwTokenizeError(char);
     static tt::Token_Type getIdentifierType(string);
+    static void printTokenQueue(queue<Token *>);
 
     string getNumString(string input);
-    void printTokenQueue();
     bool isIdentifierStart(char c);
     void pushSingleToken(tt::Token_Type t, char c);
 

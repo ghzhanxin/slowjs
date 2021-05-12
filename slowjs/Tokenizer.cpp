@@ -72,15 +72,15 @@ string Tokenizer::getNumString(string input)
     return digitStr;
 }
 
-void Tokenizer::printTokenQueue()
+void Tokenizer::printTokenQueue(queue<Token *> q)
 {
     cout << endl
          << "---------- token result ----------" << endl
          << endl;
-    while (!_q.empty())
+    while (!q.empty())
     {
-        Token *tok = _q.front();
-        _q.pop();
+        Token *tok = q.front();
+        q.pop();
         cout << tok->type << "  -> " << tok->value << endl;
     }
 }
@@ -439,8 +439,7 @@ queue<Token *> Tokenizer::tokenize(string input)
         throwTokenizeError(c);
     };
 
-    //    queue<Token *> p = q;
-    //    printTokenQueue(p);
+    // printTokenQueue(_q);
 
     return _q;
 };

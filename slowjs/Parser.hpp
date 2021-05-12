@@ -43,6 +43,7 @@ namespace nt
         MemberExpression,
         Arguments,
         ThisExpression,
+        UnaryExpression,
     };
 }
 
@@ -107,6 +108,7 @@ public:
     AST_Node *RelationalExpression();
     AST_Node *AdditiveExpression();
     AST_Node *MultiplicativeExpression();
+    AST_Node *UnaryExpression();
     AST_Node *PostfixExpression();
     AST_Node *LeftHandSideExpression();
     AST_Node *CallExpression();

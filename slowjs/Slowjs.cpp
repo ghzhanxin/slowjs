@@ -248,6 +248,8 @@ JSValue Slowjs::evaluate(AST_Node *node)
         return evaluateBreakStatement(node);
     case nt::ContinueStatement:
         return evaluateContinueStatement(node);
+    case nt::UnaryExpression:
+        return evaluateUnaryExpression(node);
     default:
         throw string("Unknown AST Node, tip: console.log is not available");
     }
@@ -291,6 +293,21 @@ JSValue Slowjs::evaluateExpressionStatement(AST_Node *node)
     return evaluate(expression);
 }
 
+JSValue Slowjs::evaluateUnaryExpression(AST_Node *node)
+{
+    string op = node->value;
+    AST_Node *expre = node->childs[0];
+    JSValue result = this->evaluate(expre);
+    if (result.isBoolean())
+        return JSValue(JS_TAG_BOOLEAN, !result.getBoolean());
+    else if (result.isNumber())
+        return JSValue(JS_TAG_BOOLEAN, !result.getNumber());
+    else if (result.isString())
+        return JSValue(JS_TAG_BOOLEAN, result.getString().size() == 0);
+    else
+        return JSValue(JS_TAG_EXCEPTION, string("Support only boolean number and string."));
+}
+
 JSValue Slowjs::evaluateBinaryExpression(AST_Node *node)
 {
     string op = node->value;
@@ -303,8 +320,8 @@ JSValue Slowjs::evaluateBinaryExpression(AST_Node *node)
 
     if (left.isNumber() && right.isNumber())
     {
-        double d_left = left.getFloat();
-        double d_right = right.getFloat();
+        double d_left = left.getNumber();
+        double d_right = right.getNumber();
 
         double number_res = 0;
         bool bool_res = false;
@@ -337,9 +354,9 @@ JSValue Slowjs::evaluateBinaryExpression(AST_Node *node)
             return JSValue(JS_TAG_EXCEPTION, string("Unsupported Operator '") + op + "'");
 
         if (op == "+" || op == "-" || op == "*" || op == "/")
-            return JSValue(JS_TAG_FLOAT64, number_res);
+            return JSValue(JS_TAG_NUMBER, number_res);
         else
-            return JSValue(JS_TAG_BOOL, bool_res);
+            return JSValue(JS_TAG_BOOLEAN, bool_res);
     }
     else if (left.isString() && right.isString() && op == "+")
     {
@@ -355,9 +372,9 @@ JSValue getJSValueFromLiteralNode(AST_Node *node)
     switch (node->rawType)
     {
     case rt::Boolean:
-        return JSValue(JS_TAG_BOOL, value == "true" ? true : false);
+        return JSValue(JS_TAG_BOOLEAN, value == "true" ? true : false);
     case rt::Number:
-        return JSValue(JS_TAG_FLOAT64, stod(value));
+        return JSValue(JS_TAG_NUMBER, stod(value));
     case rt::String:
         return JSValue(JS_TAG_STRING, value);
     case rt::Undefined:
@@ -401,7 +418,7 @@ JSValue Slowjs::evaluateIfStatement(AST_Node *node)
     vector<AST_Node *> fields = node->childs;
     JSValue test = evaluate(fields[0]);
     checkException(test);
-    if ((test.isBool() && test.getBoolean()) || (test.isNumber() && test.getFloat() != 0))
+    if ((test.isBoolean() && test.getBoolean()) || (test.isNumber() && test.getNumber() != 0))
     {
         return evaluate(fields[1]);
     }
@@ -494,8 +511,8 @@ JSValue Slowjs::evaluateUpdateExpression(AST_Node *node)
     checkException(oldValue);
     if (oldValue.isNumber())
     {
-        double v = op == "++" ? oldValue.getFloat() + 1 : oldValue.getFloat() - 1;
-        JSValue newValue = JSValue(JS_TAG_FLOAT64, v);
+        double v = op == "++" ? oldValue.getNumber() + 1 : oldValue.getNumber() - 1;
+        JSValue newValue = JSValue(JS_TAG_NUMBER, v);
         PutValue(lhs, newValue);
         return newValue;
     }

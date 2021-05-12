@@ -58,6 +58,7 @@ public:
     JSValue evaluateReturnStatement(AST_Node *);
     JSValue evaluateBreakStatement(AST_Node *);
     JSValue evaluateContinueStatement(AST_Node *);
+    JSValue evaluateUnaryExpression(AST_Node *);
     void checkException(JSValue);
 
     vector<JSValue> getParamList(AST_Node *);

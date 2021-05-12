@@ -68,10 +68,13 @@
 //          MultiplicativeExpression + AdditiveExpression
 //          MultiplicativeExpression - AdditiveExpression
 // MultiplicativeExpression :
+//          UnaryExpression
+//          UnaryExpression * MultiplicativeExpression
+//          UnaryExpression / MultiplicativeExpression
+//          UnaryExpression % MultiplicativeExpression
+// UnaryExpression:
 //          PostfixExpression
-//          PostfixExpression * MultiplicativeExpression
-//          PostfixExpression / MultiplicativeExpression
-//          PostfixExpression % MultiplicativeExpression
+//          ! UnaryExpression
 // PostfixExpression :
 //          LeftHandSideExpression
 //          LeftHandSideExpression++
@@ -639,13 +642,13 @@ AST_Node *Parser::AdditiveExpression()
 }
 
 // MultiplicativeExpression :
-//          PostfixExpression
-//          PostfixExpression * MultiplicativeExpression
-//          PostfixExpression / MultiplicativeExpression
-//          PostfixExpression % MultiplicativeExpression
+//          UnaryExpression
+//          UnaryExpression * MultiplicativeExpression
+//          UnaryExpression / MultiplicativeExpression
+//          UnaryExpression % MultiplicativeExpression
 AST_Node *Parser::MultiplicativeExpression()
 {
-    AST_Node *postfix = PostfixExpression();
+    AST_Node *postfix = UnaryExpression();
     if (!postfix)
         return nullptr;
 
@@ -662,6 +665,28 @@ AST_Node *Parser::MultiplicativeExpression()
     {
         return postfix;
     }
+}
+
+// UnaryExpression:
+//          PostfixExpression
+//          ! UnaryExpression
+AST_Node *Parser::UnaryExpression()
+{
+    if (match("!"))
+    {
+        AST_Node *unary = UnaryExpression();
+        if (unary)
+        {
+            AST_Node *node = new AST_Node(nt::UnaryExpression);
+            node->value = "!";
+            node->childs.push_back(unary);
+            return node;
+        }
+        else
+            throw throwParseSyntaxError("UnaryExpression");
+    }
+    else
+        return PostfixExpression();
 }
 
 // PostfixExpression :

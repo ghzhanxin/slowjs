@@ -71,6 +71,7 @@ for (var i = 0; i < add200(1); i++) {
 print('[ for & if trueCount: ]', trueCount);
 print('[ for & if falseCount: ]', falseCount);
 
+print('[ operator ]');
 print('8 + 2', 8 + 2);
 print('8 - 2', 8 - 2);
 print('8 * 2', 8 * 2);
@@ -83,3 +84,4 @@ print('8 == 3', 8 == 3);
 print('8 === 3', 8 === 3);
 print('8 && 0', 8 && 0);
 print('8 || 3', 8 || 3);
+print('!false', !false);
