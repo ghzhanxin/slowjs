@@ -8,13 +8,30 @@
 #include "JSValue_Type.hpp"
 #include "Slowjs.hpp"
 
-PropertyDescriptor JSObject::GetOwnProperty(string P)
+DataDescriptor JSObject::GetOwnProperty(string P)
 {
-    return PropertyDescriptor();
+    map<string, JSValue>::iterator it = this->Properties.find(P);
+    DataDescriptor D;
+    D.Value = it == this->Properties.end() ? JS_UNDEFINED : it->second;
+    return D;
 }
-PropertyDescriptor JSObject::GetProperty(string P)
+DataDescriptor JSObject::GetProperty(string P)
 {
-    return PropertyDescriptor();
+    DataDescriptor prop = this->GetOwnProperty(P);
+    if (prop.Value.isUndefined())
+        return prop;
+    else
+    {
+        JSObject *proto = this->Prototype;
+        if (proto == nullptr)
+        {
+            DataDescriptor D;
+            D.Value = JS_UNDEFINED;
+            return D;
+        }
+        else
+            return proto->GetProperty(P);
+    }
 }
 
 JSValue JSFunction::Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args)
@@ -40,8 +57,6 @@ JSValue JSFunction::Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 JSValue JSFunction::Construct(Slowjs *slow, vector<JSValue> args)
 {
     JSObject *obj = new JSObject();
-    JSFunction *fo = this;
-    JSValue thisValue = JS_UNDEFINED;
-    JSValue result = fo->Call(slow, thisValue, args);
+    JSValue result = this->Call(slow, JSValue(JS_TAG_OBJECT, obj), args);
     return result.isObject() ? result : JSValue(JS_TAG_OBJECT, obj);
 }

@@ -168,9 +168,7 @@ vector<AST_Node *> Parser::StatementList()
     {
         AST_Node *stmt = Statement();
         if (stmt)
-        {
             childs.push_back(stmt);
-        }
         else
             throw throwParseSyntaxError("Statement exception");
     }
@@ -218,9 +216,7 @@ AST_Node *Parser::Statement()
 AST_Node *Parser::BreakStatement()
 {
     if (match("break") && match(";"))
-    {
         return new AST_Node(nt::BreakStatement);
-    }
     else
         throw throwParseSyntaxError("Expect 'break' or ';' in BreakStatement");
 }
@@ -228,9 +224,7 @@ AST_Node *Parser::BreakStatement()
 AST_Node *Parser::ContinueStatement()
 {
     if (match("continue") && match(";"))
-    {
         return new AST_Node(nt::ContinueStatement);
-    }
     else
         throw throwParseSyntaxError("Expect 'continue' or ';' in ContinueStatement");
 }
@@ -243,9 +237,7 @@ AST_Node *Parser::ReturnStatement()
     {
         AST_Node *ret = new AST_Node(nt::ReturnStatement);
         if (match(";"))
-        {
             return ret;
-        }
         else
         {
             AST_Node *expre = Expression();
@@ -287,9 +279,7 @@ AST_Node *Parser::IfStatement()
             AST_Node *stmt = Statement();
 
             if (stmt)
-            {
                 node->childs.push_back(stmt);
-            }
             else
                 throw throwParseSyntaxError("IfStatement");
 
@@ -711,9 +701,7 @@ AST_Node *Parser::PostfixExpression()
         return node;
     }
     else
-    {
         return lhs;
-    }
 };
 
 // LeftHandSideExpression :
@@ -761,9 +749,7 @@ AST_Node *Parser::Arguments()
     {
         AST_Node *args = new AST_Node(nt::Arguments);
         if (match(")"))
-        {
             return args;
-        }
         else
         {
             try

@@ -21,6 +21,8 @@ using namespace std;
 
 class Lexical_Environment;
 class PropertyDescriptor;
+class DataDescriptor;
+class AccessorDescriptor;
 class JSObject;
 class JSFunction;
 
@@ -108,8 +110,8 @@ class JSObject : public JSValue
 {
 public:
     JSObject() { _tag = JS_TAG_OBJECT; };
-    PropertyDescriptor GetOwnProperty(string P);
-    PropertyDescriptor GetProperty(string P);
+    DataDescriptor GetOwnProperty(string P);
+    DataDescriptor GetProperty(string P);
     void Get();
     void Put();
     bool CanPut();
@@ -118,7 +120,7 @@ public:
     void DefaultValue();
     void DefineOwnProperty();
 
-    JSObject *Prototype;
+    JSObject *Prototype = nullptr;
     string Class;
     bool Extensible;
 

@@ -21,13 +21,9 @@ void Environment_Record::SetMutableBinding(string name, JSValue value)
 {
     Environment_Record::iterator it = this->find(name);
     if (it == this->end())
-    {
         this->insert(pair<string, JSValue>(name, value));
-    }
     else
-    {
         it->second = value;
-    }
 };
 
 JSValue Environment_Record::GetBindingValue(string name)

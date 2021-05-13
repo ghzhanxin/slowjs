@@ -15,17 +15,11 @@ int throwRuntimeException(int64_t t, string s)
 {
     string msg;
     if (t == EXCEPTION_REFERENCE)
-    {
         msg = ReferenceErrorPrefix + s + " is not defined";
-    }
     else if (t == EXCEPTION_TYPE)
-    {
         msg = TypeErrorPrefix + s;
-    }
     else
-    {
         msg = "Unknown Error";
-    }
     throw msg;
 }
 BaseUnion GetBase(Reference V)
@@ -61,13 +55,9 @@ JSValue GetValue(Reference V)
         throw throwRuntimeException(EXCEPTION_REFERENCE, V.name);
 
     if (IsPropertyReference(V))
-    {
         return JSValue(JS_TAG_STRING, string("TODO"));
-    }
     else
-    {
         return base.env_recored->GetBindingValue(GetReferencedName(V));
-    }
 }
 
 void PutValue(JSValue V, JSValue value)
@@ -103,6 +93,9 @@ Reference IdentifierResolution(Lexical_Environment *lex, string name)
 void intrinsicPrint(JSValue value)
 {
     string s;
+    JSObject *obj;
+    JSFunction *fn;
+
     switch (value.getTag())
     {
     case JS_TAG_NUMBER:
@@ -114,13 +107,9 @@ void intrinsicPrint(JSValue value)
     case JS_TAG_STRING:
         s = value.getString();
         if (s == "\\n")
-        {
             cout << endl;
-        }
         else
-        {
             cout << s;
-        }
         break;
     case JS_TAG_UNDEFINED:
         cout << value.getUndefined();
@@ -129,11 +118,15 @@ void intrinsicPrint(JSValue value)
         cout << value.getException();
         break;
     case JS_TAG_FUNCTION:
-        JSFunction *fn = value.getFunction();
+        fn = value.getFunction();
         if (fn->isIntrinsic())
             cout << "function " << fn->Name << "() { [native code] }";
         else
             cout << "function " << fn->Name << "() { USER CODE TODO }";
+        break;
+    case JS_TAG_OBJECT:
+        obj = value.getObject();
+        cout << "is a object " << obj << endl;
         break;
     }
     cout << " ";

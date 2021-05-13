@@ -61,9 +61,7 @@ string Tokenizer::getNumString(string input)
             if (!hasDot)
                 hasDot = true;
             else
-            {
                 throwTokenizeError(nextChar);
-            }
         }
 
         digitStr += nextChar;
