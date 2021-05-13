@@ -38,6 +38,19 @@ public:
     string name;
 };
 
+class Descriptor
+{
+public:
+    JSValue Enumerable = JS_FALSE;
+    JSValue Configurable = JS_FALSE;
+};
 
+class PropertyDescriptor : public Descriptor
+{
+public:
+    PropertyDescriptor(){};
+    JSValue Value = JS_UNDEFINED;
+    JSValue Writable = JS_FALSE;
+};
 
 #endif /* Spec_Type_hpp */

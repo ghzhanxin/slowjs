@@ -17,27 +17,31 @@ PropertyDescriptor JSObject::GetProperty(string P)
     return PropertyDescriptor();
 }
 
-JSValue JSFunction::Call(Slowjs *rt, JSValue thisValue, vector<JSValue> args)
+JSValue JSFunction::Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 {
     JSFunction *fo = this;
-    rt->initFunctionExecutionContext(fo, thisValue, args);
+    slow->initFunctionExecutionContext(fo, thisValue, args);
     AST_Node *func_body = fo->Code->childs[2];
     JSValue normal_Result;
     try
     {
-        normal_Result = rt->evaluate(func_body);
+        normal_Result = slow->evaluate(func_body);
     }
     catch (JSValue &value)
     {
-        rt->checkException(value);
-        rt->ctx_stack->pop();
+        slow->checkException(value);
+        slow->ctx_stack->pop();
         return value;
     }
-    rt->checkException(normal_Result);
-    rt->ctx_stack->pop();
+    slow->checkException(normal_Result);
+    slow->ctx_stack->pop();
     return normal_Result;
 }
-JSValue JSFunction::Construct(JSValue thisValue, vector<JSValue> args)
+JSValue JSFunction::Construct(Slowjs *slow, vector<JSValue> args)
 {
-    return JSValue();
+    JSObject *obj = new JSObject();
+    JSFunction *fo = this;
+    JSValue thisValue = JS_UNDEFINED;
+    JSValue result = fo->Call(slow, thisValue, args);
+    return result.isObject() ? result : JSValue(JS_TAG_OBJECT, obj);
 }

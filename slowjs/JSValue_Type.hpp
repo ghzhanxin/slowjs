@@ -20,6 +20,9 @@ class Slowjs;
 using namespace std;
 
 class Lexical_Environment;
+class PropertyDescriptor;
+class JSObject;
+class JSFunction;
 
 enum
 {
@@ -48,8 +51,6 @@ typedef union JSValueUnion
     void *ptr;
 } JSValueUnion;
 
-class JSFunction;
-class JSObject;
 class JSValue
 {
 public:
@@ -103,7 +104,6 @@ protected:
 #define JS_EXCEPTION JSValue(JS_TAG_EXCEPTION, string("Unknow Exception"))
 #define JS_UNINITIALIZED JSValue(JS_TAG_UNINITIALIZED, string("Uninitialized"))
 
-class PropertyDescriptor;
 class JSObject : public JSValue
 {
 public:
@@ -142,27 +142,12 @@ public:
     JSObject Prototype;
 
     JSValue Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args);
-    JSValue Construct(JSValue thisValue, vector<JSValue> args);
+    JSValue Construct(Slowjs *slow, vector<JSValue> args);
 
     bool isIntrinsic() { return _intrinsic; };
 
 private:
     bool _intrinsic;
-};
-
-class Descriptor
-{
-public:
-    JSValue Enumerable = JS_FALSE;
-    JSValue Configurable = JS_FALSE;
-};
-
-class PropertyDescriptor : public Descriptor
-{
-public:
-    PropertyDescriptor(){};
-    JSValue Value = JS_UNDEFINED;
-    JSValue Writable = JS_FALSE;
 };
 
 #endif /* JSValue_Type_hpp */
