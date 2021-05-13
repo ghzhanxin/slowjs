@@ -51,12 +51,17 @@ public:
     JSValue evaluateVariableDeclaration(AST_Node *);
     JSValue evaluateCallExpression(AST_Node *);
     JSValue evaluateNewExpression(AST_Node *);
-    Reference evaluateCallExpressionLeft(AST_Node *);
+    vector<string> getIdentifiersFromMemberExpression(AST_Node *, vector<string>);
     JSValue evaluateReturnStatement(AST_Node *);
     JSValue evaluateBreakStatement(AST_Node *);
     JSValue evaluateContinueStatement(AST_Node *);
     JSValue evaluateUnaryExpression(AST_Node *);
+    JSValue evaluateThisExpression(AST_Node *);
+    JSValue evaluateMemberExpression(AST_Node *);
     void checkException(JSValue);
+
+    Reference getMemberExpressionReference(AST_Node *);
+    Reference getReference(AST_Node *);
 
     vector<JSValue> getParamList(AST_Node *);
 };

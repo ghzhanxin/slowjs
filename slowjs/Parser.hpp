@@ -65,7 +65,7 @@ class AST_Node
 {
 public:
     AST_Node(){};
-    AST_Node(nt::Node_Type t) : type(t){};
+    AST_Node(nt::Node_Type t, string v = "default") : type(t), value(v){};
 
     nt::Node_Type type;
     string value;

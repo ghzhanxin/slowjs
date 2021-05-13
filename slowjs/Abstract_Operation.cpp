@@ -11,7 +11,7 @@
 #define TypeErrorPrefix "TypeError: "
 #define ReferenceErrorPrefix "ReferenceError: "
 
-int throwRuntimeException(int64_t t, string s)
+int throwRuntimeException(int64_t t = EXCEPTION_TYPE, string s = "Unknown Runtime Error")
 {
     string msg;
     if (t == EXCEPTION_REFERENCE)
@@ -19,7 +19,7 @@ int throwRuntimeException(int64_t t, string s)
     else if (t == EXCEPTION_TYPE)
         msg = TypeErrorPrefix + s;
     else
-        msg = "Unknown Error";
+        msg = s;
     throw msg;
 }
 BaseUnion GetBase(Reference V)

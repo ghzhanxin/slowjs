@@ -46,7 +46,7 @@
 // Expression : AssignmentExpression
 // AssignmentExpression:
 //          LogicalExpression
-//          Identifier = Expression
+//          MemberExpression = Expression
 // LogicalExpression:
 //          EqualityExpression
 //          EqualityExpression && LogicalExpression
@@ -95,7 +95,8 @@
 //          new NewExpression
 // MemberExpression:
 //          PrimaryExpression
-//          MemberExpression . Identifier
+//          this . MemberExpression
+//          Identifier . MemberExpression
 // PrimaryExpression :
 //          this
 //          Identifier
@@ -117,7 +118,7 @@
 
 using namespace std;
 
-int Parser::throwParseSyntaxError(string s = "Unknown Error")
+int Parser::throwParseSyntaxError(string s = "Unknown Parse Error")
 {
     string msg = SyntaxErrorPrefix;
     throw msg + s;
@@ -485,13 +486,13 @@ void Parser::restoreAssignmentExpression()
 
 // AssignmentExpression:
 //          LogicalExpression
-//          Identifier = Expression
+//          MemberExpression = Expression
 AST_Node *Parser::AssignmentExpression()
 {
     storeAssignmentExpression();
     string op = lookahead->value;
-    AST_Node *id = Identifier();
-    if (id && match("="))
+    AST_Node *member = MemberExpression();
+    if (member && match("="))
     {
         AST_Node *expre = Expression();
 
@@ -499,7 +500,7 @@ AST_Node *Parser::AssignmentExpression()
         {
             AST_Node *node = new AST_Node(nt::AssignmentExpression);
             node->value = op;
-            node->childs.push_back(id);
+            node->childs.push_back(member);
             node->childs.push_back(expre);
             return node;
         }
@@ -838,23 +839,36 @@ void Parser::restoreMemberExpression()
 
 // MemberExpression:
 //          PrimaryExpression
+//          this . MemberExpression
 //          Identifier . MemberExpression
 AST_Node *Parser::MemberExpression()
 {
     storeMemberExpression();
-    AST_Node *id = Identifier();
-    if (id && match("."))
+    if (match("this") && match("."))
     {
         AST_Node *member = MemberExpression();
         AST_Node *memberNode = new AST_Node(nt::MemberExpression);
-        memberNode->childs.push_back(id);
+        memberNode->childs.push_back(new AST_Node(nt::ThisExpression, "this"));
         memberNode->childs.push_back(member);
         return memberNode;
     }
     else
     {
         restoreMemberExpression();
-        return PrimaryExpression();
+        AST_Node *id = Identifier();
+        if (id && match("."))
+        {
+            AST_Node *member = MemberExpression();
+            AST_Node *memberNode = new AST_Node(nt::MemberExpression);
+            memberNode->childs.push_back(id);
+            memberNode->childs.push_back(member);
+            return memberNode;
+        }
+        else
+        {
+            restoreMemberExpression();
+            return PrimaryExpression();
+        }
     }
 }
 
@@ -871,7 +885,7 @@ AST_Node *Parser::PrimaryExpression()
     if (lookahead->type == tt::_this)
     {
         nextToken();
-        return new AST_Node(nt::ThisExpression);
+        return new AST_Node(nt::ThisExpression, lookahead->value);
     }
     else
 

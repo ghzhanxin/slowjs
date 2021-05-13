@@ -83,9 +83,7 @@ void Slowjs::declarationBindingInstantiation(AST_Node *node, vector<JSValue> arg
     Environment_Record *env = running_ctx->var_env->record;
     vector<AST_Node *> top_levels;
     if (node->type == nt::Program)
-    {
         top_levels = node->childs;
-    }
     else if (node->type == nt::FunctionDeclaration)
     {
         top_levels = node->childs[2]->childs;
@@ -95,20 +93,11 @@ void Slowjs::declarationBindingInstantiation(AST_Node *node, vector<JSValue> arg
         {
             AST_Node *argNameNode = names->childs[i];
             string argName = argNameNode->value;
-            JSValue v = JS_UNDEFINED;
-            if (i < argCount)
-            {
-                v = args[i];
-            }
-            else
-            {
-                v = JS_UNDEFINED;
-            }
+            JSValue v = i < argCount ? args[i] : JS_UNDEFINED;
             bool argAlreadyDeclared = env->HasBinding(argName);
             if (!argAlreadyDeclared)
-            {
                 env->CreateMutableBinding(argName);
-            }
+
             env->SetMutableBinding(argName, v);
         }
     }
@@ -132,13 +121,9 @@ void Slowjs::declarationBindingInstantiation(AST_Node *node, vector<JSValue> arg
         {
             vector<AST_Node *> arr;
             if (stmt_type == nt::VariableDeclaration)
-            {
                 arr.push_back(top_level);
-            }
             else if (stmt_type == nt::ForStatement)
-            {
                 arr.push_back(top_level->childs[0]);
-            }
             else if (stmt_type == nt::IfStatement)
             {
                 AST_Node *blockSeqs = top_level->childs[1];
@@ -146,9 +131,7 @@ void Slowjs::declarationBindingInstantiation(AST_Node *node, vector<JSValue> arg
                 {
                     AST_Node *seq_stmt = blockSeqs->childs[j];
                     if (seq_stmt->type == nt::VariableDeclaration)
-                    {
                         arr.push_back(seq_stmt);
-                    }
                 }
                 if (top_level->childs.size() == 3)
                 {
@@ -157,9 +140,7 @@ void Slowjs::declarationBindingInstantiation(AST_Node *node, vector<JSValue> arg
                     {
                         AST_Node *alt_stmt = blockAlts->childs[j];
                         if (alt_stmt->type == nt::VariableDeclaration)
-                        {
                             arr.push_back(alt_stmt);
-                        }
                     }
                 }
             }
@@ -229,6 +210,10 @@ JSValue Slowjs::evaluate(AST_Node *node)
         return evaluateContinueStatement(node);
     case nt::UnaryExpression:
         return evaluateUnaryExpression(node);
+    case nt::ThisExpression:
+        return evaluateThisExpression(node);
+    case nt::MemberExpression:
+        return evaluateMemberExpression(node);
     default:
         throw string("Unknown AST Node, tip: console.log is not available");
     }
@@ -369,20 +354,39 @@ JSValue Slowjs::evaluateLiteral(AST_Node *node)
     return getJSValueFromLiteralNode(node);
 }
 
+Reference Slowjs::getReference(AST_Node *node)
+{
+    switch (node->type)
+    {
+    case nt::Identifier:
+        return IdentifierResolution(getCurrentContext()->lex_env, node->value);
+    case nt::MemberExpression:
+        return getMemberExpressionReference(node);
+    default:
+        throw throwRuntimeException(EXCEPTION_TYPE, "Unknown Reference");
+    }
+}
 JSValue Slowjs::evaluateAssignmentExpression(AST_Node *node)
 {
     vector<AST_Node *> fields = node->childs;
+
     AST_Node *left_node = fields[0];
-
-    Lexical_Environment *lex = getCurrentContext()->lex_env;
-    Reference lhs = IdentifierResolution(lex, left_node->value);
-
     AST_Node *right_node = fields[1];
-    JSValue value = evaluate(right_node);
-    checkException(value);
 
-    PutValue(lhs, value);
-    return value;
+    Reference lhs = getReference(left_node);
+    JSValue rValue;
+    if (right_node->type == nt::Identifier || right_node->type == nt::MemberExpression)
+    {
+        Reference rhs = getReference(right_node);
+        rValue = GetValue(rhs);
+    }
+    else
+        rValue = this->evaluate(right_node);
+
+    checkException(rValue);
+
+    PutValue(lhs, rValue);
+    return rValue;
 }
 
 JSValue Slowjs::evaluateIdentifier(AST_Node *node)
@@ -398,13 +402,9 @@ JSValue Slowjs::evaluateIfStatement(AST_Node *node)
     JSValue test = evaluate(fields[0]);
     checkException(test);
     if ((test.isBoolean() && test.getBoolean()) || (test.isNumber() && test.getNumber() != 0))
-    {
         return evaluate(fields[1]);
-    }
     else if (fields.size() == 3)
-    {
         return evaluate(fields[2]);
-    }
     else
         return JS_UNDEFINED;
 }
@@ -416,9 +416,7 @@ JSValue Slowjs::evaluateBlockStatement(AST_Node *node)
     for (size_t i = 0; i < fields.size(); i++)
     {
         if (fields[i]->type == nt::FunctionDeclaration)
-        {
             continue;
-        }
         else
         {
             result = evaluate(fields[i]);
@@ -533,23 +531,20 @@ JSValue Slowjs::evaluateCallExpression(AST_Node *node)
     if (arguments->childs.size() > 0)
         argVector = getArgumentList(arguments);
 
-    Reference ref = evaluateCallExpressionLeft(left);
+    Reference ref = getReference(left);
     JSValue result = GetValue(ref);
 
     if (result.isFunction())
     {
         JSFunction *fo = result.getFunction();
         if (fo->isIntrinsic())
-        {
             return evaluateIntrinsicFunction(fo->Name, argVector);
-        }
         else
         {
             JSValue thisValue = JS_UNDEFINED;
             if (IsPropertyReference(ref))
-            {
                 thisValue = *GetBase(ref).js_value;
-            }
+
             return fo->Call(this, thisValue, argVector);
         }
     }
@@ -558,7 +553,25 @@ JSValue Slowjs::evaluateCallExpression(AST_Node *node)
 }
 JSValue Slowjs::evaluateNewExpression(AST_Node *node)
 {
-    return JSValue();
+    vector<AST_Node *> fields = node->childs;
+    AST_Node *left = fields[0];
+    AST_Node *arguments = fields[1];
+    vector<JSValue> argVector;
+    JSValue v = evaluate(node->childs[0]);
+
+    if (arguments->childs.size() > 0)
+        argVector = getArgumentList(arguments);
+
+    Reference ref = getReference(left);
+    JSValue result = GetValue(ref);
+
+    if (result.isFunction())
+    {
+        JSFunction *ctor = result.getFunction();
+        return ctor->Construct(this, argVector);
+    }
+    else
+        throw throwRuntimeException(EXCEPTION_TYPE, string("not a construtor"));
 }
 JSValue Slowjs::evaluateReturnStatement(AST_Node *node)
 {
@@ -572,37 +585,10 @@ JSValue Slowjs::evaluateContinueStatement(AST_Node *)
 {
     throw string("continue");
 }
-vector<string> getIdentifierFromMemberExpression(AST_Node *node, vector<string> idArr)
-{
-    vector<AST_Node *> fields = node->childs;
-    if (fields[0]->type == nt::Identifier)
-    {
-        idArr.push_back(fields[0]->value);
-    }
-
-    if (fields[1]->type == nt::Identifier)
-    {
-        idArr.push_back(fields[1]->value);
-        return idArr;
-    }
-    else if (fields[1]->type == nt::MemberExpression)
-    {
-        return getIdentifierFromMemberExpression(fields[1], idArr);
-    }
-    else
-        throw string("getIdentifierFromMemberExpression");
-}
-Reference Slowjs::evaluateCallExpressionLeft(AST_Node *node)
+Reference Slowjs::getMemberExpressionReference(AST_Node *node)
 {
     vector<string> idArr;
-    if (node->type == nt::Identifier)
-    {
-        return IdentifierResolution(getCurrentContext()->lex_env, node->value);
-    }
-    else if (node->type == nt::MemberExpression)
-    {
-        idArr = getIdentifierFromMemberExpression(node, idArr);
-    }
+    idArr = getIdentifiersFromMemberExpression(node, idArr);
 
     JSValue temp;
     Lexical_Environment *lex = getCurrentContext()->lex_env;
@@ -612,10 +598,9 @@ Reference Slowjs::evaluateCallExpressionLeft(AST_Node *node)
         string name = idArr[i];
         if (i == 0)
         {
-            Reference ref = IdentifierResolution(lex, name);
-            temp = GetValue(ref);
+            temp = name == "this" ? evaluate(node->childs[0]) : GetValue(IdentifierResolution(lex, name));
             if (!temp.isObject())
-                throw string("is not a Object");
+                throw throwRuntimeException(EXCEPTION_TYPE, string(name + " is not a Object"));
         }
         else if (i == count - 1)
         {
@@ -625,15 +610,40 @@ Reference Slowjs::evaluateCallExpressionLeft(AST_Node *node)
         }
         else
         {
-//            JSObject *obj = temp.getObject();
-//            JSValue res = obj->GetProperty(name).Value;
-//            if (res.isObject())
-//            {
-//                temp = res;
-//            }
-//            else
-//                throw string("is not a Object");
+            JSObject *obj = temp.getObject();
+            JSValue res = obj->GetProperty(name).Value;
+            checkException(res);
+            if (res.isObject())
+                temp = res;
+            else
+                throw throwRuntimeException(EXCEPTION_TYPE, string(name + " is not a Object"));
         }
     }
-    throw string("SyntaxError");
+    throw throwRuntimeException(EXCEPTION_TYPE, string("is not a Object"));
+}
+vector<string> Slowjs::getIdentifiersFromMemberExpression(AST_Node *node, vector<string> idArr)
+{
+    vector<AST_Node *> fields = node->childs;
+    if (fields[0]->type == nt::Identifier || fields[0]->type == nt::ThisExpression)
+        idArr.push_back(fields[0]->value);
+
+    if (fields[1]->type == nt::Identifier)
+    {
+        idArr.push_back(fields[1]->value);
+        return idArr;
+    }
+    else if (fields[1]->type == nt::MemberExpression)
+        return getIdentifiersFromMemberExpression(fields[1], idArr);
+    else
+        throw throwRuntimeException(EXCEPTION_TYPE, string("getIdentifiersFromMemberExpression"));
+}
+
+JSValue Slowjs::evaluateThisExpression(AST_Node *node)
+{
+    return getCurrentContext()->this_binding;
+}
+
+JSValue Slowjs::evaluateMemberExpression(AST_Node *node)
+{
+    return GetValue(getMemberExpressionReference(node));
 }
