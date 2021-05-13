@@ -33,6 +33,7 @@ public:
     Execution_Context *getCurrentContext();
     vector<JSValue> getArgumentList(AST_Node *);
 
+    JSValue global_obj;
     Execution_Context *global_ctx;
     stack<Execution_Context *> *ctx_stack;
 

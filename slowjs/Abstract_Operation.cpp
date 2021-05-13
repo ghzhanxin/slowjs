@@ -29,19 +29,30 @@ BaseUnion GetBase(Reference V)
 string GetReferencedName(Reference V) { return V.name; };
 bool HasPrimitiveBase(Reference V)
 {
-    JSValue *value = V.base.js_value;
-    if (value->isBoolean() || value->isNumber() || value->isNumber())
-        return true;
+    if (V.getBaseType() == BASE_TYPE_JSVALUE)
+    {
+        JSValue *value = GetBase(V).js_value;
+        if (value->isBoolean() || value->isString() || value->isNumber())
+            return true;
+        else
+            return false;
+    }
     else
         return false;
 };
 bool IsPropertyReference(Reference V)
 {
-    return HasPrimitiveBase(V);
+    if (V.getBaseType() == BASE_TYPE_JSVALUE)
+        return GetBase(V).js_value->isObject() || HasPrimitiveBase(V);
+    else
+        return false;
 };
 bool IsUnresolvableReference(Reference V)
 {
-    return V.base.js_value->isUndefined();
+    if (V.getBaseType() == BASE_TYPE_JSVALUE)
+        return GetBase(V).js_value->isUndefined();
+    else
+        return false;
 };
 
 JSValue GetValue(JSValue V)
@@ -55,7 +66,15 @@ JSValue GetValue(Reference V)
         throw throwRuntimeException(EXCEPTION_REFERENCE, V.name);
 
     if (IsPropertyReference(V))
-        return JSValue(JS_TAG_STRING, string("TODO"));
+    {
+        if (HasPrimitiveBase(V))
+            throw throwRuntimeException(EXCEPTION_REFERENCE, V.name);
+        else
+        {
+            JSObject *obj = base.js_value->getObject();
+            return obj->Get(GetReferencedName(V));
+        }
+    }
     else
         return base.env_recored->GetBindingValue(GetReferencedName(V));
 }
@@ -69,8 +88,18 @@ void PutValue(Reference V, JSValue value)
     BaseUnion base = GetBase(V);
     if (IsUnresolvableReference(V))
         throw throwRuntimeException(EXCEPTION_REFERENCE, V.name);
-
-    base.env_recored->SetMutableBinding(GetReferencedName(V), value);
+    else if (IsPropertyReference(V))
+    {
+        if (HasPrimitiveBase(V))
+            throw throwRuntimeException(EXCEPTION_REFERENCE, V.name);
+        else
+        {
+            JSObject *obj = base.js_value->getObject();
+            obj->Put(GetReferencedName(V), value);
+        }
+    }
+    else
+        base.env_recored->SetMutableBinding(GetReferencedName(V), value);
 }
 
 Reference IdentifierResolution(Lexical_Environment *lex, string name)
@@ -82,6 +111,7 @@ Reference IdentifierResolution(Lexical_Environment *lex, string name)
     }
 
     Environment_Record *env_record = lex->record;
+
     bool exists = env_record->HasBinding(name);
     if (exists)
         return Reference(env_record, name);
@@ -90,10 +120,27 @@ Reference IdentifierResolution(Lexical_Environment *lex, string name)
     return IdentifierResolution(outer, name);
 }
 
+string indent = "";
+void printJSObject(JSObject *obj)
+{
+    indent += "    ";
+    map<string, DataDescriptor *>::iterator it;
+    map<string, DataDescriptor *> m = obj->Properties;
+    cout << endl
+         << indent << "{" << endl;
+    for (it = m.begin(); it != m.end(); it++)
+    {
+        cout << "  " << indent << it->first << ": ";
+        intrinsicPrint(it->second->Value);
+        cout << "," << endl;
+    }
+    cout << indent << "}";
+    indent = indent.substr(4);
+}
+
 void intrinsicPrint(JSValue value)
 {
     string s;
-    JSObject *obj;
     JSFunction *fn;
 
     switch (value.getTag())
@@ -125,8 +172,13 @@ void intrinsicPrint(JSValue value)
             cout << "function " << fn->Name << "() { USER CODE TODO }";
         break;
     case JS_TAG_OBJECT:
-        obj = value.getObject();
-        cout << "is a object " << obj << endl;
+        printJSObject(value.getObject());
+        break;
+    case JS_TAG_NULL:
+        cout << value.getString();
+        break;
+    case JS_TAG_UNINITIALIZED:
+        cout << value.getString();
         break;
     }
     cout << " ";

@@ -8,30 +8,53 @@
 #include "JSValue_Type.hpp"
 #include "Slowjs.hpp"
 
-DataDescriptor JSObject::GetOwnProperty(string P)
+DataDescriptor *JSObject::GetOwnProperty(string P)
 {
-    map<string, JSValue>::iterator it = this->Properties.find(P);
-    DataDescriptor D;
-    D.Value = it == this->Properties.end() ? JS_UNDEFINED : it->second;
-    return D;
+    map<string, DataDescriptor *>::iterator it = this->Properties.find(P);
+    if (it == this->Properties.end())
+        return nullptr;
+    else
+        return it->second;
 }
-DataDescriptor JSObject::GetProperty(string P)
+DataDescriptor *JSObject::GetProperty(string P)
 {
-    DataDescriptor prop = this->GetOwnProperty(P);
-    if (prop.Value.isUndefined())
+    DataDescriptor *prop = this->GetOwnProperty(P);
+    if (!nullptr)
         return prop;
     else
     {
         JSObject *proto = this->Prototype;
         if (proto == nullptr)
-        {
-            DataDescriptor D;
-            D.Value = JS_UNDEFINED;
-            return D;
-        }
+            return new DataDescriptor(JS_UNDEFINED);
         else
             return proto->GetProperty(P);
     }
+}
+JSValue JSObject::Get(string P)
+{
+    DataDescriptor *desc = GetProperty(P);
+    return desc ? desc->Value : JS_UNDEFINED;
+}
+bool CanPut(string P);
+void JSObject::Put(string P, JSValue V)
+{
+    DataDescriptor *valueDesc = new DataDescriptor(V);
+    DefineOwnProperty(P, valueDesc);
+}
+bool JSObject::HasProperty(string P)
+{
+    DataDescriptor *desc = GetProperty(P);
+    return !!desc;
+}
+void JSObject::Delete(){};
+void JSObject::DefaultValue(){};
+void JSObject::DefineOwnProperty(string P, DataDescriptor *Desc)
+{
+    DataDescriptor *prop = GetOwnProperty(P);
+    if (!prop)
+        this->Properties.insert(pair<string, DataDescriptor *>(P, Desc));
+    else
+        this->Properties.find(P)->second = Desc;
 }
 
 JSValue JSFunction::Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args)

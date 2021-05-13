@@ -37,23 +37,29 @@ Execution_Context *Slowjs::getCurrentContext()
 }
 void Slowjs::initFunctionExecutionContext(JSFunction *fo, JSValue thisValue, vector<JSValue> args)
 {
-    AST_Node *codeNode = fo->Code;
     Lexical_Environment *outer = fo->Scope;
-    Lexical_Environment *local_env = new Lexical_Environment();
-    local_env->outer = outer;
-    local_env->record = new Declarative_ER();
+    Lexical_Environment *local_env = new Lexical_Environment(new Declarative_ER(), outer);
 
-    Execution_Context *func_ctx = new Execution_Context();
-    func_ctx->lex_env = local_env;
-    func_ctx->var_env = local_env;
-    func_ctx->this_binding = thisValue;
+    Execution_Context *func_ctx = new Execution_Context(local_env, thisValue);
 
     ctx_stack->push(func_ctx);
-    declarationBindingInstantiation(codeNode, args);
+    declarationBindingInstantiation(fo->Code, args);
 }
 void Slowjs::addIntrinsic()
 {
     Environment_Record *record = global_ctx->var_env->record;
+
+    string global_name = "global";
+    record->CreateMutableBinding(global_name);
+    record->SetMutableBinding(global_name, global_obj);
+    JSObject *g_obj = global_obj.getObject();
+
+    JSObject *console = new JSObject();
+    JSValue log_value = JSValue(JS_TAG_FUNCTION, new JSFunction("log"));
+    console->Put("log", log_value);
+    JSValue console_value = JSValue(JS_TAG_OBJECT, console);
+    g_obj->Put("console", console_value);
+
     string fn_name = "print";
     JSFunction *fo = new JSFunction(fn_name);
     JSValue value = JSValue(JS_TAG_FUNCTION, fo);
@@ -62,14 +68,12 @@ void Slowjs::addIntrinsic()
 }
 void Slowjs::initGlobalExecutionContext(AST_Node *node)
 {
-    Lexical_Environment *global_env = new Lexical_Environment();
-    global_env->outer = nullptr;
-    global_env->record = new Object_ER();
+    JSObject *obj = new JSObject();
+    global_obj = JSValue(JS_TAG_OBJECT, obj);
 
-    global_ctx = new Execution_Context();
-    global_ctx->lex_env = global_env;
-    global_ctx->var_env = global_env;
-    global_ctx->this_binding = JS_UNDEFINED;
+    Lexical_Environment *global_env = new Lexical_Environment(new Object_ER(global_obj), nullptr);
+
+    global_ctx = new Execution_Context(global_env, JS_UNDEFINED);
 
     ctx_stack->push(global_ctx);
     addIntrinsic();
@@ -510,7 +514,7 @@ vector<JSValue> Slowjs::getArgumentList(AST_Node *node)
 }
 JSValue Slowjs::evaluateIntrinsicFunction(string fnName, vector<JSValue> argVector)
 {
-    if (fnName == "print")
+    if (fnName == "print" || fnName == "log")
     {
         for (size_t i = 0; i < argVector.size(); i++)
         {
@@ -611,7 +615,7 @@ Reference Slowjs::getMemberExpressionReference(AST_Node *node)
         else
         {
             JSObject *obj = temp.getObject();
-            JSValue res = obj->GetProperty(name).Value;
+            JSValue res = obj->GetProperty(name)->Value;
             checkException(res);
             if (res.isObject())
                 temp = res;

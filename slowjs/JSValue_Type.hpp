@@ -32,7 +32,7 @@ enum
     EXCEPTION_REFERENCE,
 };
 
-enum
+enum JS_TAG
 {
     JS_TAG_FUNCTION = -2,
     JS_TAG_OBJECT = -1,
@@ -57,21 +57,21 @@ class JSValue
 {
 public:
     JSValue() : _tag(JS_TAG_NUMBER), _string("_default_JSValue"){};
-    JSValue(int64_t tag, string val) : _tag(tag), _string(val){};
-    JSValue(int64_t tag, double val) : _tag(tag)
+    JSValue(JS_TAG tag, string val) : _tag(tag), _string(val){};
+    JSValue(JS_TAG tag, double val) : _tag(tag)
     {
         _u.double64 = val;
     };
-    JSValue(int64_t tag, bool val) : _tag(tag), _string(val ? "true" : "false")
+    JSValue(JS_TAG tag, bool val) : _tag(tag), _string(val ? "true" : "false")
     {
         _u.boolean = val;
     };
-    JSValue(int64_t tag, void *p) : _tag(tag)
+    JSValue(JS_TAG tag, void *p) : _tag(tag)
     {
         _u.ptr = p;
     };
 
-    int64_t getTag() { return _tag; }
+    JS_TAG getTag() { return _tag; }
     double getNumber() { return _u.double64; }
     bool getBoolean() { return _u.boolean; }
     string getBooleanString() { return _string; }
@@ -94,7 +94,7 @@ public:
 
 protected:
     JSValueUnion _u;
-    int64_t _tag;
+    JS_TAG _tag;
     string _string;
 };
 
@@ -110,21 +110,21 @@ class JSObject : public JSValue
 {
 public:
     JSObject() { _tag = JS_TAG_OBJECT; };
-    DataDescriptor GetOwnProperty(string P);
-    DataDescriptor GetProperty(string P);
-    void Get();
-    void Put();
-    bool CanPut();
-    void HasProperty();
+    DataDescriptor *GetOwnProperty(string P);
+    DataDescriptor *GetProperty(string P);
+    JSValue Get(string P);
+    bool CanPut(string P);
+    void Put(string P, JSValue V);
+    bool HasProperty(string P);
     void Delete();
     void DefaultValue();
-    void DefineOwnProperty();
+    void DefineOwnProperty(string P, DataDescriptor *D);
 
     JSObject *Prototype = nullptr;
     string Class;
     bool Extensible;
 
-    map<string, JSValue> Properties;
+    map<string, DataDescriptor *> Properties;
 };
 
 class JSFunction : public JSObject

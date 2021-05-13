@@ -19,21 +19,31 @@ typedef union BaseUnion
     Environment_Record *env_recored;
 } BaseUnion;
 
+enum Base_Type
+{
+    BASE_TYPE_JSVALUE,
+    BASE_TYPE_RECORD,
+};
+
 class Reference
 {
 public:
     Reference(){};
-    Reference(Environment_Record *record, string _name) : name(_name)
+    Reference(Environment_Record *record, string _name) : name(_name), _base_type(BASE_TYPE_RECORD)
     {
         base.env_recored = record;
     }
-    Reference(JSValue *value, string _name) : name(_name)
+    Reference(JSValue *value, string _name) : name(_name), _base_type(BASE_TYPE_JSVALUE)
     {
         base.js_value = value;
     }
+    Base_Type getBaseType() { return _base_type; };
 
     BaseUnion base;
     string name;
+
+private:
+    Base_Type _base_type;
 };
 
 class PropertyDescriptor
@@ -47,6 +57,7 @@ class DataDescriptor : public PropertyDescriptor
 {
 public:
     DataDescriptor(){};
+    DataDescriptor(JSValue v) : Value(v){};
     JSValue Value = JS_UNDEFINED;
     JSValue Writable = JS_FALSE;
 };

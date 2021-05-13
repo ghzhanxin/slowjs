@@ -31,3 +31,23 @@ JSValue Environment_Record::GetBindingValue(string name)
     Environment_Record::iterator it = this->find(name);
     return it == this->end() ? JS_UNDEFINED : it->second;
 }
+
+// bool Object_ER::HasBinding(string name)
+// {
+//     return this->binding_obj.getObject()->HasProperty(name);
+// }
+
+// void Object_ER::CreateMutableBinding(string name)
+// {
+//     this->binding_obj.getObject()->Put(name, JS_UNDEFINED);
+// };
+
+// void Object_ER::SetMutableBinding(string name, JSValue value)
+// {
+//     this->binding_obj.getObject()->Put(name, value);
+// };
+
+// JSValue Object_ER::GetBindingValue(string name)
+// {
+//     return this->binding_obj.getObject()->Get(name);
+// }
