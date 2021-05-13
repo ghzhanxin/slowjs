@@ -45,12 +45,11 @@ JSValue Slowjs::FunctionCall(JSFunction *fo, JSValue thisValue, vector<JSValue> 
     {
         normal_Result = evaluate(func_body);
     }
-    catch (JSValue value)
+    catch (JSValue &value)
     {
         checkException(value);
         ctx_stack->pop();
-        JSValue result = value;
-        return result;
+        return value;
     }
     checkException(normal_Result);
     ctx_stack->pop();

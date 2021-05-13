@@ -46,7 +46,7 @@ int main(int argc, const char *argv[])
         cout << "---------- Congratulations! Evaluate Success!!! ----------" << endl;
         cout << endl;
     }
-    catch (string msg)
+    catch (string &msg)
     {
         cerr << endl;
         cerr << msg << endl;
