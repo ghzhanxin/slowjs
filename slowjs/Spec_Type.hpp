@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <string>
 #include "JSValue_Type.hpp"
-#include "Environment_Record.hpp"
+#include "Execution_Context.hpp"
 
 typedef union BaseUnion
 {
@@ -23,34 +23,38 @@ class Reference
 {
 public:
     Reference(){};
-    Reference(Environment_Record *record, string name)
+    Reference(Environment_Record *record, string _name) : name(_name)
     {
         base.env_recored = record;
-        this->name = name;
     }
-    Reference(JSValue *value, string name)
+    Reference(JSValue *value, string _name) : name(_name)
     {
         base.js_value = value;
-        this->name = name;
     }
 
     BaseUnion base;
     string name;
 };
 
-class Descriptor
+class PropertyDescriptor
 {
 public:
     JSValue Enumerable = JS_FALSE;
     JSValue Configurable = JS_FALSE;
 };
 
-class PropertyDescriptor : public Descriptor
+class DataDescriptor : public PropertyDescriptor
 {
 public:
-    PropertyDescriptor(){};
+    DataDescriptor(){};
     JSValue Value = JS_UNDEFINED;
     JSValue Writable = JS_FALSE;
+};
+class AccessorDescriptor : public PropertyDescriptor
+{
+public:
+    JSFunction Get;
+    JSFunction Set;
 };
 
 #endif /* Spec_Type_hpp */

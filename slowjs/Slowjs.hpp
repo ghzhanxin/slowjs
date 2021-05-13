@@ -16,8 +16,6 @@
 #include "Execution_Context.hpp"
 #include "Spec_Type.hpp"
 #include "Abstract_Operation.hpp"
-#include "Object_ER.hpp"
-#include "Declarative_ER.hpp"
 
 class Slowjs
 {

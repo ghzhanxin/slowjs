@@ -7,7 +7,6 @@
 
 #include "Slowjs.hpp"
 #include <iostream>
-#include "Abstract_Operation.hpp"
 
 JSValue Slowjs::run(string input)
 {
@@ -626,14 +625,14 @@ Reference Slowjs::evaluateCallExpressionLeft(AST_Node *node)
         }
         else
         {
-            JSObject *obj = temp.getObject();
-            JSValue res = obj->GetProperty(name).Value;
-            if (res.isObject())
-            {
-                temp = res;
-            }
-            else
-                throw string("is not a Object");
+//            JSObject *obj = temp.getObject();
+//            JSValue res = obj->GetProperty(name).Value;
+//            if (res.isObject())
+//            {
+//                temp = res;
+//            }
+//            else
+//                throw string("is not a Object");
         }
     }
     throw string("SyntaxError");

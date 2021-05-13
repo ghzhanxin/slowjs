@@ -110,6 +110,17 @@ public:
     JSObject() { _tag = JS_TAG_OBJECT; };
     PropertyDescriptor GetOwnProperty(string P);
     PropertyDescriptor GetProperty(string P);
+    void Get();
+    void Put();
+    bool CanPut();
+    void HasProperty();
+    void Delete();
+    void DefaultValue();
+    void DefineOwnProperty();
+
+    JSObject *Prototype;
+    string Class;
+    bool Extensible;
 
     map<string, JSValue> Properties;
 };

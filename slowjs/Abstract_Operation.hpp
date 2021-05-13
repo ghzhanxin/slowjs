@@ -12,9 +12,7 @@
 #include <stdio.h>
 #include <stack>
 #include "Spec_Type.hpp"
-#include "Lexical_Environment.hpp"
 #include "Execution_Context.hpp"
-#include "Object_ER.hpp"
 
 // access the components of references
 
