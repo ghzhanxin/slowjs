@@ -11,8 +11,11 @@
 #include <stdio.h>
 #include <string>
 #include <iostream>
-#include "Parser.hpp"
 #include <map>
+
+#include "Parser.hpp"
+
+class Slowjs;
 
 using namespace std;
 
@@ -118,7 +121,11 @@ public:
     {
         _tag = JS_TAG_FUNCTION;
     };
-    JSFunction(AST_Node *formal_param, AST_Node *func_code, Lexical_Environment *scope, string name)
+    JSFunction(
+        AST_Node *formal_param,
+        AST_Node *func_code,
+        Lexical_Environment *scope,
+        string name)
         : FormalParameters(formal_param),
           Code(func_code),
           Scope(scope),
@@ -134,8 +141,8 @@ public:
     string Name;
     JSObject Prototype;
 
-    JSValue _Call(JSValue thisValue, vector<JSValue> params);
-    JSValue _Construct(JSValue thisValue, vector<JSValue> params);
+    JSValue Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args);
+    JSValue Construct(JSValue thisValue, vector<JSValue> args);
 
     bool isIntrinsic() { return _intrinsic; };
 

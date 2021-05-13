@@ -36,25 +36,6 @@ Execution_Context *Slowjs::getCurrentContext()
 {
     return ctx_stack->top();
 }
-JSValue Slowjs::FunctionCall(JSFunction *fo, JSValue thisValue, vector<JSValue> args)
-{
-    initFunctionExecutionContext(fo, thisValue, args);
-    AST_Node *func_body = fo->Code->childs[2];
-    JSValue normal_Result;
-    try
-    {
-        normal_Result = evaluate(func_body);
-    }
-    catch (JSValue &value)
-    {
-        checkException(value);
-        ctx_stack->pop();
-        return value;
-    }
-    checkException(normal_Result);
-    ctx_stack->pop();
-    return normal_Result;
-}
 void Slowjs::initFunctionExecutionContext(JSFunction *fo, JSValue thisValue, vector<JSValue> args)
 {
     AST_Node *codeNode = fo->Code;
@@ -570,7 +551,7 @@ JSValue Slowjs::evaluateCallExpression(AST_Node *node)
             {
                 thisValue = *GetBase(ref).js_value;
             }
-            return FunctionCall(fo, thisValue, argVector);
+            return fo->Call(this, thisValue, argVector);
         }
     }
     else

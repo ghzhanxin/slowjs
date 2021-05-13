@@ -33,7 +33,6 @@ public:
     void declarationBindingInstantiation(AST_Node *, vector<JSValue>);
     JSValue evaluateIntrinsicFunction(string, vector<JSValue>);
     Execution_Context *getCurrentContext();
-    JSValue FunctionCall(JSFunction *, JSValue, vector<JSValue>);
     vector<JSValue> getArgumentList(AST_Node *);
 
     Execution_Context *global_ctx;

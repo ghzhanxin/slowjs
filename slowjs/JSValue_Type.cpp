@@ -6,6 +6,7 @@
 //
 
 #include "JSValue_Type.hpp"
+#include "Slowjs.hpp"
 
 PropertyDescriptor JSObject::GetOwnProperty(string P)
 {
@@ -16,13 +17,27 @@ PropertyDescriptor JSObject::GetProperty(string P)
     return PropertyDescriptor();
 }
 
-JSValue JSFunction::_Call(JSValue thisValue, vector<JSValue> params)
+JSValue JSFunction::Call(Slowjs *rt, JSValue thisValue, vector<JSValue> args)
+{
+    JSFunction *fo = this;
+    rt->initFunctionExecutionContext(fo, thisValue, args);
+    AST_Node *func_body = fo->Code->childs[2];
+    JSValue normal_Result;
+    try
+    {
+        normal_Result = rt->evaluate(func_body);
+    }
+    catch (JSValue &value)
+    {
+        rt->checkException(value);
+        rt->ctx_stack->pop();
+        return value;
+    }
+    rt->checkException(normal_Result);
+    rt->ctx_stack->pop();
+    return normal_Result;
+}
+JSValue JSFunction::Construct(JSValue thisValue, vector<JSValue> args)
 {
     return JSValue();
 }
-JSValue JSFunction::_Construct(JSValue thisValue, vector<JSValue> params)
-{
-    return JSValue();
-}
-
-
