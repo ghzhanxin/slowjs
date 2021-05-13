@@ -19,15 +19,12 @@ DataDescriptor *JSObject::GetOwnProperty(string P)
 DataDescriptor *JSObject::GetProperty(string P)
 {
     DataDescriptor *prop = this->GetOwnProperty(P);
-    if (!nullptr)
+    if (prop)
         return prop;
     else
     {
         JSObject *proto = this->Prototype;
-        if (proto == nullptr)
-            return new DataDescriptor(JS_UNDEFINED);
-        else
-            return proto->GetProperty(P);
+        return proto ? proto->GetProperty(P) : nullptr;
     }
 }
 JSValue JSObject::Get(string P)
@@ -51,10 +48,10 @@ void JSObject::DefaultValue(){};
 void JSObject::DefineOwnProperty(string P, DataDescriptor *Desc)
 {
     DataDescriptor *prop = GetOwnProperty(P);
-    if (!prop)
-        this->Properties.insert(pair<string, DataDescriptor *>(P, Desc));
-    else
+    if (prop)
         this->Properties.find(P)->second = Desc;
+    else
+        this->Properties.insert(pair<string, DataDescriptor *>(P, Desc));
 }
 
 JSValue JSFunction::Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args)
