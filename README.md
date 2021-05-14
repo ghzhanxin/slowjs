@@ -81,8 +81,10 @@
       - [x] for
       - [ ] do
       - [ ] while
-- [ ] 内置全局对象
-  - [x] print （目前用来代替 console.log 向标准输出设备输出数据）
+- [ ] 内置全局对象 (global)
+  - [x] print （同 console.log ）
+  - [x] console
+    - [x] Log
   - [ ] Promise
   - [ ] Gererator
   - [ ] setTimeout
@@ -96,7 +98,9 @@
 #### 已支持的运行环境特性：（目前竟然全不支持 T_T）
 
 - [ ] Event Loop
-- [ ] 多进程/多线程
+- [ ] 多进程
+- [ ] 多线程
+- [ ] 协程
 - [ ] I/O
   - [ ] File 
   - [ ] Network
