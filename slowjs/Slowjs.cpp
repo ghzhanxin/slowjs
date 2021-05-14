@@ -47,22 +47,18 @@ void Slowjs::initFunctionExecutionContext(JSFunction *fo, JSValue thisValue, vec
 }
 void Slowjs::addIntrinsic()
 {
-    Environment_Record *record = global_ctx->var_env->record;
-
     JSObject *global_obj = global_obj_value.getObject();
     global_obj->Put("global", global_obj_value);
 
-    JSObject *console = new JSObject();
-    JSValue log_value = JSValue(JS_TAG_FUNCTION, new JSFunction("log"));
-    console->Put("log", log_value);
-    JSValue console_value = JSValue(JS_TAG_OBJECT, console);
-    global_obj->Put("console", console_value);
+    JSValue Object_value = JSValue(JS_TAG_FUNCTION, new JSFunction("Object"));
+    global_obj->Put("Object", Object_value);
 
-    string fn_name = "print";
-    JSFunction *fo = new JSFunction(fn_name);
-    JSValue value = JSValue(JS_TAG_FUNCTION, fo);
-    record->CreateMutableBinding(fn_name);
-    record->SetMutableBinding(fn_name, value);
+    JSObject *console = new JSObject();
+    console->Put("log", JSValue(JS_TAG_FUNCTION, new JSFunction("log")));
+    global_obj->Put("console", JSValue(JS_TAG_OBJECT, console));
+
+    JSValue print_value = JSValue(JS_TAG_FUNCTION, new JSFunction("print"));
+    global_obj->Put("print", print_value);
 }
 void Slowjs::initGlobalExecutionContext(AST_Node *node)
 {
@@ -230,7 +226,7 @@ JSValue Slowjs::evaluateProgram(AST_Node *node)
 {
     initGlobalExecutionContext(node);
     vector<AST_Node *> childs = node->childs;
-    JSValue result;
+    JSValue result = JS_UNDEFINED;
     for (size_t i = 0; i < childs.size(); i++)
     {
         AST_Node *stmt = childs[i];
@@ -376,7 +372,7 @@ JSValue Slowjs::evaluateAssignmentExpression(AST_Node *node)
     AST_Node *right_node = fields[1];
 
     Reference lhs = getReference(left_node);
-    JSValue rValue;
+    JSValue rValue = JS_UNDEFINED;
     if (right_node->type == nt::Identifier || right_node->type == nt::MemberExpression)
     {
         Reference rhs = getReference(right_node);
@@ -414,7 +410,7 @@ JSValue Slowjs::evaluateIfStatement(AST_Node *node)
 JSValue Slowjs::evaluateBlockStatement(AST_Node *node)
 {
     vector<AST_Node *> fields = node->childs;
-    JSValue result;
+    JSValue result = JS_UNDEFINED;
     for (size_t i = 0; i < fields.size(); i++)
     {
         if (fields[i]->type == nt::FunctionDeclaration)
@@ -435,7 +431,7 @@ JSValue Slowjs::evaluateForStatement(AST_Node *node)
     AST_Node *update = fields[2];
     AST_Node *block = fields[3];
 
-    JSValue result;
+    JSValue result = JS_UNDEFINED;
 
     JSValue assignValue = evaluate(assign);
     checkException(assignValue);
@@ -444,7 +440,7 @@ JSValue Slowjs::evaluateForStatement(AST_Node *node)
     checkException(testValue);
     bool condition = testValue.getBoolean();
 
-    JSValue updateValue;
+    JSValue updateValue = JS_UNDEFINED;
 
     while (condition)
     {
@@ -521,6 +517,8 @@ JSValue Slowjs::evaluateIntrinsicFunction(string fnName, vector<JSValue> argVect
         cout << endl;
         return JS_UNDEFINED;
     }
+    else if (fnName == "Object")
+        return JSValue(JS_TAG_OBJECT, new JSObject());
     else
         return JSValue(JS_TAG_EXCEPTION, string("'" + fnName + "' is not a function"));
 }
@@ -539,16 +537,11 @@ JSValue Slowjs::evaluateCallExpression(AST_Node *node)
     if (result.isFunction())
     {
         JSFunction *fo = result.getFunction();
-        if (fo->isIntrinsic())
-            return evaluateIntrinsicFunction(fo->Name, argVector);
-        else
-        {
-            JSValue thisValue = JS_UNDEFINED;
-            if (IsPropertyReference(ref))
-                thisValue = *GetBase(ref).js_value;
+        JSValue thisValue = JS_UNDEFINED;
+        if (IsPropertyReference(ref))
+            thisValue = *GetBase(ref).js_value;
 
-            return fo->Call(this, thisValue, argVector);
-        }
+        return fo->Call(this, thisValue, argVector);
     }
     else
         return JSValue(JS_TAG_EXCEPTION, string("'" + GetReferencedName(ref) + "' is not a function"));
@@ -592,7 +585,7 @@ Reference Slowjs::getMemberExpressionReference(AST_Node *node)
     vector<string> idArr;
     idArr = getIdentifiersFromMemberExpression(node, idArr);
 
-    JSValue temp;
+    JSValue temp = JS_UNDEFINED;
     Lexical_Environment *lex = getCurrentContext()->lex_env;
     size_t count = idArr.size();
     for (size_t i = 0; i < count; i++)

@@ -8,6 +8,7 @@
 #include "JSValue_Type.hpp"
 #include "Slowjs.hpp"
 
+JSObject *JSObject::JSObjectPrototype = new JSObject();
 DataDescriptor *JSObject::GetOwnProperty(string P)
 {
     map<string, DataDescriptor *>::iterator it = this->Properties.find(P);
@@ -57,26 +58,32 @@ void JSObject::DefineOwnProperty(string P, DataDescriptor *Desc)
 JSValue JSFunction::Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 {
     JSFunction *fo = this;
-    slow->initFunctionExecutionContext(fo, thisValue, args);
-    AST_Node *func_body = fo->Code->childs[2];
-    JSValue normal_Result;
-    try
+    if (fo->isIntrinsic())
+        return slow->evaluateIntrinsicFunction(fo->Name, args);
+    else
     {
-        normal_Result = slow->evaluate(func_body);
-    }
-    catch (JSValue &value)
-    {
-        slow->checkException(value);
+        slow->initFunctionExecutionContext(fo, thisValue, args);
+        AST_Node *func_body = fo->Code->childs[2];
+        JSValue normal_Result = JS_UNDEFINED;
+        try
+        {
+            normal_Result = slow->evaluate(func_body);
+        }
+        catch (JSValue &value)
+        {
+            slow->checkException(value);
+            slow->ctx_stack->pop();
+            return value;
+        }
+        slow->checkException(normal_Result);
         slow->ctx_stack->pop();
-        return value;
+        return normal_Result;
     }
-    slow->checkException(normal_Result);
-    slow->ctx_stack->pop();
-    return normal_Result;
 }
 JSValue JSFunction::Construct(Slowjs *slow, vector<JSValue> args)
 {
     JSObject *obj = new JSObject();
     JSValue result = this->Call(slow, JSValue(JS_TAG_OBJECT, obj), args);
+    slow->checkException(result);
     return result.isObject() ? result : JSValue(JS_TAG_OBJECT, obj);
 }

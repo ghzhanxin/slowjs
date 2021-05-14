@@ -109,7 +109,12 @@ protected:
 class JSObject : public JSValue
 {
 public:
-    JSObject() { _tag = JS_TAG_OBJECT; };
+    static JSObject *JSObjectPrototype;
+    JSObject()
+    {
+        _tag = JS_TAG_OBJECT;
+        Prototype = JSObject::JSObjectPrototype;
+    };
     DataDescriptor *GetOwnProperty(string P);
     DataDescriptor *GetProperty(string P);
     JSValue Get(string P);
@@ -120,8 +125,8 @@ public:
     void DefaultValue();
     void DefineOwnProperty(string P, DataDescriptor *D);
 
-    JSObject *Prototype = nullptr;
-    string Class;
+    JSObject *Prototype;
+    string Class = "Object";
     bool Extensible;
 
     map<string, DataDescriptor *> Properties;
@@ -152,7 +157,7 @@ public:
     AST_Node *Code;
     Lexical_Environment *Scope;
     string Name;
-    JSObject Prototype;
+    string Class = "Function";
 
     JSValue Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args);
     JSValue Construct(Slowjs *slow, vector<JSValue> args);
