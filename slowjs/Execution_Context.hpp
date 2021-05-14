@@ -59,10 +59,10 @@ class Object_ER : public Environment_Record
 public:
     Object_ER(JSValue obj) : binding_obj(obj) { _tag = Record_Type_Object; };
 
-    // bool HasBinding(string name);
-    // void CreateMutableBinding(string name);
-    // void SetMutableBinding(string name, JSValue value);
-    // JSValue GetBindingValue(string name);
+    bool HasBinding(string name);
+    void CreateMutableBinding(string name);
+    void SetMutableBinding(string name, JSValue value);
+    JSValue GetBindingValue(string name);
     JSValue binding_obj;
 };
 

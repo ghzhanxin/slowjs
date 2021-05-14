@@ -49,16 +49,14 @@ void Slowjs::addIntrinsic()
 {
     Environment_Record *record = global_ctx->var_env->record;
 
-    string global_name = "global";
-    record->CreateMutableBinding(global_name);
-    record->SetMutableBinding(global_name, global_obj);
-    JSObject *g_obj = global_obj.getObject();
+    JSObject *global_obj = global_obj_value.getObject();
+    global_obj->Put("global", global_obj_value);
 
     JSObject *console = new JSObject();
     JSValue log_value = JSValue(JS_TAG_FUNCTION, new JSFunction("log"));
     console->Put("log", log_value);
     JSValue console_value = JSValue(JS_TAG_OBJECT, console);
-    g_obj->Put("console", console_value);
+    global_obj->Put("console", console_value);
 
     string fn_name = "print";
     JSFunction *fo = new JSFunction(fn_name);
@@ -69,9 +67,9 @@ void Slowjs::addIntrinsic()
 void Slowjs::initGlobalExecutionContext(AST_Node *node)
 {
     JSObject *obj = new JSObject();
-    global_obj = JSValue(JS_TAG_OBJECT, obj);
+    global_obj_value = JSValue(JS_TAG_OBJECT, obj);
 
-    Lexical_Environment *global_env = new Lexical_Environment(new Object_ER(global_obj), nullptr);
+    Lexical_Environment *global_env = new Lexical_Environment(new Object_ER(global_obj_value), nullptr);
 
     global_ctx = new Execution_Context(global_env, JS_UNDEFINED);
 

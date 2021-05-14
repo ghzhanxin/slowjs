@@ -120,22 +120,23 @@ Reference IdentifierResolution(Lexical_Environment *lex, string name)
     return IdentifierResolution(outer, name);
 }
 
-string indent = "";
+bool is_top_level_obj = true;
 void printJSObject(JSObject *obj)
 {
-    indent += "    ";
     map<string, DataDescriptor *>::iterator it;
     map<string, DataDescriptor *> m = obj->Properties;
     cout << endl
-         << indent << "{" << endl;
+         << "{" << endl;
     for (it = m.begin(); it != m.end(); it++)
     {
-        cout << "  " << indent << it->first << ": ";
-        intrinsicPrint(it->second->Value);
+        cout << "  " << it->first << ": ";
+        if (it->second->Value.isObject())
+            cout << "[ Object ]";
+        else
+            intrinsicPrint(it->second->Value);
         cout << "," << endl;
     }
-    cout << indent << "}";
-    indent = indent.substr(4);
+    cout << "}";
 }
 
 void intrinsicPrint(JSValue value)
