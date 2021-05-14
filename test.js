@@ -84,9 +84,41 @@ print('8 && 0', 8 && 0);
 print('8 || 3', 8 || 3);
 print('!false', !false);
 
-var b = 3;
-var c = undefined;
-var z = 'zx';
-var k = "kstring";
-print('global: ', global);
-console.log("123");
+function ab() { this.a = 1; }
+// Object.prototype = new ab();
+// Object.prototype.NAME = 1;
+// var obj = new Object();
+// var obj_proto = Object.getPrototypeOf(obj);
+// print(obj_proto);
+
+
+function Person(name, age) {
+    this.name = name;
+    this.age = age;
+}
+
+var p = new Person();
+
+function Student(grade) {
+    this.grade = grade;
+}
+Student.prototype = new Person('zx', 18);
+
+var stu = new Student(3);
+// console.log(stu, stu.name, stu.age, stu.grade);
+
+var p_proto = Object.getPrototypeOf(p);
+print(p_proto);
+var a = Object.getPrototypeOf(p_proto);
+print(a);
+var a_proto = Object.getPrototypeOf(a);
+print(a_proto);
+var b = Object.getPrototypeOf(a_proto);
+print(b);
+var b_proto = Object.getPrototypeOf(b);
+print(b_proto);
+print(p.c);
+
+
+
+

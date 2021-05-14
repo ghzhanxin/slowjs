@@ -18,13 +18,12 @@ JSFunction *JSObject::Function = new JSFunction("Function");
 void JSObject::CreateBuiltinObject()
 {
     ObjectPrototype->Prototype = nullptr;
+    ObjectPrototype->Put("constructor", JSValue(JS_TAG_FUNCTION, Object));
+
     Object->Prototype = ObjectPrototype;
     Object->Put("prototype", JSValue(JS_TAG_OBJECT, ObjectPrototype));
     Object->Put("getPrototypeOf", JSValue(JS_TAG_FUNCTION, new JSFunction("getPrototypeOf")));
-    ObjectPrototype->Put("constructor", JSValue(JS_TAG_FUNCTION, Object));
 
-    FunctionPrototype->Prototype = ObjectPrototype;
-    Function->Prototype = FunctionPrototype;
     Function->Put("prototype", JSValue(JS_TAG_OBJECT, FunctionPrototype));
     FunctionPrototype->Put("constructor", JSValue(JS_TAG_FUNCTION, Function));
 };
@@ -71,7 +70,16 @@ void JSObject::DefineOwnProperty(string P, DataDescriptor *Desc)
     DataDescriptor *prop = GetOwnProperty(P);
 
     if (prop)
-        this->Properties.find(P)->second = Desc;
+    {
+        // TODO: HACK replace Object.prototype
+        if (((JSFunction *)this)->Name == "Object" && P == "prototype" && prop->Value.getObject() == ObjectPrototype)
+        {
+            *ObjectPrototype = *(Desc->Value.getObject());
+            ObjectPrototype->Prototype = nullptr;
+        }
+        else
+            this->Properties.find(P)->second = Desc;
+    }
     else
         this->Properties.insert(pair<string, DataDescriptor *>(P, Desc));
 }

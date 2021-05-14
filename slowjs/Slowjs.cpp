@@ -520,9 +520,14 @@ JSValue Slowjs::evaluateIntrinsicFunction(JSFunction *fo, vector<JSValue> argVec
     else if (fnName == "getPrototypeOf")
     {
         if (argVector[0].isObject())
-            return JSValue(JS_TAG_OBJECT, argVector[0].getObject()->Prototype);
+        {
+            if (argVector[0].getObject()->Prototype)
+                return JSValue(JS_TAG_OBJECT, argVector[0].getObject()->Prototype);
+            else
+                return JS_NULL;
+        }
         else
-            return JSValue(JS_TAG_EXCEPTION, string(" is not a function"));
+            return JSValue(JS_TAG_EXCEPTION, string("getPrototypeOf args is not a object"));
     }
     else
         return JSValue(JS_TAG_EXCEPTION, string("'" + fnName + "' is not a function"));

@@ -120,6 +120,7 @@ public:
     JSObject()
     {
         _tag = JS_TAG_OBJECT;
+        Prototype = ObjectPrototype;
     };
     DataDescriptor *GetOwnProperty(string P);
     DataDescriptor *GetProperty(string P);
