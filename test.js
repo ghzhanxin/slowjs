@@ -1,7 +1,5 @@
 
-// print 为 slowjs 内置函数，替代 console.log 用以向标准输出设备输出数据
-// node 环境中没有 print, 用 node 运行这份测试代码时，打开下面一行注释
-// print = console.log;
+print = console.log;
 
 // 不支持自动加分号，语句后面一定要加分号；
 var globalString = "global_var ";
@@ -86,6 +84,9 @@ print('8 && 0', 8 && 0);
 print('8 || 3', 8 || 3);
 print('!false', !false);
 
+var b = 3;
+var c = undefined;
+var z = 'zx';
+var k = "kstring";
 print('global: ', global);
-
-// console.log("123");
+console.log("123");
