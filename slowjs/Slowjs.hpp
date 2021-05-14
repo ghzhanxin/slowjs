@@ -26,15 +26,14 @@ public:
 
     void initCallStack();
     void addIntrinsic();
-    void addIntrinsicObjects();
     void initGlobalExecutionContext(AST_Node *);
     void initFunctionExecutionContext(JSFunction *, JSValue, vector<JSValue>);
     void declarationBindingInstantiation(AST_Node *, vector<JSValue>);
-    JSValue evaluateIntrinsicFunction(string, vector<JSValue>);
+    JSValue evaluateIntrinsicFunction(JSFunction *, vector<JSValue>);
     Execution_Context *getCurrentContext();
     vector<JSValue> getArgumentList(AST_Node *);
 
-    JSValue global_obj_value;
+    JSObject *global_obj;
     Execution_Context *global_ctx;
     stack<Execution_Context *> *ctx_stack;
 

@@ -7,8 +7,28 @@
 
 #include "JSValue_Type.hpp"
 #include "Slowjs.hpp"
+#include <iostream>
 
-JSObject *JSObject::JSObjectPrototype = new JSObject();
+JSObject *JSObject::ObjectPrototype = new JSObject();
+JSFunction *JSObject::Object = new JSFunction("Object");
+
+JSObject *JSObject::FunctionPrototype = new JSObject();
+JSFunction *JSObject::Function = new JSFunction("Function");
+
+void JSObject::CreateBuiltinObject()
+{
+    ObjectPrototype->Prototype = nullptr;
+    Object->Prototype = ObjectPrototype;
+    Object->Put("prototype", JSValue(JS_TAG_OBJECT, ObjectPrototype));
+    Object->Put("getPrototypeOf", JSValue(JS_TAG_FUNCTION, new JSFunction("getPrototypeOf")));
+    ObjectPrototype->Put("constructor", JSValue(JS_TAG_FUNCTION, Object));
+
+    FunctionPrototype->Prototype = ObjectPrototype;
+    Function->Prototype = FunctionPrototype;
+    Function->Put("prototype", JSValue(JS_TAG_OBJECT, FunctionPrototype));
+    FunctionPrototype->Put("constructor", JSValue(JS_TAG_FUNCTION, Function));
+};
+
 DataDescriptor *JSObject::GetOwnProperty(string P)
 {
     map<string, DataDescriptor *>::iterator it = this->Properties.find(P);
@@ -49,17 +69,27 @@ void JSObject::DefaultValue(){};
 void JSObject::DefineOwnProperty(string P, DataDescriptor *Desc)
 {
     DataDescriptor *prop = GetOwnProperty(P);
+
     if (prop)
         this->Properties.find(P)->second = Desc;
     else
         this->Properties.insert(pair<string, DataDescriptor *>(P, Desc));
 }
 
+void JSFunction::initializeFunction()
+{
+    _tag = JS_TAG_FUNCTION;
+    Prototype = JSObject::FunctionPrototype;
+    JSFunction *fo = this;
+    JSObject *proto = new JSObject();
+    proto->DefineOwnProperty("constructor", new DataDescriptor(JSValue(JS_TAG_FUNCTION, fo)));
+    fo->DefineOwnProperty("prototype", new DataDescriptor(JSValue(JS_TAG_OBJECT, proto)));
+};
 JSValue JSFunction::Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 {
     JSFunction *fo = this;
     if (fo->isIntrinsic())
-        return slow->evaluateIntrinsicFunction(fo->Name, args);
+        return slow->evaluateIntrinsicFunction(fo, args);
     else
     {
         slow->initFunctionExecutionContext(fo, thisValue, args);
@@ -83,6 +113,8 @@ JSValue JSFunction::Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 JSValue JSFunction::Construct(Slowjs *slow, vector<JSValue> args)
 {
     JSObject *obj = new JSObject();
+    JSValue proto = this->Get("prototype");
+    obj->Prototype = proto.isObject() ? proto.getObject() : JSObject::ObjectPrototype;
     JSValue result = this->Call(slow, JSValue(JS_TAG_OBJECT, obj), args);
     slow->checkException(result);
     return result.isObject() ? result : JSValue(JS_TAG_OBJECT, obj);

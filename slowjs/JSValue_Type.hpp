@@ -88,7 +88,8 @@ public:
     bool isString() { return _tag == JS_TAG_STRING; }
     bool isUndefined() { return _tag == JS_TAG_UNDEFINED; }
     bool isNull() { return _tag == JS_TAG_NULL; }
-    bool isObject() { return _tag == JS_TAG_OBJECT; }
+    bool isBaseObject() { return _tag == JS_TAG_OBJECT; }
+    bool isObject() { return _tag == JS_TAG_OBJECT || _tag == JS_TAG_FUNCTION; }
     bool isFunction() { return _tag == JS_TAG_FUNCTION; }
     bool isException() { return _tag == JS_TAG_EXCEPTION; }
 
@@ -101,7 +102,7 @@ protected:
 /* special values */
 #define JS_TRUE JSValue(JS_TAG_BOOLEAN, true)
 #define JS_FALSE JSValue(JS_TAG_BOOLEAN, false)
-#define JS_NULL JSValue(JS_TAG_NULL, "null")
+#define JS_NULL JSValue(JS_TAG_NULL, string("null"))
 #define JS_UNDEFINED JSValue(JS_TAG_UNDEFINED, string("undefined"))
 #define JS_EXCEPTION JSValue(JS_TAG_EXCEPTION, string("Unknow Exception"))
 #define JS_UNINITIALIZED JSValue(JS_TAG_UNINITIALIZED, string("Uninitialized"))
@@ -109,11 +110,16 @@ protected:
 class JSObject : public JSValue
 {
 public:
-    static JSObject *JSObjectPrototype;
+    // builtins
+    static JSObject *ObjectPrototype;
+    static JSFunction *Object;
+    static JSObject *FunctionPrototype;
+    static JSFunction *Function;
+    static void CreateBuiltinObject();
+
     JSObject()
     {
         _tag = JS_TAG_OBJECT;
-        Prototype = JSObject::JSObjectPrototype;
     };
     DataDescriptor *GetOwnProperty(string P);
     DataDescriptor *GetProperty(string P);
@@ -125,9 +131,9 @@ public:
     void DefaultValue();
     void DefineOwnProperty(string P, DataDescriptor *D);
 
-    JSObject *Prototype;
+    JSObject *Prototype = nullptr;
     string Class = "Object";
-    bool Extensible;
+    bool Extensible = true;
 
     map<string, DataDescriptor *> Properties;
 };
@@ -137,7 +143,7 @@ class JSFunction : public JSObject
 public:
     JSFunction(string name) : Name(name), _intrinsic(true)
     {
-        _tag = JS_TAG_FUNCTION;
+        initializeFunction();
     };
     JSFunction(
         AST_Node *formal_param,
@@ -149,10 +155,11 @@ public:
           Scope(scope),
           Name(name),
           _intrinsic(false)
-
     {
-        _tag = JS_TAG_FUNCTION;
+        initializeFunction();
     };
+    void initializeFunction();
+
     AST_Node *FormalParameters;
     AST_Node *Code;
     Lexical_Environment *Scope;

@@ -130,7 +130,7 @@ void printJSObject(JSObject *obj)
     for (it = m.begin(); it != m.end(); it++)
     {
         cout << "  " << it->first << ": ";
-        if (it->second->Value.isObject())
+        if (it->second->Value.isBaseObject())
             cout << "[ Object ]";
         else
             intrinsicPrint(it->second->Value);

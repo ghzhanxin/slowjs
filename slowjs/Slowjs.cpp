@@ -47,11 +47,10 @@ void Slowjs::initFunctionExecutionContext(JSFunction *fo, JSValue thisValue, vec
 }
 void Slowjs::addIntrinsic()
 {
-    JSObject *global_obj = global_obj_value.getObject();
-    global_obj->Put("global", global_obj_value);
+    JSObject::CreateBuiltinObject();
 
-    JSValue Object_value = JSValue(JS_TAG_FUNCTION, new JSFunction("Object"));
-    global_obj->Put("Object", Object_value);
+    global_obj->Put("global", JSValue(JS_TAG_OBJECT, global_obj));
+    global_obj->Put("Object", JSValue(JS_TAG_FUNCTION, JSObject::Object));
 
     JSObject *console = new JSObject();
     console->Put("log", JSValue(JS_TAG_FUNCTION, new JSFunction("log")));
@@ -62,10 +61,8 @@ void Slowjs::addIntrinsic()
 }
 void Slowjs::initGlobalExecutionContext(AST_Node *node)
 {
-    JSObject *obj = new JSObject();
-    global_obj_value = JSValue(JS_TAG_OBJECT, obj);
-
-    Lexical_Environment *global_env = new Lexical_Environment(new Object_ER(global_obj_value), nullptr);
+    global_obj = new JSObject();
+    Lexical_Environment *global_env = new Lexical_Environment(new Object_ER(global_obj), nullptr);
 
     global_ctx = new Execution_Context(global_env, JS_UNDEFINED);
 
@@ -506,8 +503,9 @@ vector<JSValue> Slowjs::getArgumentList(AST_Node *node)
     }
     return vec;
 }
-JSValue Slowjs::evaluateIntrinsicFunction(string fnName, vector<JSValue> argVector)
+JSValue Slowjs::evaluateIntrinsicFunction(JSFunction *fo, vector<JSValue> argVector)
 {
+    string fnName = fo->Name;
     if (fnName == "print" || fnName == "log")
     {
         for (size_t i = 0; i < argVector.size(); i++)
@@ -518,7 +516,14 @@ JSValue Slowjs::evaluateIntrinsicFunction(string fnName, vector<JSValue> argVect
         return JS_UNDEFINED;
     }
     else if (fnName == "Object")
-        return JSValue(JS_TAG_OBJECT, new JSObject());
+        return JS_UNDEFINED;
+    else if (fnName == "getPrototypeOf")
+    {
+        if (argVector[0].isObject())
+            return JSValue(JS_TAG_OBJECT, argVector[0].getObject()->Prototype);
+        else
+            return JSValue(JS_TAG_EXCEPTION, string(" is not a function"));
+    }
     else
         return JSValue(JS_TAG_EXCEPTION, string("'" + fnName + "' is not a function"));
 }

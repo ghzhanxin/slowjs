@@ -34,20 +34,20 @@ JSValue Environment_Record::GetBindingValue(string name)
 
 bool Object_ER::HasBinding(string name)
 {
-    return this->binding_obj.getObject()->HasProperty(name);
+    return this->binding_obj->HasProperty(name);
 }
 
 void Object_ER::CreateMutableBinding(string name)
 {
-    this->binding_obj.getObject()->Put(name, JS_UNDEFINED);
+    this->binding_obj->Put(name, JS_UNDEFINED);
 };
 
 void Object_ER::SetMutableBinding(string name, JSValue value)
 {
-    this->binding_obj.getObject()->Put(name, value);
+    this->binding_obj->Put(name, value);
 };
 
 JSValue Object_ER::GetBindingValue(string name)
 {
-    return this->binding_obj.getObject()->Get(name);
+    return this->binding_obj->Get(name);
 }
