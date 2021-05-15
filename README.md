@@ -48,6 +48,7 @@
     - [x] for
     - [x] break
     - [x] continue
+    - [x] throw
   - [ ] 表达式
     - [ ] 成员表达式 
       - [x] `object.property` 
