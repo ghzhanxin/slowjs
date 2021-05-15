@@ -98,7 +98,10 @@ JSValue JSFunction::Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 {
     JSFunction *fo = this;
     if (fo->isIntrinsic())
-        return fo->getCFunction()(args);
+    {
+        C_Function cf = fo->getCFunction();
+        return cf(fo, slow, thisValue, args);
+    }
     else
     {
         slow->initFunctionExecutionContext(fo, thisValue, args);

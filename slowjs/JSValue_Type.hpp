@@ -146,7 +146,7 @@ class JSFunction : public JSObject
 {
 public:
     JSFunction(string name, void *ptr = nullptr)
-        : Name(name), _intrinsic(true), _c_function_ptr(ptr)
+        : Name(name), _c_function_ptr(ptr)
     {
         initializeFunction();
     };
@@ -158,8 +158,7 @@ public:
         : FormalParameters(formal_param),
           Code(func_code),
           Scope(scope),
-          Name(name),
-          _intrinsic(false)
+          Name(name)
     {
         initializeFunction();
     };
@@ -174,14 +173,13 @@ public:
     JSValue Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args);
     JSValue Construct(Slowjs *slow, vector<JSValue> args);
 
-    bool isIntrinsic() { return _intrinsic; };
+    bool isIntrinsic() { return !!_c_function_ptr; };
 
-    typedef JSValue (*C_Function)(vector<JSValue>);
+    typedef JSValue (*C_Function)(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue>);
     C_Function getCFunction() { return (C_Function)_c_function_ptr; };
 
 private:
-    void *_c_function_ptr;
-    bool _intrinsic;
+    void *_c_function_ptr = nullptr;
 };
 
 #endif /* JSValue_Type_hpp */

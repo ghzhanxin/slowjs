@@ -40,9 +40,9 @@ JSValue ToNumber(JSValue);
 JSValue ToString(JSValue);
 JSValue ToObject(JSValue);
 
-JSValue CPrint(vector<JSValue>);
-JSValue CObject(vector<JSValue>);
-JSValue CGetPrototypeOf(vector<JSValue>);
-JSValue CCall(vector<JSValue>);
+JSValue CPrint(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
+JSValue CObject(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
+JSValue CGetPrototypeOf(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
+JSValue CCall(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
 
 #endif /* Abstract_Operation_hpp */

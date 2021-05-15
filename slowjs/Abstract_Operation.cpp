@@ -141,7 +141,7 @@ void printJSObject(JSObject *obj)
 void printJSValue(JSValue value)
 {
     string s;
-    JSFunction *fn;
+    JSFunction *fo;
 
     switch (value.getTag())
     {
@@ -164,11 +164,11 @@ void printJSValue(JSValue value)
             cout << s;
         break;
     case JS_TAG_FUNCTION:
-        fn = value.getFunction();
-        if (fn->isIntrinsic())
-            cout << "function " << fn->Name << "() { [native code] }";
+        fo = value.getFunction();
+        if (fo->isIntrinsic())
+            cout << "function " << fo->Name << "() { [native code] }";
         else
-            cout << "function " << fn->Name << "() { USER CODE TODO }";
+            cout << "function " << fo->Name << "() { USER CODE TODO }";
         break;
     case JS_TAG_OBJECT:
         printJSObject(value.getObject());
@@ -262,7 +262,7 @@ JSValue ToObject(JSValue value)
     throw throwRuntimeException(EXCEPTION_TYPE, "ToObject");
 }
 
-JSValue CPrint(vector<JSValue> args)
+JSValue CPrint(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 {
     for (size_t i = 0; i < args.size(); i++)
     {
@@ -272,11 +272,11 @@ JSValue CPrint(vector<JSValue> args)
     return JS_UNDEFINED;
 }
 
-JSValue CObject(vector<JSValue> args)
+JSValue CObject(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 {
     return JS_UNDEFINED;
 }
-JSValue CGetPrototypeOf(vector<JSValue> args)
+JSValue CGetPrototypeOf(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 {
     if (args[0].isObject())
     {
@@ -288,14 +288,14 @@ JSValue CGetPrototypeOf(vector<JSValue> args)
     else
         return JSValue(JS_TAG_EXCEPTION, string("getPrototypeOf args is not a object"));
 }
-JSValue CCall(vector<JSValue> args)
+JSValue CCall(JSFunction *fo, Slowjs *slow, JSValue caller, vector<JSValue> args)
 {
     JSValue thisValue = JS_UNDEFINED;
+    JSFunction *caller_fo = caller.getFunction();
     if (args.size() > 0)
     {
         thisValue = args[0];
         args.erase(args.begin());
     }
-    // return fo->Call(this, thisValue, args);
-    return JS_UNDEFINED;
+    return caller_fo->Call(slow, thisValue, args);
 }
