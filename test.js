@@ -52,27 +52,28 @@ function testType() {
     print('testType done');
 }
 
-function testConstructor() {
-    function Person(name, age) {
-        this.name = name;
-        this.age = age;
-    }
-    Person.prototype.height = 180;
-    Person.prototype.weight = 70;
+function testOperator() {
+    var left = 8;
+    var right = 2;
 
-    function Student(grade) {
-        this.grade = grade;
-    }
+    assert(left + right, 10);
+    assert(left - right, 6);
+    assert(left * right, 16);
+    assert(left / right, 4);
+    assert(left > right, true);
+    assert(left >= right, true);
+    assert(left < right, false);
+    assert(left <= right, false);
+    assert(left === right, false);
+    assert(left !== right, true);
+    assert(left && right, 2);
+    assert(left || right, 8);
+    assert(0 && right, 0);
+    assert(0 || right, 2);
+    assert(!left, false);
+    assert(!!left, true);
 
-    assert(Person, Person);
-    var per = new Person();
-    var stu = new Student();
-    var tempPer = per;
-    assert(tempPer, per);
-    assert(per.height, 180);
-    assert(per.weight, 70);
-
-    print('testConstructor done');
+    print("testOperator done");
 }
 
 var a = 1;
@@ -129,38 +130,66 @@ function testIFAndForStatment() {
     print('testIFAndForStatment done');
 }
 
-function testOperator() {
-    var left = 8;
-    var right = 2;
+function testObjectPrototype() {
+    Object.prototype.onObjectPrototype = 0;
+    var obj = new Object();
+    assert(obj.onObjectPrototype, 0);
+    var obj__proto = Object.getPrototypeOf(obj);
+    assert(obj__proto, Object.prototype);
+    var OPrototype__proto = Object.getPrototypeOf(Object.prototype);
+    assert(OPrototype__proto, null);
 
-    assert(left + right, 10);
-    assert(left - right, 6);
-    assert(left * right, 16);
-    assert(left / right, 4);
-    assert(left > right, true);
-    assert(left >= right, true);
-    assert(left < right, false);
-    assert(left <= right, false);
-    assert(left === right, false);
-    assert(left !== right, true);
-    assert(left && right, 2);
-    assert(left || right, 8);
-    assert(0 && right, 0);
-    assert(0 || right, 2);
-    assert(!left, false);
-    assert(!!left, true);
+    function Person(name, age) {
+        this.name = name;
+        this.age = age;
+    }
 
-    print("testOperator done");
+    Person.prototype.canWalk = true;
+    Person.prototype.canFly = false;
+
+    var per = new Person('zx', 18);
+    assert(per.onObjectPrototype, 0);
+    assert(per.name, 'zx');
+    assert(per.age, 18);
+
+    var per__proto = Object.getPrototypeOf(per);
+    assert(per__proto, Person.prototype);
+
+    var per__proto__proto = Object.getPrototypeOf(per__proto);
+    assert(per__proto__proto, Object.prototype);
+
+    function Student(name, age, grade) {
+        Person.call(this, name, age);
+        this.grade = grade;
+    }
+    function Temp() { }
+    Temp.prototype = Person.prototype;
+    Student.prototype = new Temp();
+
+    var stu = new Student('zx', 18, 3);
+    assert(stu.onObjectPrototype, 0);
+    assert(stu.canWalk, true);
+    assert(stu.canFly, false);
+    assert(stu.name, 'zx');
+    assert(stu.age, 18);
+    assert(stu.grade, 3);
+
+    var stu__proto = Object.getPrototypeOf(stu);
+    assert(stu__proto, Student.prototype);
+
+    var stu__proto__proto = Object.getPrototypeOf(stu__proto);
+    assert(stu__proto__proto, Person.prototype);
+
+    var stu__proto__proto__proto = Object.getPrototypeOf(stu__proto__proto);
+    assert(stu__proto__proto__proto, Object.prototype);
+
+    print('testObjectPrototype done');
 }
 
-
 testType();
-testConstructor();
+testOperator();
 testClosure();
 testHighOrderFunction();
 testIFAndForStatment();
-testOperator();
-
-
-
+testObjectPrototype();
 
