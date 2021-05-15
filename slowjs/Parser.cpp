@@ -34,6 +34,7 @@
 // ForStatement : for (VariableDeclaration ExpressionStatement Expression) Statement
 // VariableDeclaration : var AssignmentExpression ;
 // FunctionDeclaration : function Identifier (FormalParameters) BlockStatement
+// FunctionExpression : function [Identifier] (FormalParameters) BlockStatement
 // BlockStatement : { StatementList }
 // ExpressionStatement : Expression ;
 // FormalParameters :
@@ -95,6 +96,7 @@
 //          new NewExpression
 // MemberExpression:
 //          PrimaryExpression
+//          FunctionExpression
 //          this . MemberExpression
 //          Identifier . MemberExpression
 // PrimaryExpression :
@@ -367,14 +369,14 @@ AST_Node *Parser::FunctionDeclaration()
         AST_Node *id = Identifier();
         if (id && match("("))
         {
-            node->childs.push_back(id);
             AST_Node *param = FormalParameters();
             if (param && match(")"))
             {
-                node->childs.push_back(param);
                 AST_Node *block = BlockStatement();
                 if (block)
                 {
+                    node->childs.push_back(id);
+                    node->childs.push_back(param);
                     node->childs.push_back(block);
                     return node;
                 }
@@ -388,7 +390,46 @@ AST_Node *Parser::FunctionDeclaration()
             throw throwParseSyntaxError("Expect function identifier or '(' in FunctionDeclaration");
     }
     else
-        throw throwParseSyntaxError("Expect '(' in FunctionDeclaration");
+        throw throwParseSyntaxError("Expect 'function' in FunctionDeclaration");
+}
+// FunctionExpression : function [Identifier] (FormalParameters) BlockStatement
+AST_Node *Parser::FunctionExpression()
+{
+    AST_Node *node = new AST_Node(nt::FunctionExpression);
+
+    if (match("function"))
+    {
+        AST_Node *id = nullptr;
+        if (lookahead && lookahead->value != "(")
+        {
+            id = Identifier();
+            if (!id)
+                throw throwParseSyntaxError("Expect 'Identifier' in FunctionExpression");
+        }
+        if (match("("))
+        {
+            AST_Node *param = FormalParameters();
+            if (param && match(")"))
+            {
+                AST_Node *block = BlockStatement();
+                if (block)
+                {
+                    node->childs.push_back(id);
+                    node->childs.push_back(param);
+                    node->childs.push_back(block);
+                    return node;
+                }
+                else
+                    throw throwParseSyntaxError("FunctionExpression");
+            }
+            else
+                throw throwParseSyntaxError("Expect parameter or ')' in FunctionExpression");
+        }
+        else
+            throw throwParseSyntaxError("Expect function identifier or '(' in FunctionExpression");
+    }
+    else
+        throw throwParseSyntaxError("Expect 'function' in FunctionExpression");
 }
 
 // BlockStatement : { StatementList }
@@ -490,16 +531,13 @@ void Parser::restoreAssignmentExpression()
 AST_Node *Parser::AssignmentExpression()
 {
     storeAssignmentExpression();
-    string op = lookahead->value;
     AST_Node *member = MemberExpression();
     if (member && match("="))
     {
         AST_Node *expre = Expression();
-
         if (expre)
         {
             AST_Node *node = new AST_Node(nt::AssignmentExpression);
-            node->value = op;
             node->childs.push_back(member);
             node->childs.push_back(expre);
             return node;
@@ -839,12 +877,15 @@ void Parser::restoreMemberExpression()
 
 // MemberExpression:
 //          PrimaryExpression
+//          FunctionExpression
 //          this . MemberExpression
 //          Identifier . MemberExpression
 AST_Node *Parser::MemberExpression()
 {
     storeMemberExpression();
-    if (match("this") && match("."))
+    if (lookahead && lookahead->value == "function")
+        return FunctionExpression();
+    else if (match("this") && match("."))
     {
         AST_Node *member = MemberExpression();
         AST_Node *memberNode = new AST_Node(nt::MemberExpression);

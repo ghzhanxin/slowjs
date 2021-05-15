@@ -44,6 +44,7 @@ namespace nt
         Arguments,
         ThisExpression,
         UnaryExpression,
+        FunctionExpression,
     };
 }
 
@@ -98,6 +99,7 @@ public:
     AST_Node *ExpressionStatement();
     AST_Node *VariableDeclaration();
     AST_Node *FunctionDeclaration();
+    AST_Node *FunctionExpression();
     AST_Node *FormalParameters();
     vector<AST_Node *> IdentifierList();
 

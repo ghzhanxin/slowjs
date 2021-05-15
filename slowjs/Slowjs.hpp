@@ -59,11 +59,14 @@ public:
     JSValue evaluateUnaryExpression(AST_Node *);
     JSValue evaluateThisExpression(AST_Node *);
     JSValue evaluateMemberExpression(AST_Node *);
+    JSValue evaluateFunctionExpression(AST_Node *);
     void checkException(JSValue);
 
     Reference getMemberExpressionReference(AST_Node *);
     Reference getReference(AST_Node *);
 
     vector<JSValue> getParamList(AST_Node *);
+
+    JSFunction *CreateFunctionObject(AST_Node *);
 };
 #endif /* Slowjs_hpp */

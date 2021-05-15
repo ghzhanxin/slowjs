@@ -72,6 +72,13 @@ void Slowjs::initGlobalExecutionContext(AST_Node *node)
     declarationBindingInstantiation(node, placeholder);
 }
 
+JSFunction *Slowjs::CreateFunctionObject(AST_Node *node)
+{
+    AST_Node *identifier = node->childs[0];
+    AST_Node *formal_param = node->childs[1];
+    string fn = identifier ? identifier->value : "(anonymous)";
+    return new JSFunction(formal_param, node, getCurrentContext()->var_env, fn);
+}
 void Slowjs::declarationBindingInstantiation(AST_Node *node, vector<JSValue> args)
 {
     Execution_Context *running_ctx = getCurrentContext();
@@ -104,13 +111,10 @@ void Slowjs::declarationBindingInstantiation(AST_Node *node, vector<JSValue> arg
 
         if (stmt_type == nt::FunctionDeclaration)
         {
-            AST_Node *identifier = top_level->childs[0];
-            AST_Node *formal_param = top_level->childs[1];
-            string fn = identifier->value;
-            JSFunction *fo = new JSFunction(formal_param, top_level, running_ctx->var_env, fn);
-            JSValue f = JSValue(JS_TAG_FUNCTION, fo);
+            string fn = top_level->childs[0]->value;
+            JSFunction *fo = CreateFunctionObject(top_level);
             env->CreateMutableBinding(fn);
-            env->SetMutableBinding(fn, f);
+            env->SetMutableBinding(fn, JSValue(JS_TAG_FUNCTION, fo));
         }
         else if (stmt_type == nt::VariableDeclaration || stmt_type == nt::ForStatement || stmt_type == nt::IfStatement)
         {
@@ -209,6 +213,8 @@ JSValue Slowjs::evaluate(AST_Node *node)
         return evaluateThisExpression(node);
     case nt::MemberExpression:
         return evaluateMemberExpression(node);
+    case nt::FunctionExpression:
+        return evaluateFunctionExpression(node);
     default:
         throw string("Unknown AST Node, tip: console.log is not available");
     }
@@ -701,4 +707,8 @@ JSValue Slowjs::evaluateThisExpression(AST_Node *node)
 JSValue Slowjs::evaluateMemberExpression(AST_Node *node)
 {
     return GetValue(getMemberExpressionReference(node));
+}
+JSValue Slowjs::evaluateFunctionExpression(AST_Node *node)
+{
+    return JSValue(JS_TAG_FUNCTION, CreateFunctionObject(node));
 }
