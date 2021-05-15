@@ -1,123 +1,165 @@
-
+// 暂不支持自动加分号，语句后面一定要加分号；
 print = console.log;
 
-// 不支持自动加分号，语句后面一定要加分号；
-var globalString = "global_var ";
-var doubleQuote = "double string";
-var singleQuote = 'single string';
-var boolTrue = true;
-var boolFalse = false;
-var singedNumber = -3.14;
-var consolelog = print;
+function assert(actual, expected) {
+    if (actual === expected) return;
 
-print("[ globalString: ]", globalString);
-print("[ doubleQuote: ]", doubleQuote);
-print("[ singleQuote: ]", singleQuote);
-print("[ singedNumber: ]", singedNumber);
-print("[ boolTrue: ]", boolTrue);
-print("[ boolFalse: ]", boolFalse);
-print("[ consolelog: ]", consolelog);
-
-print("[ function add hoist: ]", add);
-print("[ var add10 hoist: ]", add10);
-
-function add(a, b) {
-    // '+' 加号运算符支持数字之间或字符串之间加，不支持隐式类型转换
-    return a + b;
+    print("assertion failed: got |", actual, "|", ", expected |", expected, "|");
 }
-function addFactory(bindFirst) {
-    function closure(second) {
-        return add(bindFirst, second);
+
+function testHoist() {
+    assert(hoist_var, undefined);
+    print('testHoist done');
+}
+testHoist();
+var hoist_var = 'a';
+
+function testType() {
+    var test_undefined = undefined;
+    assert(test_undefined, undefined);
+
+    var test_null = null;
+    assert(test_null, null);
+
+    var test_int = 1;
+    assert(test_int, 1);
+
+    var test_signed = -3.14;
+    assert(test_signed, -3.14);
+
+    var test_float = 1.0;
+    assert(test_float, 1.0);
+
+    var test_false = false;
+    var test_true = true;
+    assert(test_false, !test_true);
+    assert(test_true, !test_false);
+
+    var test_string = "string";
+    assert(test_string, "string");
+
+    var test_obj = new Object();
+    test_obj.num = 1;
+    test_obj.bool = true;
+    test_obj.str = 'obj';
+    test_obj.nu = null;
+    assert(test_obj.num, 1);
+    assert(test_obj.bool, true);
+    assert(test_obj.str, 'obj');
+    assert(test_obj.u, undefined);
+    assert(test_obj.nu, null);
+
+    print('testType done');
+}
+
+function testConstructor() {
+    function Person(name, age) {
+        this.name = name;
+        this.age = age;
     }
-    return closure;
+    Person.prototype.height = 180;
+    Person.prototype.weight = 70;
+
+    function Student(grade) {
+        this.grade = grade;
+    }
+
+    assert(Person, Person);
+    var per = new Person();
+    var stu = new Student();
+    var tempPer = per;
+    assert(tempPer, per);
+    assert(per.height, 180);
+    assert(per.weight, 70);
+
+    print('testConstructor done');
 }
-var add10 = addFactory(10);
-var add200 = addFactory(200);
 
-print('[ 10 + 0.1 = ]', add10(0.1));
-print('[ 200 + -1 = ]', add200(-1));
-
-function highOrderFunction(add) {
-    var local_string = 'local_var ';
-    function closure() {
-        function innerer() {
-            print('[ nested innerner ]');
+var a = 1;
+function testClosure() {
+    var b = 2;
+    function outer() {
+        var c = 3;
+        function inner() {
+            var d = 4;
+            return a + b + c + d;
         }
-        innerer();
-        return add(local_string, globalString);
-    };
-    return closure;
-};
-
-var concat_global_local = highOrderFunction(add);
-print('[ closure & first class function ]', concat_global_local());
-
-var trueCount = 0;
-var falseCount = 0;
-var add1 = addFactory(1);
-for (var i = 0; i < add200(1); i++) {
-    if (i < 30) continue;
-
-    if (i < 50) {
-        trueCount = add1(trueCount);
-    } else {
-        falseCount = add1(falseCount);
+        return inner;
     }
+    var closure = outer();
+    assert(closure(), 10);
 
-    if (i > 100) break;
-}
-print('[ for & if trueCount: ]', trueCount);
-print('[ for & if falseCount: ]', falseCount);
-
-print('[ operator ]');
-print('8 + 2', 8 + 2);
-print('8 - 2', 8 - 2);
-print('8 * 2', 8 * 2);
-print('8 / 2', 8 / 2);
-print('8 > 3', 8 > 3);
-print('8 >= 3', 8 >= 3);
-print('8 < 3', 8 < 3);
-print('8 <= 3', 8 <= 3);
-print('8 == 3', 8 == 3);
-print('8 === 3', 8 === 3);
-print('8 && 0', 8 && 0);
-print('8 || 3', 8 || 3);
-print('!false', !false);
-
-function ab() { this.a = 1; }
-// Object.prototype = new ab();
-// Object.prototype.NAME = 1;
-// var obj = new Object();
-// var obj_proto = Object.getPrototypeOf(obj);
-// print(obj_proto);
-
-
-function Person(name, age) {
-    this.name = name;
-    this.age = age;
+    print("testClosure done");
 }
 
-var p = new Person();
+function testHighOrderFunction() {
+    function add(a, b) {
+        return a + b;
+    }
+    function highOrderFunction(fn, num1, num2) {
+        function closure() {
+            return fn(num1, num2);
+        };
+        return closure;
+    }
+    var test = highOrderFunction(add, 1, 2);
+    assert(test(), 3);
 
-function Student(grade) {
-    this.grade = grade;
+    print('testHighOrderFunction done');
 }
-Student.prototype = new Person('zx', 18);
 
-var stu = new Student(3);
-// console.log(stu, stu.name, stu.age, stu.grade);
+function testIFAndForStatment() {
+    var lessCount = 0;
+    var greatCount = 0;
 
-var p_proto = Object.getPrototypeOf(p);
-print(p_proto);
-var a = Object.getPrototypeOf(p_proto);
-print(a);
-var a_proto = Object.getPrototypeOf(a);
-print(a_proto);
-var b = Object.getPrototypeOf(a_proto);
-print(b);
-var b_proto = Object.getPrototypeOf(b);
-print(b_proto);
-print(p.c);
+    for (var i = 0; i < 200; i++) {
+        if (i <= 10) continue;
+
+        if (i <= 30) {
+            lessCount = lessCount + 1;
+        } else {
+            greatCount = greatCount + 1;
+        }
+
+        if (i >= 100) break;
+    }
+    assert(lessCount, 20);
+    assert(greatCount, 70);
+
+    print('testIFAndForStatment done');
+}
+
+function testOperator() {
+    var left = 8;
+    var right = 2;
+
+    assert(left + right, 10);
+    assert(left - right, 6);
+    assert(left * right, 16);
+    assert(left / right, 4);
+    assert(left > right, true);
+    assert(left >= right, true);
+    assert(left < right, false);
+    assert(left <= right, false);
+    assert(left === right, false);
+    assert(left !== right, true);
+    assert(left && right, 2);
+    assert(left || right, 8);
+    assert(0 && right, 0);
+    assert(0 || right, 2);
+    assert(!left, false);
+    assert(!!left, true);
+
+    print("testOperator done");
+}
+
+
+testType();
+testConstructor();
+testClosure();
+testHighOrderFunction();
+testIFAndForStatment();
+testOperator();
 
 
 
