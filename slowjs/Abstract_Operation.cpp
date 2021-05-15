@@ -132,13 +132,13 @@ void printJSObject(JSObject *obj)
         if (it->second->Value.isBaseObject())
             cout << "[ Object ]";
         else
-            intrinsicPrint(it->second->Value);
+            printJSValue(it->second->Value);
         cout << "," << endl;
     }
     cout << "}";
 }
 
-void intrinsicPrint(JSValue value)
+void printJSValue(JSValue value)
 {
     string s;
     JSFunction *fn;
@@ -174,7 +174,7 @@ void intrinsicPrint(JSValue value)
         printJSObject(value.getObject());
         break;
     default:
-        throw throwRuntimeException(EXCEPTION_TYPE, "intrinsicPrint");
+        throw throwRuntimeException(EXCEPTION_TYPE, "printJSValue");
     }
     cout << " ";
 }
@@ -260,4 +260,42 @@ JSValue ToObject(JSValue value)
 {
     // TODO:
     throw throwRuntimeException(EXCEPTION_TYPE, "ToObject");
+}
+
+JSValue CPrint(vector<JSValue> args)
+{
+    for (size_t i = 0; i < args.size(); i++)
+    {
+        printJSValue(args[i]);
+    }
+    cout << endl;
+    return JS_UNDEFINED;
+}
+
+JSValue CObject(vector<JSValue> args)
+{
+    return JS_UNDEFINED;
+}
+JSValue CGetPrototypeOf(vector<JSValue> args)
+{
+    if (args[0].isObject())
+    {
+        if (args[0].getObject()->Prototype)
+            return JSValue(JS_TAG_OBJECT, args[0].getObject()->Prototype);
+        else
+            return JS_NULL;
+    }
+    else
+        return JSValue(JS_TAG_EXCEPTION, string("getPrototypeOf args is not a object"));
+}
+JSValue CCall(vector<JSValue> args)
+{
+    JSValue thisValue = JS_UNDEFINED;
+    if (args.size() > 0)
+    {
+        thisValue = args[0];
+        args.erase(args.begin());
+    }
+    // return fo->Call(this, thisValue, args);
+    return JS_UNDEFINED;
 }

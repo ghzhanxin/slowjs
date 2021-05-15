@@ -51,13 +51,14 @@ void Slowjs::addIntrinsic()
 
     global_obj->Put("global", JSValue(JS_TAG_OBJECT, global_obj));
     global_obj->Put("Object", JSValue(JS_TAG_FUNCTION, JSObject::Object));
+    global_obj->Put("Function", JSValue(JS_TAG_FUNCTION, JSObject::Function));
 
     JSObject *console = new JSObject();
-    console->Put("log", JSValue(JS_TAG_FUNCTION, new JSFunction("log")));
+    JSFunction *cprint_JSFunction = new JSFunction("CFunction", (void *)CPrint);
+    console->Put("log", JSValue(JS_TAG_FUNCTION, cprint_JSFunction));
     global_obj->Put("console", JSValue(JS_TAG_OBJECT, console));
 
-    JSValue print_value = JSValue(JS_TAG_FUNCTION, new JSFunction("print"));
-    global_obj->Put("print", print_value);
+    global_obj->Put("print", JSValue(JS_TAG_FUNCTION, cprint_JSFunction));
 }
 void Slowjs::initGlobalExecutionContext(AST_Node *node)
 {
@@ -558,35 +559,6 @@ vector<JSValue> Slowjs::getArgumentList(AST_Node *node)
         vec.push_back(v);
     }
     return vec;
-}
-JSValue Slowjs::evaluateIntrinsicFunction(JSFunction *fo, vector<JSValue> argVector)
-{
-    string fnName = fo->Name;
-    if (fnName == "print" || fnName == "log")
-    {
-        for (size_t i = 0; i < argVector.size(); i++)
-        {
-            intrinsicPrint(argVector[i]);
-        }
-        cout << endl;
-        return JS_UNDEFINED;
-    }
-    else if (fnName == "Object")
-        return JS_UNDEFINED;
-    else if (fnName == "getPrototypeOf")
-    {
-        if (argVector[0].isObject())
-        {
-            if (argVector[0].getObject()->Prototype)
-                return JSValue(JS_TAG_OBJECT, argVector[0].getObject()->Prototype);
-            else
-                return JS_NULL;
-        }
-        else
-            return JSValue(JS_TAG_EXCEPTION, string("getPrototypeOf args is not a object"));
-    }
-    else
-        return JSValue(JS_TAG_EXCEPTION, string("'" + fnName + "' is not a function"));
 }
 JSValue Slowjs::evaluateCallExpression(AST_Node *node)
 {

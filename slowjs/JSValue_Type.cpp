@@ -10,10 +10,10 @@
 #include <iostream>
 
 JSObject *JSObject::ObjectPrototype = new JSObject();
-JSFunction *JSObject::Object = new JSFunction("Object");
+JSFunction *JSObject::Object = new JSFunction("CFunction", (void *)CObject);
 
 JSObject *JSObject::FunctionPrototype = new JSObject();
-JSFunction *JSObject::Function = new JSFunction("Function");
+JSFunction *JSObject::Function = new JSFunction("CFunction");
 
 void JSObject::CreateBuiltinObject()
 {
@@ -22,10 +22,11 @@ void JSObject::CreateBuiltinObject()
 
     Object->Prototype = ObjectPrototype;
     Object->Put("prototype", JSValue(JS_TAG_OBJECT, ObjectPrototype));
-    Object->Put("getPrototypeOf", JSValue(JS_TAG_FUNCTION, new JSFunction("getPrototypeOf")));
+    Object->Put("getPrototypeOf", JSValue(JS_TAG_FUNCTION, new JSFunction("CFunction", (void *)CGetPrototypeOf)));
 
     Function->Put("prototype", JSValue(JS_TAG_OBJECT, FunctionPrototype));
     FunctionPrototype->Put("constructor", JSValue(JS_TAG_FUNCTION, Function));
+    FunctionPrototype->Put("call", JSValue(JS_TAG_FUNCTION, new JSFunction("CFunction", (void *)CCall)));
 };
 
 DataDescriptor *JSObject::GetOwnProperty(string P)
@@ -64,7 +65,7 @@ bool JSObject::HasProperty(string P)
     return !!desc;
 }
 void JSObject::Delete(){};
-JSValue JSObject::DefaultValue(){return JS_UNDEFINED;};
+JSValue JSObject::DefaultValue() { return JS_UNDEFINED; };
 void JSObject::DefineOwnProperty(string P, DataDescriptor *Desc)
 {
     DataDescriptor *prop = GetOwnProperty(P);
@@ -97,7 +98,7 @@ JSValue JSFunction::Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 {
     JSFunction *fo = this;
     if (fo->isIntrinsic())
-        return slow->evaluateIntrinsicFunction(fo, args);
+        return fo->getCFunction()(args);
     else
     {
         slow->initFunctionExecutionContext(fo, thisValue, args);
@@ -120,10 +121,11 @@ JSValue JSFunction::Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 }
 JSValue JSFunction::Construct(Slowjs *slow, vector<JSValue> args)
 {
+    JSFunction *fo = this;
     JSObject *obj = new JSObject();
-    JSValue proto = this->Get("prototype");
+    JSValue proto = fo->Get("prototype");
     obj->Prototype = proto.isObject() ? proto.getObject() : JSObject::ObjectPrototype;
-    JSValue result = this->Call(slow, JSValue(JS_TAG_OBJECT, obj), args);
+    JSValue result = fo->Call(slow, JSValue(JS_TAG_OBJECT, obj), args);
     slow->checkException(result);
     return result.isObject() ? result : JSValue(JS_TAG_OBJECT, obj);
 }

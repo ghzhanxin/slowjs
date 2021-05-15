@@ -31,7 +31,7 @@ void PutValue(Reference V, JSValue W);
 
 Reference IdentifierResolution(Lexical_Environment *lex, string name);
 
-void intrinsicPrint(JSValue);
+void printJSValue(JSValue);
 int throwRuntimeException(int64_t t, string s);
 
 JSValue ToPrimitive(JSValue);
@@ -39,5 +39,10 @@ JSValue ToBoolean(JSValue);
 JSValue ToNumber(JSValue);
 JSValue ToString(JSValue);
 JSValue ToObject(JSValue);
+
+JSValue CPrint(vector<JSValue>);
+JSValue CObject(vector<JSValue>);
+JSValue CGetPrototypeOf(vector<JSValue>);
+JSValue CCall(vector<JSValue>);
 
 #endif /* Abstract_Operation_hpp */

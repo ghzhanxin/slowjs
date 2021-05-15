@@ -145,7 +145,8 @@ public:
 class JSFunction : public JSObject
 {
 public:
-    JSFunction(string name) : Name(name), _intrinsic(true)
+    JSFunction(string name, void *ptr = nullptr)
+        : Name(name), _intrinsic(true), _c_function_ptr(ptr)
     {
         initializeFunction();
     };
@@ -175,7 +176,11 @@ public:
 
     bool isIntrinsic() { return _intrinsic; };
 
+    typedef JSValue (*C_Function)(vector<JSValue>);
+    C_Function getCFunction() { return (C_Function)_c_function_ptr; };
+
 private:
+    void *_c_function_ptr;
     bool _intrinsic;
 };
 

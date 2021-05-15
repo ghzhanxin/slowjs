@@ -29,7 +29,6 @@ public:
     void initGlobalExecutionContext(AST_Node *);
     void initFunctionExecutionContext(JSFunction *, JSValue, vector<JSValue>);
     void declarationBindingInstantiation(AST_Node *, vector<JSValue>);
-    JSValue evaluateIntrinsicFunction(JSFunction *, vector<JSValue>);
     Execution_Context *getCurrentContext();
     vector<JSValue> getArgumentList(AST_Node *);
 
