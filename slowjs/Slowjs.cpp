@@ -255,16 +255,14 @@ JSValue Slowjs::evaluateExpressionStatement(AST_Node *node)
 JSValue Slowjs::evaluateUnaryExpression(AST_Node *node)
 {
     string op = node->value;
-    AST_Node *expre = node->childs[0];
-    JSValue result = this->evaluate(expre);
-    if (result.isBoolean())
-        return JSValue(JS_TAG_BOOLEAN, !result.getBoolean());
-    else if (result.isNumber())
-        return JSValue(JS_TAG_BOOLEAN, !result.getNumber());
-    else if (result.isString())
-        return JSValue(JS_TAG_BOOLEAN, result.getString().size() == 0);
+    AST_Node *expr = node->childs[0];
+    JSValue result = this->evaluate(expr);
+    JSValue oldValue = ToBoolean(result);
+
+    if (op == "!")
+        return oldValue.getBoolean() ? JS_FALSE : JS_TRUE;
     else
-        return JSValue(JS_TAG_EXCEPTION, string("Support only boolean number and string."));
+        return JSValue(JS_TAG_EXCEPTION, string("Unsupported Type in UnaryExpression"));
 }
 
 JSValue strictEqualityComparison(JSValue left, JSValue right)
@@ -312,12 +310,12 @@ JSValue Slowjs::evaluateBinaryExpression(AST_Node *node)
     else if (op == "&&")
     {
         JSValue l = ToBoolean(left);
-        return !l.getBoolean() ? l : right;
+        return !l.getBoolean() ? left : right;
     }
     else if (op == "||")
     {
         JSValue l = ToBoolean(left);
-        return l.getBoolean() ? l : right;
+        return l.getBoolean() ? left : right;
     }
     else if (op == "+")
     {
