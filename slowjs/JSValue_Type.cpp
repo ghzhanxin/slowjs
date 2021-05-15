@@ -64,7 +64,7 @@ bool JSObject::HasProperty(string P)
     return !!desc;
 }
 void JSObject::Delete(){};
-void JSObject::DefaultValue(){};
+JSValue JSObject::DefaultValue(){return JS_UNDEFINED;};
 void JSObject::DefineOwnProperty(string P, DataDescriptor *Desc)
 {
     DataDescriptor *prop = GetOwnProperty(P);

@@ -34,4 +34,10 @@ Reference IdentifierResolution(Lexical_Environment *lex, string name);
 void intrinsicPrint(JSValue);
 int throwRuntimeException(int64_t t, string s);
 
+JSValue ToPrimitive(JSValue);
+JSValue ToBoolean(JSValue);
+JSValue ToNumber(JSValue);
+JSValue ToString(JSValue);
+JSValue ToObject(JSValue);
+
 #endif /* Abstract_Operation_hpp */

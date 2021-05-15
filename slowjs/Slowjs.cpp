@@ -159,7 +159,7 @@ void Slowjs::checkException(JSValue value)
 {
     if (value.isException())
     {
-        string msg = value.getException();
+        string msg = value.getString();
         throwRuntimeException(EXCEPTION_TYPE, msg);
     }
 }
@@ -267,6 +267,27 @@ JSValue Slowjs::evaluateUnaryExpression(AST_Node *node)
         return JSValue(JS_TAG_EXCEPTION, string("Support only boolean number and string."));
 }
 
+JSValue strictEqualityComparison(JSValue left, JSValue right)
+{
+    // https://262.ecma-international.org/5.1/#sec-11.9.6
+    if (left.getTag() != right.getTag())
+        return JS_FALSE;
+    else if (left.isUndefined())
+        return JS_TRUE;
+    else if (left.isNull())
+        return JS_TRUE;
+    else if (left.isNumber())
+        // TODO:
+        return JSValue(JS_TAG_BOOLEAN, left.getNumber() == right.getNumber());
+    else if (left.isString())
+        return JSValue(JS_TAG_BOOLEAN, left.getString() == right.getString());
+    else if (left.isBoolean())
+        return JSValue(JS_TAG_BOOLEAN, left.getBoolean() == right.getBoolean());
+    else if (left.isObject())
+        return JSValue(JS_TAG_BOOLEAN, left.getPtr() == right.getPtr());
+    else
+        return JSValue(JS_TAG_EXCEPTION, string("Unsupported Operator or Operand"));
+}
 JSValue Slowjs::evaluateBinaryExpression(AST_Node *node)
 {
     string op = node->value;
@@ -277,52 +298,83 @@ JSValue Slowjs::evaluateBinaryExpression(AST_Node *node)
     checkException(left);
     checkException(right);
 
-    if (left.isNumber() && right.isNumber())
+    if (op == "==" || op == "!=")
+        // TODO:
+        cerr << "'==' '!=' is not currently supported, now has the same effect as '===' '!=='. please use '===' '!==' instead" << endl;
+
+    if (op == "===" || op == "==")
+        return strictEqualityComparison(left, right);
+    else if (op == "!==" || op == "!=")
     {
-        double d_left = left.getNumber();
-        double d_right = right.getNumber();
-
-        double number_res = 0;
-        bool bool_res = false;
-
-        if (op == "+")
-            number_res = d_left + d_right;
-        else if (op == "-")
-            number_res = d_left - d_right;
-        else if (op == "*")
-            number_res = d_left * d_right;
-        else if (op == "/")
-            number_res = d_left / d_right;
-        else if (op == ">")
-            bool_res = d_left > d_right;
-        else if (op == ">=")
-            bool_res = d_left >= d_right;
-        else if (op == "<")
-            bool_res = d_left < d_right;
-        else if (op == "<=")
-            bool_res = d_left <= d_right;
-        else if (op == "==")
-            bool_res = d_left == d_right;
-        else if (op == "===")
-            bool_res = d_left == d_right;
-        else if (op == "&&")
-            bool_res = d_left && d_right;
-        else if (op == "||")
-            bool_res = d_left || d_right;
-        else
-            return JSValue(JS_TAG_EXCEPTION, string("Unsupported Operator '") + op + "'");
-
-        if (op == "+" || op == "-" || op == "*" || op == "/")
-            return JSValue(JS_TAG_NUMBER, number_res);
-        else
-            return JSValue(JS_TAG_BOOLEAN, bool_res);
+        JSValue r = strictEqualityComparison(left, right);
+        return JSValue(JS_TAG_BOOLEAN, !r.getBoolean());
     }
-    else if (left.isString() && right.isString() && op == "+")
+    else if (op == "&&")
     {
-        return JSValue(JS_TAG_STRING, left.getString() + right.getString());
+        JSValue l = ToBoolean(left);
+        return !l.getBoolean() ? l : right;
+    }
+    else if (op == "||")
+    {
+        JSValue l = ToBoolean(left);
+        return l.getBoolean() ? l : right;
+    }
+    else if (op == "+")
+    {
+        // TODO: https://262.ecma-international.org/5.1/#sec-11.6.1
+        JSValue lp = ToPrimitive(left);
+        JSValue rp = ToPrimitive(right);
+        if (lp.isNumber() && rp.isNumber())
+            return JSValue(JS_TAG_NUMBER, lp.getNumber() + rp.getNumber());
+        else if (lp.isString() && rp.isString())
+            return JSValue(JS_TAG_STRING, lp.getString() + rp.getString());
+        else
+            return JSValue(JS_TAG_EXCEPTION, string("Unsupported Type in '+'"));
+    }
+    else if (op == "-")
+    {
+        JSValue ln = ToNumber(left);
+        JSValue rn = ToNumber(right);
+        return JSValue(JS_TAG_NUMBER, ln.getNumber() - rn.getNumber());
+    }
+    else if (op == "*")
+    {
+        JSValue ln = ToNumber(left);
+        JSValue rn = ToNumber(right);
+        return JSValue(JS_TAG_NUMBER, ln.getNumber() * rn.getNumber());
+    }
+    else if (op == "/")
+    {
+        JSValue ln = ToNumber(left);
+        JSValue rn = ToNumber(right);
+        return JSValue(JS_TAG_NUMBER, ln.getNumber() / rn.getNumber());
+    }
+    else if (op == ">")
+    {
+        JSValue ln = ToNumber(left);
+        JSValue rn = ToNumber(right);
+        return JSValue(JS_TAG_BOOLEAN, ln.getNumber() > rn.getNumber());
+    }
+    else if (op == ">=")
+    {
+        JSValue ln = ToNumber(left);
+        JSValue rn = ToNumber(right);
+        return JSValue(JS_TAG_BOOLEAN, ln.getNumber() >= rn.getNumber());
+    }
+    else if (op == "<")
+    {
+        JSValue ln = ToNumber(left);
+        JSValue rn = ToNumber(right);
+        return JSValue(JS_TAG_BOOLEAN, ln.getNumber() < rn.getNumber());
+    }
+    else if (op == "<=")
+    {
+        JSValue ln = ToNumber(left);
+        JSValue rn = ToNumber(right);
+        return JSValue(JS_TAG_BOOLEAN, ln.getNumber() <= rn.getNumber());
     }
     else
-        return JSValue(JS_TAG_EXCEPTION, string("Operand must be number or can be string if operator is '+' !"));
+        return JSValue(JS_TAG_EXCEPTION, string("Unsupported Operator or Operand"));
 }
 
 JSValue getJSValueFromLiteralNode(AST_Node *node)
@@ -576,11 +628,11 @@ JSValue Slowjs::evaluateNewExpression(AST_Node *node)
         return ctor->Construct(this, argVector);
     }
     else
-        throw throwRuntimeException(EXCEPTION_TYPE, string("not a construtor"));
+        return JSValue(JS_TAG_EXCEPTION, string("not a construtor"));
 }
 JSValue Slowjs::evaluateReturnStatement(AST_Node *node)
 {
-    throw evaluate(node->childs[0]);
+    throw node->childs.size() == 0 ? JS_UNDEFINED : evaluate(node->childs[0]);
 }
 JSValue Slowjs::evaluateBreakStatement(AST_Node *)
 {

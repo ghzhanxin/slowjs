@@ -120,7 +120,6 @@ Reference IdentifierResolution(Lexical_Environment *lex, string name)
     return IdentifierResolution(outer, name);
 }
 
-bool is_top_level_obj = true;
 void printJSObject(JSObject *obj)
 {
     map<string, DataDescriptor *>::iterator it;
@@ -146,11 +145,16 @@ void intrinsicPrint(JSValue value)
 
     switch (value.getTag())
     {
+    case JS_TAG_UNDEFINED:
+    case JS_TAG_EXCEPTION:
+    case JS_TAG_NAN:
+    case JS_TAG_BOOLEAN:
+    case JS_TAG_NULL:
+    case JS_TAG_UNINITIALIZED:
+        cout << value.getString();
+        break;
     case JS_TAG_NUMBER:
         cout << value.getNumber();
-        break;
-    case JS_TAG_BOOLEAN:
-        cout << value.getBooleanString();
         break;
     case JS_TAG_STRING:
         s = value.getString();
@@ -158,12 +162,6 @@ void intrinsicPrint(JSValue value)
             cout << endl;
         else
             cout << s;
-        break;
-    case JS_TAG_UNDEFINED:
-        cout << value.getUndefined();
-        break;
-    case JS_TAG_EXCEPTION:
-        cout << value.getException();
         break;
     case JS_TAG_FUNCTION:
         fn = value.getFunction();
@@ -175,12 +173,91 @@ void intrinsicPrint(JSValue value)
     case JS_TAG_OBJECT:
         printJSObject(value.getObject());
         break;
-    case JS_TAG_NULL:
-        cout << value.getString();
-        break;
-    case JS_TAG_UNINITIALIZED:
-        cout << value.getString();
-        break;
+    default:
+        throw throwRuntimeException(EXCEPTION_TYPE, "intrinsicPrint");
     }
     cout << " ";
+}
+
+JSValue ToPrimitive(JSValue value)
+{
+    switch (value.getTag())
+    {
+    case JS_TAG_UNDEFINED:
+    case JS_TAG_NULL:
+    case JS_TAG_BOOLEAN:
+    case JS_TAG_NUMBER:
+    case JS_TAG_STRING:
+        return value;
+    case JS_TAG_OBJECT:
+        return value.getObject()->DefaultValue();
+    case JS_TAG_FUNCTION:
+        return value.getFunction()->DefaultValue();
+    default:
+        throw throwRuntimeException(EXCEPTION_TYPE, "ToPrimitive");
+    }
+}
+JSValue ToBoolean(JSValue value)
+{
+    switch (value.getTag())
+    {
+    case JS_TAG_UNDEFINED:
+    case JS_TAG_NULL:
+        return JS_FALSE;
+    case JS_TAG_BOOLEAN:
+        return value;
+    case JS_TAG_NUMBER:
+        return JSValue(JS_TAG_BOOLEAN, value.getNumber() != 0);
+    case JS_TAG_STRING:
+        return JSValue(JS_TAG_BOOLEAN, value.getString().size() != 0);
+    case JS_TAG_OBJECT:
+        return JS_TRUE;
+    default:
+        throw throwRuntimeException(EXCEPTION_TYPE, "ToBoolean");
+    }
+}
+JSValue ToNumber(JSValue value)
+{
+    switch (value.getTag())
+    {
+    case JS_TAG_UNDEFINED:
+        return JS_NAN;
+    case JS_TAG_NULL:
+        return JSValue(JS_TAG_NUMBER, 0.0);
+    case JS_TAG_BOOLEAN:
+        return JSValue(JS_TAG_NUMBER, value.getBoolean() ? 1.0 : 0.0);
+    case JS_TAG_NUMBER:
+        return value;
+    case JS_TAG_STRING:
+        // TODO:
+        return JSValue(JS_TAG_NUMBER, value.getString().size() == 0 ? 0.0 : 1.0);
+    case JS_TAG_OBJECT:
+        return ToNumber(ToPrimitive(value));
+    default:
+        throw throwRuntimeException(EXCEPTION_TYPE, "ToNumber");
+    }
+}
+JSValue ToString(JSValue value)
+{
+    switch (value.getTag())
+    {
+    case JS_TAG_UNDEFINED:
+    case JS_TAG_NULL:
+    case JS_TAG_BOOLEAN:
+        return JSValue(JS_TAG_STRING, value.getString());
+    case JS_TAG_NUMBER:
+        // TODO:
+        return value;
+    case JS_TAG_STRING:
+        return value;
+    case JS_TAG_OBJECT:
+        return ToNumber(ToPrimitive(value));
+    default:
+        throw throwRuntimeException(EXCEPTION_TYPE, "ToString");
+    }
+}
+JSValue ToObject(JSValue value)
+{
+    // TODO:
+    throw throwRuntimeException(EXCEPTION_TYPE, "ToObject");
 }

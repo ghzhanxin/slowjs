@@ -44,6 +44,7 @@ enum JS_TAG
     JS_TAG_UNDEFINED,
     JS_TAG_UNINITIALIZED,
     JS_TAG_EXCEPTION,
+    JS_TAG_NAN,
 };
 
 typedef union JSValueUnion
@@ -62,6 +63,10 @@ public:
     {
         _u.double64 = val;
     };
+    JSValue(JS_TAG tag, int val) : _tag(tag)
+    {
+        _u.double64 = val;
+    };
     JSValue(JS_TAG tag, bool val) : _tag(tag), _string(val ? "true" : "false")
     {
         _u.boolean = val;
@@ -74,14 +79,10 @@ public:
     JS_TAG getTag() { return _tag; }
     double getNumber() { return _u.double64; }
     bool getBoolean() { return _u.boolean; }
-    string getBooleanString() { return _string; }
     string getString() { return _string; }
     void *getPtr() { return _u.ptr; }
     JSFunction *getFunction() { return (JSFunction *)getPtr(); }
     JSObject *getObject() { return (JSObject *)getPtr(); }
-    string getException() { return _string; }
-    string getUndefined() { return _string; }
-    string getUninitialized() { return _string; }
 
     bool isNumber() { return _tag == JS_TAG_NUMBER; }
     bool isBoolean() { return _tag == JS_TAG_BOOLEAN; }
@@ -92,6 +93,7 @@ public:
     bool isObject() { return _tag == JS_TAG_OBJECT || _tag == JS_TAG_FUNCTION; }
     bool isFunction() { return _tag == JS_TAG_FUNCTION; }
     bool isException() { return _tag == JS_TAG_EXCEPTION; }
+    bool isNaN() { return _tag == JS_TAG_NAN; }
 
 protected:
     JSValueUnion _u;
@@ -106,6 +108,7 @@ protected:
 #define JS_UNDEFINED JSValue(JS_TAG_UNDEFINED, string("undefined"))
 #define JS_EXCEPTION JSValue(JS_TAG_EXCEPTION, string("Unknow Exception"))
 #define JS_UNINITIALIZED JSValue(JS_TAG_UNINITIALIZED, string("Uninitialized"))
+#define JS_NAN JSValue(JS_TAG_NAN, string("NaN"))
 
 class JSObject : public JSValue
 {
@@ -129,7 +132,7 @@ public:
     void Put(string P, JSValue V);
     bool HasProperty(string P);
     void Delete();
-    void DefaultValue();
+    JSValue DefaultValue();
     void DefineOwnProperty(string P, DataDescriptor *D);
 
     JSObject *Prototype = nullptr;
