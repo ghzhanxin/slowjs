@@ -11,22 +11,31 @@
 #### 已支持的语言特性：
 
 - [ ] 类型
-  - [x] String
-    - [x] 单引号
-    - [x] 双引号
+  - [x] Undefined
+    - [x] undefined
+  - [x] Null
+    - [x] null
   - [x] Number
     - [x] 符号数
     - [x] 浮点数
   - [x] Boolean
     - [x] true
     - [x] false
-  - [x] Undefined
-    - [x] undefined
-  - [x] Null
-    - [x] null
+  - [ ] String
+    - [x] 单引号
+    - [x] 双引号
   - [ ] Object
-    - [x] function 普通调用，闭包，支持函数一等公民。暂不支持作为对象的方法。
-    - [ ] other
+    - [x] 创建对象 `new Object() 或者 new 函数名()`
+    - [x] Function 
+      - [x] 普通调用
+      - [x] new 调用 
+      - [x] 闭包
+      - [x] 一等公民
+      - [x] 对象方法
+      - [ ] prototype
+        - [x] call
+        - [ ] bind
+    - [ ] Array
 - [ ] 语法
   - [ ] 自动分号，暂不支持，目前语句一定要加分号。
   - [x] 语句
@@ -40,10 +49,12 @@
     - [x] break
     - [x] continue
   - [ ] 表达式
-    - [ ] 成员表达式 如 `object.property object[property]`
+    - [ ] 成员表达式 
+      - [x] `object.property` 
+      - [ ] `object[property]`
     - [x] 函数调用 如 `fn();`
     - [x] 主值表达式
-      - [ ] this 
+      - [x] this 
       - [x] 标识符
         - [x] 首字母
           - [x] $
@@ -85,7 +96,9 @@
 - [ ] 内置全局对象 (global)
   - [x] print （同 console.log ）
   - [x] console
-    - [x] Log
+    - [x] log
+  - [x] Object
+    - [x] prototype
   - [ ] Promise
   - [ ] Gererator
   - [ ] setTimeout
@@ -93,6 +106,7 @@
 - [ ] 异常处理
   - [x] 异常类型提示
   - [ ] 异常位置提示
+  - [ ] try catch
 
 [可执行代码示例](https://github.com/halolantern/slowjs/blob/main/test.js)
 
