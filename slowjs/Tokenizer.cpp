@@ -439,7 +439,5 @@ queue<Token *> Tokenizer::tokenize(string input)
         throwTokenizeError(c);
     };
 
-    // printTokenQueue(_q);
-
     return _q;
 };

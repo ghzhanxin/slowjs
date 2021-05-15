@@ -1060,6 +1060,5 @@ AST_Node *Parser::parse(queue<Token *> que)
              << endl;
     };
 
-    //    printAST(root);
     return root;
 }

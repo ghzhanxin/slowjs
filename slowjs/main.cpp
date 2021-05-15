@@ -34,11 +34,6 @@ int main(int argc, const char *argv[])
 
         string code = getInputCode(argv[1]);
 
-        //        cout << endl
-        //             << "---------- input code ----------" << endl
-        //             << endl;
-        //        cout << code << endl;
-
         Slowjs slow = Slowjs();
         JSValue result = slow.run(code);
 
