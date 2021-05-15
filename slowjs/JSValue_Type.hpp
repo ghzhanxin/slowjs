@@ -26,7 +26,7 @@ class AccessorDescriptor;
 class JSObject;
 class JSFunction;
 
-enum
+enum EXCEPTION_ENUM
 {
     EXCEPTION_TYPE,
     EXCEPTION_REFERENCE,

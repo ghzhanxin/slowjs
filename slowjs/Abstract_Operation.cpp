@@ -11,7 +11,7 @@
 #define TypeErrorPrefix "TypeError: "
 #define ReferenceErrorPrefix "ReferenceError: "
 
-int throwRuntimeException(int64_t t = EXCEPTION_TYPE, string s = "Unknown Runtime Error")
+int throwRuntimeException(EXCEPTION_ENUM t = EXCEPTION_TYPE, string s = "Unknown Runtime Error")
 {
     string msg;
     if (t == EXCEPTION_REFERENCE)

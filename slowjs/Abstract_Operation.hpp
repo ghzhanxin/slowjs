@@ -32,7 +32,7 @@ void PutValue(Reference V, JSValue W);
 Reference IdentifierResolution(Lexical_Environment *lex, string name);
 
 void printJSValue(JSValue);
-int throwRuntimeException(int64_t t, string s);
+int throwRuntimeException(EXCEPTION_ENUM t, string s);
 
 JSValue ToPrimitive(JSValue);
 JSValue ToBoolean(JSValue);

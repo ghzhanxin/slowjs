@@ -15,6 +15,7 @@
 //          BreakStatement
 //          ContinueStatement
 //          ReturnStatement
+//          ThrowStatement
 //          EmptyStatement
 //          IfStatement
 //          ForStatement
@@ -27,6 +28,7 @@
 // ReturnStatement:
 //          return ;
 //          return expression ;
+// ThrowStatement: throw Expression ;
 // EmptyStatement : ;
 // IfStatement :
 //          if (Expression) Statement
@@ -182,6 +184,7 @@ vector<AST_Node *> Parser::StatementList()
 //          BreakStatement
 //          ContinueStatement
 //          ReturnStatement
+//          ThrowStatement
 //          EmptyStatement
 //          IfStatement
 //          ForStatement
@@ -200,6 +203,8 @@ AST_Node *Parser::Statement()
         return ContinueStatement();
     if (lookahead->value == "return")
         return ReturnStatement();
+    if (lookahead->value == "throw")
+        return ThrowStatement();
     if (lookahead->value == ";")
         return EmptyStatement();
     if (lookahead->value == "if")
@@ -257,6 +262,23 @@ AST_Node *Parser::ReturnStatement()
         throw throwParseSyntaxError("Expect 'return' in ReturnStatement");
 }
 
+// ThrowStatement: throw Expression ;
+AST_Node *Parser::ThrowStatement()
+{
+    if (match("throw"))
+    {
+        AST_Node *expr = Expression();
+        if (expr && match(";"))
+        {
+            AST_Node *thr = new AST_Node(nt::ThrowStatement);
+            thr->childs.push_back(expr);
+            return thr;
+        }
+        throw throwParseSyntaxError("Expect expression or ';' in ReturnStatement");
+    }
+    else
+        throw throwParseSyntaxError("Expect 'throw' in ReturnStatement");
+}
 // EmptyStatement : ;
 AST_Node *Parser::EmptyStatement()
 {

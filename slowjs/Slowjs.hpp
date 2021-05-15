@@ -51,7 +51,6 @@ public:
     JSValue evaluateVariableDeclaration(AST_Node *);
     JSValue evaluateCallExpression(AST_Node *);
     JSValue evaluateNewExpression(AST_Node *);
-    vector<string> getIdentifiersFromMemberExpression(AST_Node *, vector<string>);
     JSValue evaluateReturnStatement(AST_Node *);
     JSValue evaluateBreakStatement(AST_Node *);
     JSValue evaluateContinueStatement(AST_Node *);
@@ -59,13 +58,14 @@ public:
     JSValue evaluateThisExpression(AST_Node *);
     JSValue evaluateMemberExpression(AST_Node *);
     JSValue evaluateFunctionExpression(AST_Node *);
-    void checkException(JSValue);
+    JSValue evaluateThrowStatement(AST_Node *);
 
     Reference getMemberExpressionReference(AST_Node *);
     Reference getReference(AST_Node *);
 
+    void checkException(JSValue);
     vector<JSValue> getParamList(AST_Node *);
-
     JSFunction *CreateFunctionObject(AST_Node *);
+    vector<string> getIdentifiersFromMemberExpression(AST_Node *, vector<string>);
 };
 #endif /* Slowjs_hpp */

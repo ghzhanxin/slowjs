@@ -38,6 +38,8 @@ tt::Token_Type Tokenizer::getIdentifierType(string s)
         return tt::_this;
     else if (s == "continue")
         return tt::_continue;
+    else if (s == "throw")
+        return tt::_throw;
     else
         return tt::name;
 }

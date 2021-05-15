@@ -216,8 +216,10 @@ JSValue Slowjs::evaluate(AST_Node *node)
         return evaluateMemberExpression(node);
     case nt::FunctionExpression:
         return evaluateFunctionExpression(node);
+    case nt::ThrowStatement:
+        return evaluateThrowStatement(node);
     default:
-        throw string("Unknown AST Node, tip: console.log is not available");
+        throw string("Unknown AST Node");
     }
 }
 
@@ -683,4 +685,12 @@ JSValue Slowjs::evaluateMemberExpression(AST_Node *node)
 JSValue Slowjs::evaluateFunctionExpression(AST_Node *node)
 {
     return JSValue(JS_TAG_FUNCTION, CreateFunctionObject(node));
+}
+JSValue Slowjs::evaluateThrowStatement(AST_Node *node)
+{
+    JSValue expr = evaluate(node->childs[0]);
+    if (!expr.isString())
+        return JSValue(JS_TAG_EXCEPTION, string("ThrowStatement Supported only string currently"));
+
+    throw expr.getString();
 }

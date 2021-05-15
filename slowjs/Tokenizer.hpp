@@ -72,6 +72,7 @@ namespace tt
         _new,
         _this,
         _continue,
+        _throw,
     };
 }
 

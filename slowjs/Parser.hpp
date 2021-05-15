@@ -45,6 +45,7 @@ namespace nt
         ThisExpression,
         UnaryExpression,
         FunctionExpression,
+        ThrowStatement,
     };
 }
 
@@ -93,6 +94,7 @@ public:
     AST_Node *BreakStatement();
     AST_Node *ContinueStatement();
     AST_Node *ReturnStatement();
+    AST_Node *ThrowStatement();
     AST_Node *IfStatement();
     AST_Node *ForStatement();
     AST_Node *BlockStatement();
