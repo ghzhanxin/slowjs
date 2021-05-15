@@ -108,7 +108,7 @@ function testHighOrderFunction(assert) {
     assert(test(), 3);
 }
 
-function testIFAndForStatment(assert) {
+function testIFAndForStatement(assert) {
     var lessCount = 0;
     var greatCount = 0;
 
@@ -185,5 +185,5 @@ describe('testType', testType);
 describe('testOperator', testOperator);
 describe('testClosure', testClosure);
 describe('testHighOrderFunction', testHighOrderFunction);
-describe('testIFAndForStatment', testIFAndForStatment);
+describe('testIFAndForStatement', testIFAndForStatement);
 describe('testObjectPrototype', testObjectPrototype);
