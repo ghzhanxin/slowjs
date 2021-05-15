@@ -1,20 +1,27 @@
 // 暂不支持自动加分号，语句后面一定要加分号；
 print = console.log;
 
-function assert(actual, expected) {
-    if (actual === expected) return;
+function describe(title, fn) {
+    function assert(actual, expected) {
+        if (actual === expected) return;
 
-    print("assertion failed: got |", actual, "|", ", expected |", expected, "|");
+        print("FAIL in " + title);
+        print("got |", actual, "|", ", expected |", expected, "|");
+        throw "";
+    }
+
+    fn(assert);
+    print('PASS ' + title);
 }
 
-function testHoist() {
+describe('testHoist', testHoist);
+
+function testHoist(assert) {
     assert(hoist_var, undefined);
-    print('testHoist done');
 }
-testHoist();
 var hoist_var = 'a';
 
-function testType() {
+function testType(assert) {
     var test_undefined = undefined;
     assert(test_undefined, undefined);
 
@@ -48,11 +55,9 @@ function testType() {
     assert(test_obj.str, 'obj');
     assert(test_obj.u, undefined);
     assert(test_obj.nu, null);
-
-    print('testType done');
 }
 
-function testOperator() {
+function testOperator(assert) {
     var left = 8;
     var right = 2;
 
@@ -72,12 +77,10 @@ function testOperator() {
     assert(0 || right, 2);
     assert(!left, false);
     assert(!!left, true);
-
-    print("testOperator done");
 }
 
 var a = 1;
-function testClosure() {
+function testClosure(assert) {
     var b = 2;
     function outer() {
         var c = 3;
@@ -89,11 +92,9 @@ function testClosure() {
     }
     var closure = outer();
     assert(closure(), 10);
-
-    print("testClosure done");
 }
 
-function testHighOrderFunction() {
+function testHighOrderFunction(assert) {
     function add(a, b) {
         return a + b;
     }
@@ -105,11 +106,9 @@ function testHighOrderFunction() {
     }
     var test = highOrderFunction(add, 1, 2);
     assert(test(), 3);
-
-    print('testHighOrderFunction done');
 }
 
-function testIFAndForStatment() {
+function testIFAndForStatment(assert) {
     var lessCount = 0;
     var greatCount = 0;
 
@@ -126,11 +125,9 @@ function testIFAndForStatment() {
     }
     assert(lessCount, 20);
     assert(greatCount, 70);
-
-    print('testIFAndForStatment done');
 }
 
-function testObjectPrototype() {
+function testObjectPrototype(assert) {
     Object.prototype.onObjectPrototype = 0;
     var obj = new Object();
     assert(obj.onObjectPrototype, 0);
@@ -182,14 +179,11 @@ function testObjectPrototype() {
 
     var stu__proto__proto__proto = Object.getPrototypeOf(stu__proto__proto);
     assert(stu__proto__proto__proto, Object.prototype);
-
-    print('testObjectPrototype done');
 }
 
-testType();
-testOperator();
-testClosure();
-testHighOrderFunction();
-testIFAndForStatment();
-testObjectPrototype();
-
+describe('testType', testType);
+describe('testOperator', testOperator);
+describe('testClosure', testClosure);
+describe('testHighOrderFunction', testHighOrderFunction);
+describe('testIFAndForStatment', testIFAndForStatment);
+describe('testObjectPrototype', testObjectPrototype);
