@@ -100,6 +100,8 @@
     - [x] log
   - [x] Object
     - [x] prototype
+  - [x] process
+    - [x] nextTick
   - [ ] Promise
   - [ ] Gererator
   - [ ] setTimeout
@@ -111,9 +113,9 @@
 
 [可执行代码示例](https://github.com/halolantern/slowjs/blob/main/test.js)
 
-#### 已支持的运行环境特性：（目前竟然全不支持 T_T）
+#### 已支持的运行环境特性：
 
-- [ ] Event Loop
+- [x] Event Loop
 - [ ] 多进程
 - [ ] 多线程
 - [ ] 协程
