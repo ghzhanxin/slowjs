@@ -44,6 +44,8 @@ function testType(assert) {
 
     var test_string = "string";
     assert(test_string, "string");
+    var test_single_quote = 'string';
+    assert(test_string, test_single_quote);
 
     var test_obj = new Object();
     test_obj.num = 1;
@@ -181,10 +183,22 @@ function testObjectPrototype(assert) {
     assert(stu__proto__proto__proto, Object.prototype);
 }
 
-function delay(a, b, c) {
-    print('in delay', a, b, c);
+function testNextTick(assert) {
+    var s = '';
+    function addChar(char) {
+        s = s + char;
+    }
+    process.nextTick(addChar, '1');
+    addChar('2');
+    addChar('3');
+    assert(s, '23');
+
+    function delayRead() {
+        assert(s, '231');
+    }
+    process.nextTick(delayRead);
 }
-process.nextTick(delay, 1, 2, 3);
+
 
 describe('testType', testType);
 describe('testOperator', testOperator);
@@ -192,4 +206,5 @@ describe('testClosure', testClosure);
 describe('testHighOrderFunction', testHighOrderFunction);
 describe('testIFAndForStatement', testIFAndForStatement);
 describe('testObjectPrototype', testObjectPrototype);
+describe('testNextTick', testNextTick);
 
