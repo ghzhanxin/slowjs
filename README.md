@@ -95,8 +95,9 @@
       - [x] for
       - [ ] do
       - [ ] while
-- [ ] 内置全局对象 (global)
-  - [x] print （同 console.log ）
+- [x] 内置全局对象 `global`
+- [ ] 全局对象属性
+  - [x] print （同 `console.log` ）
   - [x] console
     - [x] log
   - [x] Object
