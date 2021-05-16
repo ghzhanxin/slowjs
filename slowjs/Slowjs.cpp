@@ -12,7 +12,7 @@ JSValue Slowjs::run(string input)
 {
     queue<Token *> q = tokenize(input);
     AST_Node *ast = parse(q);
-    initCallStack();
+    addIntrinsic();
     return evaluate(ast);
 }
 queue<Token *> Slowjs::tokenize(string input)
@@ -25,11 +25,6 @@ AST_Node *Slowjs::parse(queue<Token *> token_queue)
     Parser parser = Parser();
     return parser.parse(token_queue);
 }
-
-void Slowjs::initCallStack()
-{
-    ctx_stack = new stack<Execution_Context *>;
-};
 
 Execution_Context *Slowjs::getCurrentContext()
 {
@@ -53,22 +48,24 @@ void Slowjs::addIntrinsic()
     global_obj->Put("Object", JSValue(JS_TAG_FUNCTION, JSObject::Object));
     global_obj->Put("Function", JSValue(JS_TAG_FUNCTION, JSObject::Function));
 
+    JSObject *process = new JSObject();
+    process->Put("nextTick", JSValue(JS_TAG_FUNCTION, new JSFunction("nextTick", (void *)CEnqueueTask)));
+    global_obj->Put("process", JSValue(JS_TAG_OBJECT, process));
+
     JSObject *console = new JSObject();
-    JSFunction *cprint_JSFunction = new JSFunction("CFunction", (void *)CPrint);
-    console->Put("log", JSValue(JS_TAG_FUNCTION, cprint_JSFunction));
+    JSFunction *clog_JSFunction = new JSFunction("log", (void *)CPrint);
+    console->Put("log", JSValue(JS_TAG_FUNCTION, clog_JSFunction));
     global_obj->Put("console", JSValue(JS_TAG_OBJECT, console));
 
+    JSFunction *cprint_JSFunction = new JSFunction("print", (void *)CPrint);
     global_obj->Put("print", JSValue(JS_TAG_FUNCTION, cprint_JSFunction));
 }
 void Slowjs::initGlobalExecutionContext(AST_Node *node)
 {
-    global_obj = new JSObject();
     Lexical_Environment *global_env = new Lexical_Environment(new Object_ER(global_obj), nullptr);
-
     global_ctx = new Execution_Context(global_env, JS_UNDEFINED);
-
     ctx_stack->push(global_ctx);
-    addIntrinsic();
+
     vector<JSValue> placeholder;
     declarationBindingInstantiation(node, placeholder);
 }

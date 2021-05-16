@@ -16,6 +16,8 @@
 
 // access the components of references
 
+class Slowjs;
+
 BaseUnion GetBase(Reference V);
 string GetReferencedName(Reference V);
 bool HasPrimitiveBase(Reference V);
@@ -44,5 +46,6 @@ JSValue CPrint(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
 JSValue CObject(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
 JSValue CGetPrototypeOf(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
 JSValue CCall(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
+JSValue CEnqueueTask(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
 
 #endif /* Abstract_Operation_hpp */

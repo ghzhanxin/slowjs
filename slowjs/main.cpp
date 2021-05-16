@@ -11,7 +11,7 @@
 
 using namespace std;
 
-string getInputCode(string fileName)
+string getContentFromFile(string fileName)
 {
     ifstream in(fileName);
     if (in)
@@ -25,6 +25,7 @@ string getInputCode(string fileName)
     else
         throw string("error: open file fail! file does not exist");
 }
+
 int main(int argc, const char *argv[])
 {
     try
@@ -32,10 +33,9 @@ int main(int argc, const char *argv[])
         if (argc == 1)
             throw string("error: no input file");
 
-        string code = getInputCode(argv[1]);
-
         Slowjs slow = Slowjs();
-        JSValue result = slow.run(code);
+        slow.run(getContentFromFile(argv[1]));
+        slow.loop->startLoop();
 
         cout << endl;
         cout << "---------- Congratulations! Evaluate Success!!! ----------" << endl;

@@ -10,10 +10,10 @@
 #include <iostream>
 
 JSObject *JSObject::ObjectPrototype = new JSObject();
-JSFunction *JSObject::Object = new JSFunction("CFunction", (void *)CObject);
+JSFunction *JSObject::Object = new JSFunction("Object", (void *)CObject);
 
 JSObject *JSObject::FunctionPrototype = new JSObject();
-JSFunction *JSObject::Function = new JSFunction("CFunction");
+JSFunction *JSObject::Function = new JSFunction("Function");
 
 void JSObject::CreateBuiltinObject()
 {
@@ -22,11 +22,11 @@ void JSObject::CreateBuiltinObject()
 
     Object->Prototype = ObjectPrototype;
     Object->Put("prototype", JSValue(JS_TAG_OBJECT, ObjectPrototype));
-    Object->Put("getPrototypeOf", JSValue(JS_TAG_FUNCTION, new JSFunction("CFunction", (void *)CGetPrototypeOf)));
+    Object->Put("getPrototypeOf", JSValue(JS_TAG_FUNCTION, new JSFunction("getPrototypeOf", (void *)CGetPrototypeOf)));
 
     Function->Put("prototype", JSValue(JS_TAG_OBJECT, FunctionPrototype));
     FunctionPrototype->Put("constructor", JSValue(JS_TAG_FUNCTION, Function));
-    FunctionPrototype->Put("call", JSValue(JS_TAG_FUNCTION, new JSFunction("CFunction", (void *)CCall)));
+    FunctionPrototype->Put("call", JSValue(JS_TAG_FUNCTION, new JSFunction("call", (void *)CCall)));
 };
 
 DataDescriptor *JSObject::GetOwnProperty(string P)
@@ -98,10 +98,7 @@ JSValue JSFunction::Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 {
     JSFunction *fo = this;
     if (fo->isIntrinsic())
-    {
-        C_Function cf = fo->getCFunction();
-        return cf(fo, slow, thisValue, args);
-    }
+        return fo->getCFunction()(fo, slow, thisValue, args);
     else
     {
         slow->initFunctionExecutionContext(fo, thisValue, args);

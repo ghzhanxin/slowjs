@@ -16,15 +16,21 @@
 #include "Execution_Context.hpp"
 #include "Spec_Type.hpp"
 #include "Abstract_Operation.hpp"
+#include "Event_Loop.hpp"
 
 class Slowjs
 {
 public:
+    Slowjs()
+    {
+        loop = new Event_Loop(this);
+        global_obj = new JSObject();
+        ctx_stack = new stack<Execution_Context *>;
+    }
     JSValue run(string input);
     queue<Token *> tokenize(string input);
     AST_Node *parse(queue<Token *> q);
 
-    void initCallStack();
     void addIntrinsic();
     void initGlobalExecutionContext(AST_Node *);
     void initFunctionExecutionContext(JSFunction *, JSValue, vector<JSValue>);
@@ -32,6 +38,7 @@ public:
     Execution_Context *getCurrentContext();
     vector<JSValue> getArgumentList(AST_Node *);
 
+    Event_Loop *loop;
     JSObject *global_obj;
     Execution_Context *global_ctx;
     stack<Execution_Context *> *ctx_stack;

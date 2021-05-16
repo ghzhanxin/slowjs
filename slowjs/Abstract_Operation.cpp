@@ -6,7 +6,7 @@
 //
 
 #include "Abstract_Operation.hpp"
-#include <string>
+#include "Slowjs.hpp"
 
 #define TypeErrorPrefix "TypeError: "
 #define ReferenceErrorPrefix "ReferenceError: "
@@ -298,4 +298,32 @@ JSValue CCall(JSFunction *fo, Slowjs *slow, JSValue caller, vector<JSValue> args
         args.erase(args.begin());
     }
     return caller_fo->Call(slow, thisValue, args);
+}
+JSValue CEnqueueTask(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
+{
+    if (args.size() > 0)
+    {
+        JSFunction *delay_fo = args[0].getFunction();
+        args.erase(args.begin());
+
+        Function_Data *fn_data = new Function_Data(delay_fo, thisValue, args);
+        Task task(fn_data);
+        slow->loop->task_queue.push(task);
+    }
+
+    return JS_UNDEFINED;
+}
+JSValue CEnqueueJob(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
+{
+    if (args.size() > 0)
+    {
+        JSFunction *delay_fo = args[0].getFunction();
+        args.erase(args.begin());
+
+        Function_Data *fn_data = new Function_Data(delay_fo, thisValue, args);
+        Job job(fn_data);
+        slow->loop->job_queue.push(job);
+    }
+
+    return JS_UNDEFINED;
 }
