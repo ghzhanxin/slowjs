@@ -199,6 +199,79 @@ function testNextTick(assert) {
     process.nextTick(delayRead);
 }
 
+function testPromiseLike(assert) {
+
+    // simple Promise definition
+    function Promise(executor) {
+        var _this = this;
+        function nextTickDoResolveCallback(value) {
+            if (_this.onFulfilledCallback) {
+                _this.onFulfilledCallback(value);
+            }
+        }
+        function PromiseResolve(value) {
+            if (_this.state === 'PENDING') {
+                _this.state = 'FULFILLED';
+                _this.value = value;
+
+                process.nextTick(nextTickDoResolveCallback, value);
+            }
+        }
+        function nextTickDoRejectCallback(reason) {
+            if (_this.onRejectedCallback)
+                _this.onRejectedCallback(reason);
+        }
+        function PromiseReject(reason) {
+            if (_this.state === 'PENDING') {
+                _this.state = 'REJECTED';
+                _this.value = reason;
+
+                process.nextTick(nextTickDoRejectCallback, reason);
+            }
+        }
+
+        this.state = 'PENDING';
+        this.value = null;
+        this.onFulfilledCallback = null;
+        this.onRejectedCallback = null;
+
+        executor(PromiseResolve, PromiseReject);
+    }
+    function prototypeThen(onFulfilled, onRejected) {
+        var p1 = this;
+        p1.onFulfilledCallback = onFulfilled;
+        p1.onRejectedCallback = onRejected;
+    }
+    Promise.prototype.then = prototypeThen;
+
+
+
+    // simple Promise use case
+    function executor(resolve, reject) {
+        process.nextTick(resolve, 'success');
+    }
+    function onFulfilled(value) {
+        assert(value, 'success');
+    }
+    function onRejected(reason) {
+        assert(reason, 'fail');
+    }
+    var promise = new Promise(executor);
+    promise.then(onFulfilled, onRejected);
+
+    // simple Promise use case 2
+    function executor2(resolve, reject) {
+        reject('fail');
+    }
+    function onFulfilled2(value) {
+        assert(value, 'success');
+    }
+    function onRejected2(reason) {
+        assert(reason, 'fail');
+    }
+    var promise2 = new Promise(executor2);
+    promise2.then(onFulfilled2, onRejected2);
+}
 
 describe('testType', testType);
 describe('testOperator', testOperator);
@@ -207,4 +280,4 @@ describe('testHighOrderFunction', testHighOrderFunction);
 describe('testIFAndForStatement', testIFAndForStatement);
 describe('testObjectPrototype', testObjectPrototype);
 describe('testNextTick', testNextTick);
-
+describe('testPromiseLike', testPromiseLike);
