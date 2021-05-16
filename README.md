@@ -2,7 +2,7 @@
 
 ## 这是什么
 
-这是一个脚本语言（目前是 ECMAScript 5 的子集）的运行时环境，类似于 Node.js，通过命令行方式执行。
+这是一个脚本语言（目前是 ECMAScript 5.1 的子集）的运行时环境，类似于 Node.js，通过命令行方式执行。
 
 如果你熟悉 ES5 ，那么你可以很轻松地编写可被正确执行的脚本。
 
@@ -50,10 +50,11 @@
     - [x] continue
     - [x] throw
   - [ ] 表达式
+    - [ ] 函数表达式。如`var fn = function (){}` 不支持！太难了！尝试多次失败 T_T. 请用函数声明。
     - [ ] 成员表达式 
       - [x] `object.property` 
       - [ ] `object[property]`
-    - [x] 函数调用 如 `fn();`
+    - [x] 函数调用表达式 如 `fn();`
     - [x] 主值表达式
       - [x] this 
       - [x] 标识符
@@ -151,8 +152,12 @@
 
    ii. 没装 g++，解决方案：安装一下。
 
-   iii. slow 文件没有执行权限，解决方案：在 slow 文件的目录下执行 `$ chmod 777 slow` 。
+   iii. slow 文件权限问题
 
+   ​	a. 没有执行权限。解决方案：在 slow 文件的目录下执行 `$ chmod 777 slow` 。
+   
+   ​	b. MacOS 下没有打开权限或未知开发者。解决方案：System Preference -> Security & Privacy -> Allow Anyway 。
+   
    iv. 运行时报错，解决方案：大概率是语法错误，根据提示修改语法。
    
    v. 其他问题，欢迎提 Issues。
