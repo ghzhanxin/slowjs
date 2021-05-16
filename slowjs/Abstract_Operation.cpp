@@ -211,6 +211,7 @@ JSValue ToBoolean(JSValue value)
     case JS_TAG_STRING:
         return JSValue(JS_TAG_BOOLEAN, value.getString().size() != 0);
     case JS_TAG_OBJECT:
+    case JS_TAG_FUNCTION:
         return JS_TRUE;
     default:
         throw throwRuntimeException(EXCEPTION_TYPE, "ToBoolean");
@@ -232,6 +233,7 @@ JSValue ToNumber(JSValue value)
         // TODO:
         return JSValue(JS_TAG_NUMBER, value.getString().size() == 0 ? 0.0 : 1.0);
     case JS_TAG_OBJECT:
+    case JS_TAG_FUNCTION:
         return ToNumber(ToPrimitive(value));
     default:
         throw throwRuntimeException(EXCEPTION_TYPE, "ToNumber");
@@ -251,6 +253,7 @@ JSValue ToString(JSValue value)
     case JS_TAG_STRING:
         return value;
     case JS_TAG_OBJECT:
+    case JS_TAG_FUNCTION:
         return ToNumber(ToPrimitive(value));
     default:
         throw throwRuntimeException(EXCEPTION_TYPE, "ToString");

@@ -33,7 +33,9 @@
 // IfStatement :
 //          if (Expression) Statement
 //          if (Expression) Statement else Statement
-// ForStatement : for (VariableDeclaration ExpressionStatement Expression) Statement
+// ForStatement :
+//          for (var AssignmentExpression ; Expression ; Expression) Statement
+//          for ( [Expression] ; Expression ; Expression) Statement
 // VariableDeclaration : var AssignmentExpression ;
 // FunctionDeclaration : function Identifier (FormalParameters) BlockStatement
 // FunctionExpression : function [Identifier] (FormalParameters) BlockStatement
@@ -248,10 +250,10 @@ AST_Node *Parser::ReturnStatement()
             return ret;
         else
         {
-            AST_Node *expre = Expression();
-            if (expre && match(";"))
+            AST_Node *expr = Expression();
+            if (expr && match(";"))
             {
-                ret->childs.push_back(expre);
+                ret->childs.push_back(expr);
                 return ret;
             }
             else
@@ -297,10 +299,10 @@ AST_Node *Parser::IfStatement()
 
     if (match("if") && match("("))
     {
-        AST_Node *expre = Expression();
-        if (expre && match(")"))
+        AST_Node *expr = Expression();
+        if (expr && match(")"))
         {
-            node->childs.push_back(expre);
+            node->childs.push_back(expr);
             AST_Node *stmt = Statement();
 
             if (stmt)
@@ -329,32 +331,59 @@ AST_Node *Parser::IfStatement()
         throw throwParseSyntaxError("Expect 'if' or '(' in IfStatement");
 }
 
-// ForStatement : for (VariableDeclaration ExpressionStatement Expression) Statement
+// ForStatement :
+//          for (var AssignmentExpression ; Expression ; Expression) Statement
+//          for ( [Expression] ; Expression ; Expression) Statement
 AST_Node *Parser::ForStatement()
 {
     AST_Node *node = new AST_Node(nt::ForStatement);
 
     if (match("for") && match("("))
     {
-        AST_Node *var = VariableDeclaration();
-        AST_Node *expre_stmt = ExpressionStatement();
-        AST_Node *expre = Expression();
-        if (var && expre_stmt && expre && match(")"))
+        AST_Node *first = nullptr;
+        if (lookahead)
         {
-            node->childs.push_back(var);
-            node->childs.push_back(expre_stmt);
-            node->childs.push_back(expre);
-            AST_Node *stmt = Statement();
-            if (stmt)
+            if (lookahead->value == "var")
             {
-                node->childs.push_back(stmt);
-                return node;
+                match("var");
+                first = new AST_Node(nt::VariableDeclaration);
+                first->childs.push_back(AssignmentExpression());
             }
+            else if (lookahead->value == ";")
+                first = new AST_Node(nt::EmptyStatement);
             else
-                throw throwParseSyntaxError("ForStatement");
+                first = Expression();
         }
         else
-            throw throwParseSyntaxError("Expect ')' in ForStatement");
+            throw throwParseSyntaxError("ForStatement");
+
+        if (first && match(";"))
+        {
+            AST_Node *second = Expression();
+            if (second && match(";"))
+            {
+                AST_Node *third = Expression();
+                if (third && match(")"))
+                {
+                    node->childs.push_back(first);
+                    node->childs.push_back(second);
+                    node->childs.push_back(third);
+                    AST_Node *stmt = Statement();
+                    if (stmt)
+                    {
+                        node->childs.push_back(stmt);
+                        return node;
+                    }
+                    else
+                        throw throwParseSyntaxError("ForStatement");
+                }
+                else
+                    throw throwParseSyntaxError("Expect ')' in ForStatement");
+            }
+            throw throwParseSyntaxError("Expect ';' in ForStatement");
+        }
+        else
+            throw throwParseSyntaxError("Expect ';' in ForStatement");
     }
     else
         throw throwParseSyntaxError("Expect 'for' or '(' in ForStatement");
@@ -480,11 +509,11 @@ AST_Node *Parser::ExpressionStatement()
 {
     AST_Node *node = new AST_Node(nt::ExpressionStatement);
 
-    AST_Node *expre = Expression();
-    if (!match(";") || !expre)
+    AST_Node *expr = Expression();
+    if (!match(";") || !expr)
         throw throwParseSyntaxError("Expect ';' or expression in ExpressionStatement");
 
-    node->childs.push_back(expre);
+    node->childs.push_back(expr);
     return node;
 }
 
@@ -556,12 +585,12 @@ AST_Node *Parser::AssignmentExpression()
     AST_Node *member = MemberExpression();
     if (member && match("="))
     {
-        AST_Node *expre = Expression();
-        if (expre)
+        AST_Node *expr = Expression();
+        if (expr)
         {
             AST_Node *node = new AST_Node(nt::AssignmentExpression);
             node->childs.push_back(member);
-            node->childs.push_back(expre);
+            node->childs.push_back(expr);
             return node;
         }
         else
@@ -842,10 +871,10 @@ vector<AST_Node *> Parser::ExpressionList()
     vector<AST_Node *> childs;
     while (lookahead && lookahead->value != ")")
     {
-        AST_Node *expre = Expression();
-        if (expre)
+        AST_Node *expr = Expression();
+        if (expr)
         {
-            childs.push_back(expre);
+            childs.push_back(expr);
 
             if (lookahead->value == ")")
                 return childs;
@@ -958,11 +987,11 @@ AST_Node *Parser::PrimaryExpression()
     }
     else if (match("("))
     {
-        AST_Node *expre = Expression();
-        if (!match(")") || !expre)
+        AST_Node *expr = Expression();
+        if (!match(")") || !expr)
             throw throwParseSyntaxError("Expect ')'");
 
-        return expre;
+        return expr;
     }
     else
     {

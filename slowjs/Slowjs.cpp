@@ -116,11 +116,14 @@ void Slowjs::declarationBindingInstantiation(AST_Node *node, vector<JSValue> arg
         }
         else if (stmt_type == nt::VariableDeclaration || stmt_type == nt::ForStatement || stmt_type == nt::IfStatement)
         {
-            vector<AST_Node *> arr;
+            vector<AST_Node *> declarations;
             if (stmt_type == nt::VariableDeclaration)
-                arr.push_back(top_level);
+                declarations.push_back(top_level);
             else if (stmt_type == nt::ForStatement)
-                arr.push_back(top_level->childs[0]);
+            {
+                if (top_level->childs[0]->type == nt::VariableDeclaration)
+                    declarations.push_back(top_level->childs[0]);
+            }
             else if (stmt_type == nt::IfStatement)
             {
                 AST_Node *blockSeqs = top_level->childs[1];
@@ -128,7 +131,7 @@ void Slowjs::declarationBindingInstantiation(AST_Node *node, vector<JSValue> arg
                 {
                     AST_Node *seq_stmt = blockSeqs->childs[j];
                     if (seq_stmt->type == nt::VariableDeclaration)
-                        arr.push_back(seq_stmt);
+                        declarations.push_back(seq_stmt);
                 }
                 if (top_level->childs.size() == 3)
                 {
@@ -137,14 +140,14 @@ void Slowjs::declarationBindingInstantiation(AST_Node *node, vector<JSValue> arg
                     {
                         AST_Node *alt_stmt = blockAlts->childs[j];
                         if (alt_stmt->type == nt::VariableDeclaration)
-                            arr.push_back(alt_stmt);
+                            declarations.push_back(alt_stmt);
                     }
                 }
             }
 
-            for (size_t k = 0; k < arr.size(); k++)
+            for (size_t k = 0; k < declarations.size(); k++)
             {
-                AST_Node *AsignNode = arr[k]->childs[0];
+                AST_Node *AsignNode = declarations[k]->childs[0];
                 string dn = AsignNode->childs[0]->value;
                 bool varAlreadyDeclared = env->HasBinding(dn);
                 if (!varAlreadyDeclared)
@@ -452,7 +455,7 @@ JSValue Slowjs::evaluateIfStatement(AST_Node *node)
     vector<AST_Node *> fields = node->childs;
     JSValue test = evaluate(fields[0]);
     checkException(test);
-    if ((test.isBoolean() && test.getBoolean()) || (test.isNumber() && test.getNumber() != 0))
+    if (ToBoolean(test).getBoolean())
         return evaluate(fields[1]);
     else if (fields.size() == 3)
         return evaluate(fields[2]);
@@ -479,19 +482,19 @@ JSValue Slowjs::evaluateBlockStatement(AST_Node *node)
 JSValue Slowjs::evaluateForStatement(AST_Node *node)
 {
     vector<AST_Node *> fields = node->childs;
-    AST_Node *assign = fields[0]->childs[0];
+    AST_Node *first = fields[0];
     AST_Node *test = fields[1];
     AST_Node *update = fields[2];
     AST_Node *block = fields[3];
 
     JSValue result = JS_UNDEFINED;
 
-    JSValue assignValue = evaluate(assign);
-    checkException(assignValue);
+    JSValue firstValue = evaluate(first);
+    checkException(firstValue);
 
     JSValue testValue = evaluate(test);
     checkException(testValue);
-    bool condition = testValue.getBoolean();
+    bool condition = ToBoolean(testValue).getBoolean();
 
     JSValue updateValue = JS_UNDEFINED;
 
@@ -513,10 +516,12 @@ JSValue Slowjs::evaluateForStatement(AST_Node *node)
 
                 testValue = evaluate(test);
                 checkException(testValue);
-                condition = testValue.getBoolean();
+                condition = ToBoolean(testValue).getBoolean();
 
                 continue;
             }
+            else
+                return JSValue(JS_TAG_EXCEPTION, string("evaluateForStatement"));
         }
 
         updateValue = evaluate(update);
@@ -524,7 +529,7 @@ JSValue Slowjs::evaluateForStatement(AST_Node *node)
 
         testValue = evaluate(test);
         checkException(testValue);
-        condition = testValue.getBoolean();
+        condition = ToBoolean(testValue).getBoolean();
     }
     return result;
 }
