@@ -181,9 +181,15 @@ function testObjectPrototype(assert) {
     assert(stu__proto__proto__proto, Object.prototype);
 }
 
+function delay(a, b, c) {
+    print('in delay', a, b, c);
+}
+process.nextTick(delay, 1, 2, 3);
+
 describe('testType', testType);
 describe('testOperator', testOperator);
 describe('testClosure', testClosure);
 describe('testHighOrderFunction', testHighOrderFunction);
 describe('testIFAndForStatement', testIFAndForStatement);
 describe('testObjectPrototype', testObjectPrototype);
+
