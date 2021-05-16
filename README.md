@@ -21,14 +21,14 @@
   - [x] Boolean
     - [x] true
     - [x] false
-  - [ ] String
+  - [x] String
     - [x] 单引号
     - [x] 双引号
   - [ ] Object
     - [x] 创建对象 `new Object() 或者 new 函数名()`
-    - [x] Function 
+    - [x] Function
       - [x] 普通调用
-      - [x] new 调用 
+      - [x] new 调用
       - [x] 闭包
       - [x] 一等公民
       - [x] 对象方法
@@ -51,12 +51,12 @@
     - [x] throw
   - [ ] 表达式
     - [ ] 函数表达式。如`var fn = function (){}` 不支持！太难了！尝试多次失败 T_T. 请用函数声明。
-    - [ ] 成员表达式 
-      - [x] `object.property` 
+    - [ ] 成员表达式
+      - [x] `object.property`
       - [ ] `object[property]`
     - [x] 函数调用表达式 如 `fn();`
     - [x] 主值表达式
-      - [x] this 
+      - [x] this
       - [x] 标识符
         - [x] 首字母
           - [x] $
@@ -73,20 +73,20 @@
     - [ ] 多行注释
   - [ ] 运算符
     - [ ] 算术
-      - [x] \+ \- \* / 
+      - [x] \+ \- \* /
       - [ ] %
     - [x] 逻辑
       - [x] && || !
     - [x] 关系
-      - [x] \>  \< \>=  \<=
-    - [ ] 赋值 
-      - [x] = 
+      - [x] \>  \< \>=  \<= === !==
+      - [ ] == !=
+    - [ ] 赋值
+      - [x] =
       - [ ] += -= *= /= %=
-    - [ ] 相等
-      - [ ] == != 
-      - [x] === !==
     - [x] 自增自减
       - [x] ++ --
+    - [ ] 条件
+      - [ ] test ? consequent : alternate
   - [ ] 控制流
     - [x] 分支
       - [x] if
@@ -121,7 +121,7 @@
 - [ ] 多线程
 - [ ] 协程
 - [ ] I/O
-  - [ ] File 
+  - [ ] File
   - [ ] Network
 
 ## 这为什么
@@ -145,7 +145,7 @@
    ```bash
    $ ./slow test.js
    ```
-   
+
 4. 如果失败，可能原因：
 
    i. 没装 make，解决方案：安装一下。
@@ -154,12 +154,12 @@
 
    iii. slow 文件权限问题
 
-   ​	a. 没有执行权限。解决方案：在 slow 文件的目录下执行 `$ chmod 777 slow` 。
-   
-   ​	b. MacOS 下没有打开权限或未知开发者。解决方案：System Preference -> Security & Privacy -> Allow Anyway 。
-   
+   ​        a. 没有执行权限。解决方案：在 slow 文件的目录下执行 `$ chmod 777 slow` 。
+
+   ​        b. MacOS 下没有打开权限或未知开发者。解决方案：System Preference -> Security & Privacy -> Allow Anyway 。
+
    iv. 运行时报错，解决方案：大概率是语法错误，根据提示修改语法。
-   
+
    v. 其他问题，欢迎提 Issues。
 
 ## 这有什么用
