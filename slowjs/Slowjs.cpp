@@ -303,7 +303,7 @@ JSValue Slowjs::evaluateBinaryExpression(AST_Node *node)
     checkException(right);
 
     if (op == "==" || op == "!=")
-        // TODO:
+        // TODO: https://262.ecma-international.org/5.1/#sec-11.9.1
         cerr << "'==' '!=' is not currently supported, now has the same effect as '===' '!=='. please use '===' '!==' instead" << endl;
 
     if (op == "===" || op == "==")

@@ -51,6 +51,7 @@ public:
     bool hasTask();
     bool hasJob();
 
+    // https://html.spec.whatwg.org/#event-loop-processing-model
     void startLoop();
     void Perform(Task);
     void PerformOldestTask();

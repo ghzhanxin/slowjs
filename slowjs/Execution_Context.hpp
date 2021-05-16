@@ -16,6 +16,7 @@
 class Environment_Record;
 class Lexical_Environment;
 
+// https://262.ecma-international.org/5.1/#sec-10.3
 class Execution_Context
 {
 public:
@@ -27,6 +28,7 @@ public:
     JSValue this_binding;
 };
 
+// https://262.ecma-international.org/5.1/#sec-10.2
 class Lexical_Environment
 {
 public:
@@ -42,6 +44,8 @@ enum Record_Type
     Record_Type_Declarative,
     Record_Type_Object,
 };
+
+// https://262.ecma-international.org/5.1/#sec-10.2.1
 class Environment_Record : public map<string, JSValue>
 {
 public:

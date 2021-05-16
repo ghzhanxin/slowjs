@@ -110,6 +110,7 @@ protected:
 #define JS_UNINITIALIZED JSValue(JS_TAG_UNINITIALIZED, string("Uninitialized"))
 #define JS_NAN JSValue(JS_TAG_NAN, string("NaN"))
 
+// https://262.ecma-international.org/5.1/#sec-8.6
 class JSObject : public JSValue
 {
 public:
@@ -162,6 +163,7 @@ public:
     {
         initializeFunction();
     };
+    // https://262.ecma-international.org/5.1/#sec-13.2
     void initializeFunction();
 
     AST_Node *FormalParameters;
@@ -170,7 +172,10 @@ public:
     string Name;
     string Class = "Function";
 
+    // https://262.ecma-international.org/5.1/#sec-13.2.1
     JSValue Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args);
+
+    // https://262.ecma-international.org/5.1/#sec-13.2.2
     JSValue Construct(Slowjs *slow, vector<JSValue> args);
 
     bool isIntrinsic() { return !!_c_function_ptr; };

@@ -32,9 +32,13 @@ public:
     AST_Node *parse(queue<Token *> q);
 
     void addIntrinsic();
+    // https://262.ecma-international.org/5.1/#sec-10.4.1.1
     void initGlobalExecutionContext(AST_Node *);
+    // https://262.ecma-international.org/5.1/#sec-10.4.3
     void initFunctionExecutionContext(JSFunction *, JSValue, vector<JSValue>);
+    // https://262.ecma-international.org/5.1/#sec-10.5
     void declarationBindingInstantiation(AST_Node *, vector<JSValue>);
+
     Execution_Context *getCurrentContext();
     vector<JSValue> getArgumentList(AST_Node *);
 

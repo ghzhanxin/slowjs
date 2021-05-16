@@ -25,6 +25,7 @@ enum Base_Type
     BASE_TYPE_RECORD,
 };
 
+// https://262.ecma-international.org/5.1/#sec-8.7
 class Reference
 {
 public:
@@ -46,6 +47,7 @@ private:
     Base_Type _base_type;
 };
 
+// https://262.ecma-international.org/5.1/#sec-8.10
 class PropertyDescriptor
 {
 public:

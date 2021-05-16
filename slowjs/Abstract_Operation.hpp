@@ -14,34 +14,38 @@
 #include "Spec_Type.hpp"
 #include "Execution_Context.hpp"
 
-// access the components of references
-
 class Slowjs;
 
+// https://262.ecma-international.org/5.1/#sec-8.7
 BaseUnion GetBase(Reference V);
 string GetReferencedName(Reference V);
 bool HasPrimitiveBase(Reference V);
 bool IsPropertyReference(Reference V);
 bool IsUnresolvableReference(Reference V);
 
-// operate on references:
+// https://262.ecma-international.org/5.1/#sec-8.7.1
 JSValue GetValue(JSValue V);
 JSValue GetValue(Reference V);
 
 void PutValue(JSValue V, JSValue W);
 void PutValue(Reference V, JSValue W);
 
+// https://262.ecma-international.org/5.1/#sec-10.3.1
+// https://262.ecma-international.org/5.1/#sec-10.2.2.1
 Reference IdentifierResolution(Lexical_Environment *lex, string name);
 
-void printJSValue(JSValue);
-int throwRuntimeException(EXCEPTION_ENUM t, string s);
-
+// https://262.ecma-international.org/5.1/#sec-9
 JSValue ToPrimitive(JSValue);
 JSValue ToBoolean(JSValue);
 JSValue ToNumber(JSValue);
 JSValue ToString(JSValue);
 JSValue ToObject(JSValue);
 
+// helper function
+void printJSValue(JSValue);
+int throwRuntimeException(EXCEPTION_ENUM t, string s);
+
+// CFunction
 JSValue CPrint(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
 JSValue CObject(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
 JSValue CGetPrototypeOf(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
