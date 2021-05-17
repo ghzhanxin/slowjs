@@ -156,6 +156,18 @@ queue<Token *> Tokenizer::tokenize(const string &input)
             continue;
         }
 
+        if (c == '?')
+        {
+            pushSingleToken(tt::question, c);
+            continue;
+        }
+
+        if (c == ':')
+        {
+            pushSingleToken(tt::colon, c);
+            continue;
+        }
+
         if (isdigit(c))
         {
             string digitStr = getNumString(input);

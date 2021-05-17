@@ -52,8 +52,11 @@
 
 // Expression : AssignmentExpression
 // AssignmentExpression:
-//          LogicalExpression
+//          ConditionalExpression
 //          MemberExpression = Expression
+// ConditionalExpression:
+//          LogicalExpression
+//          LogicalExpression ? LogicalExpression : LogicalExpression
 // LogicalExpression:
 //          EqualityExpression
 //          EqualityExpression && LogicalExpression
@@ -552,7 +555,7 @@ void Parser::restoreAssignmentExpression()
 }
 
 // AssignmentExpression:
-//          LogicalExpression
+//          ConditionalExpression
 //          MemberExpression = Expression
 AST_Node *Parser::AssignmentExpression()
 {
@@ -571,8 +574,35 @@ AST_Node *Parser::AssignmentExpression()
     else
     {
         restoreAssignmentExpression();
-        return LogicalExpression();
+        return ConditionalExpression();
     }
+}
+
+// ConditionalExpression:
+//          LogicalExpression
+//          LogicalExpression ? LogicalExpression : LogicalExpression
+AST_Node *Parser::ConditionalExpression()
+{
+    AST_Node *test = LogicalExpression();
+    if (!test)
+        return nullptr;
+
+    if (!eat("?"))
+        return test;
+
+    AST_Node *consequence = LogicalExpression();
+    check(consequence, "consequence in ConditionalExpression");
+
+    check(eat(":"));
+
+    AST_Node *alternate = LogicalExpression();
+    check(alternate, "alternate in ConditionalExpression");
+
+    AST_Node *node = new AST_Node(nt::ConditionalExpression);
+    node->childs.push_back(test);
+    node->childs.push_back(consequence);
+    node->childs.push_back(alternate);
+    return node;
 }
 
 AST_Node *Parser::buildBinary(AST_Node *left, AST_Node *right, string op)

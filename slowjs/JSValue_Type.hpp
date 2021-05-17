@@ -175,6 +175,7 @@ public:
     {
         _tag = JS_TAG_BOOLEAN;
         _u.boolean = value;
+        _string = value ? "true" : "false";
     }
 
     bool Value() { return this->getBoolean(); }

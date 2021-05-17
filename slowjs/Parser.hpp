@@ -48,6 +48,7 @@ namespace nt
         ThrowStatement,
         WhileStatement,
         DoWhileStatement,
+        ConditionalExpression,
     };
 }
 
@@ -116,6 +117,7 @@ public:
 
     AST_Node *Expression();
     AST_Node *AssignmentExpression();
+    AST_Node *ConditionalExpression();
     AST_Node *LogicalExpression();
     AST_Node *EqualityExpression();
     AST_Node *RelationalExpression();

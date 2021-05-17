@@ -223,6 +223,8 @@ JSValue Slowjs::evaluate(AST_Node *node)
         return evaluateDoWhileStatement(node);
     case nt::WhileStatement:
         return evaluateWhileStatement(node);
+    case nt::ConditionalExpression:
+        return evaluateConditionalExpression(node);
     default:
         throw string("Unknown AST Node");
     }
@@ -455,12 +457,16 @@ JSValue Slowjs::evaluateIdentifier(AST_Node *node)
     return GetValue(ref);
 }
 
+JSValue Slowjs::evaluateConditionalExpression(AST_Node *node)
+{
+    return evaluateIfStatement(node);
+}
 JSValue Slowjs::evaluateIfStatement(AST_Node *node)
 {
     vector<AST_Node *> fields = node->childs;
-    JSValue test = evaluate(fields[0]);
-    checkException(test);
-    if (ToBoolean(test).getBoolean())
+    JSValue testValue = evaluate(fields[0]);
+    checkException(testValue);
+    if (ToBoolean(testValue).getBoolean())
         return evaluate(fields[1]);
     else if (fields.size() == 3)
         return evaluate(fields[2]);
