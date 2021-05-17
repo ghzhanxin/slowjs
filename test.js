@@ -79,6 +79,10 @@ function testOperator(assert) {
     assert(0 || right, 2);
     assert(!left, false);
     assert(!!left, true);
+    left++;
+    assert(left, 9);
+    left--;
+    assert(left, 8);
 }
 
 var a = 1;
@@ -110,23 +114,68 @@ function testHighOrderFunction(assert) {
     assert(test(), 3);
 }
 
-function testIFAndForStatement(assert) {
-    var lessCount = 0;
-    var greatCount = 0;
+function testIfStatement(assert) {
+    var num = 10;
+    var less = 0;
+    var great = 0;
 
-    for (var i = 0; i < 200; i++) {
-        if (i <= 10) continue;
-
-        if (i <= 30) {
-            lessCount = lessCount + 1;
-        } else {
-            greatCount = greatCount + 1;
-        }
-
-        if (i >= 100) break;
+    if (num === 0) {
+        less++;
+    } else if (num === 1) {
+        less--;
+    } else {
+        great++;
     }
-    assert(lessCount, 20);
-    assert(greatCount, 70);
+    assert(less, 0);
+    assert(great, 1);
+}
+function testIterationStatement(assert) {
+    var i = 0;
+    var forLess10 = 0;
+    var forGreat10 = 0;
+    for (; i < 20; i++) {
+        if (i < 10) {
+            forLess10++;
+            continue;
+        }
+        if (i >= 15) break;
+        forGreat10++;
+    }
+    assert(forLess10, 10);
+    assert(forGreat10, 5);
+
+    var j = 0;
+    var whileLess10 = 0;
+    var whileGreat10 = 0;
+    while (j < 20) {
+        j++;
+
+        if (j < 10) {
+            whileLess10++;
+            continue;
+        }
+        if (j >= 15) break;
+        whileGreat10++;
+    }
+    assert(whileLess10, 9);
+    assert(whileGreat10, 5);
+
+    var k = 0;
+    var doLess10 = 0;
+    var doGreat10 = 0;
+    do {
+        k++;
+
+        if (k < 10) {
+            doLess10++;
+            continue;
+        }
+        if (k >= 15) break;
+        doGreat10++;
+    } while (k < 20);
+
+    assert(doLess10, 9);
+    assert(doGreat10, 5);
 }
 
 function testObjectPrototype(assert) {
@@ -277,7 +326,8 @@ describe('testType', testType);
 describe('testOperator', testOperator);
 describe('testClosure', testClosure);
 describe('testHighOrderFunction', testHighOrderFunction);
-describe('testIFAndForStatement', testIFAndForStatement);
+describe('testIfStatement', testIfStatement);
+describe('testIterationStatement', testIterationStatement);
 describe('testObjectPrototype', testObjectPrototype);
 describe('testNextTick', testNextTick);
 describe('testPromiseLike', testPromiseLike);
