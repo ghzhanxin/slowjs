@@ -85,8 +85,8 @@
       - [ ] += -= *= /= %=
     - [x] 自增自减
       - [x] ++ --
-    - [ ] 条件
-      - [ ] test ? consequent : alternate
+    - [x] 条件
+      - [x] test ? consequent : alternate
   - [ ] 控制流
     - [x] 分支
       - [x] if
