@@ -46,6 +46,8 @@ namespace nt
         UnaryExpression,
         FunctionExpression,
         ThrowStatement,
+        WhileStatement,
+        DoWhileStatement,
     };
 }
 
@@ -83,7 +85,14 @@ public:
     queue<Token *> tokenQueue;
 
     void nextToken();
-    bool match(string s);
+    template <typename T>
+    bool eat(T);
+
+    bool expect(string);
+    bool expect(tt::Token_Type);
+
+    bool expectNot(string);
+    bool expectNot(tt::Token_Type);
 
     AST_Node *parse(queue<Token *>);
 
@@ -96,7 +105,7 @@ public:
     AST_Node *ReturnStatement();
     AST_Node *ThrowStatement();
     AST_Node *IfStatement();
-    AST_Node *ForStatement();
+    AST_Node *IterationStatement();
     AST_Node *BlockStatement();
     AST_Node *ExpressionStatement();
     AST_Node *VariableDeclaration();
@@ -135,8 +144,10 @@ public:
     void restoreMemberExpression();
 
     int throwParseSyntaxError(string);
+    int checkParseResult(bool, string);
 
-    static void traversal(AST_Node *node, string prefix);
+    static void
+    traversal(AST_Node *node, string prefix);
     static void printAST(AST_Node *node);
 };
 

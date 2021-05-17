@@ -40,6 +40,10 @@ tt::Token_Type Tokenizer::getIdentifierType(string s)
         return tt::_continue;
     else if (s == "throw")
         return tt::_throw;
+    else if (s == "do")
+        return tt::_do;
+    else if (s == "while")
+        return tt::_while;
     else
         return tt::name;
 }

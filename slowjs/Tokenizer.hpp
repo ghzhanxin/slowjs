@@ -73,6 +73,8 @@ namespace tt
         _this,
         _continue,
         _throw,
+        _do,
+        _while,
     };
 }
 
