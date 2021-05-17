@@ -173,5 +173,4 @@ Just For Fun.
 2. 语法分析参考 [acorn](https://github.com/acornjs/acorn) 和 [编译原理](https://book.douban.com/subject/3296317/)
 3. 文法结构参考 [ECMAScript5.1 Annex A Grammar](https://262.ecma-international.org/5.1/#sec-A)
 4. 语法树结构参考  [astexplorer](https://astexplorer.net/)
-5. 语言类型参考 [quickjs](https://github.com/bellard/quickjs/blob/master/quickjs.h)
-
+5. 语言类型参考 [quickjs](https://github.com/bellard/quickjs/blob/b5e62895c619d4ffc75c9d822c8d85f1ece77e5b/quickjs.h#L67) 和 [v8](https://github.com/v8/v8/blob/ed73693de815988a27ead2216acd7ab9955d9e92/include/v8.h#L2699)
