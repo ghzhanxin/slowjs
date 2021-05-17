@@ -93,8 +93,8 @@
         - [x] 可选 else
     - [x] 循环
       - [x] for
-      - [ ] do
-      - [ ] while
+      - [x] while
+      - [x] do while 
 - [x] 内置全局对象 `global`
 - [ ] 全局对象属性
   - [x] print （同 `console.log` ）
