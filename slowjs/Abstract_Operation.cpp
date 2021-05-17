@@ -105,10 +105,7 @@ void PutValue(Reference V, JSValue value)
 Reference IdentifierResolution(Lexical_Environment *lex, string name)
 {
     if (!lex)
-    {
-        JSValue *Undefined = new JSValue(JS_TAG_UNDEFINED, string("undefined"));
-        return Reference(Undefined, name);
-    }
+        return Reference(new JSUndefined, name);
 
     Environment_Record *env_record = lex->record;
 
@@ -207,9 +204,9 @@ JSValue ToBoolean(JSValue value)
     case JS_TAG_BOOLEAN:
         return value;
     case JS_TAG_NUMBER:
-        return JSValue(JS_TAG_BOOLEAN, value.getNumber() != 0);
+        return JSBoolean(value.getNumber() != 0).ToJSValue();
     case JS_TAG_STRING:
-        return JSValue(JS_TAG_BOOLEAN, value.getString().size() != 0);
+        return JSBoolean(value.getString().size() != 0).ToJSValue();
     case JS_TAG_OBJECT:
     case JS_TAG_FUNCTION:
         return JS_TRUE;
@@ -224,14 +221,14 @@ JSValue ToNumber(JSValue value)
     case JS_TAG_UNDEFINED:
         return JS_NAN;
     case JS_TAG_NULL:
-        return JSValue(JS_TAG_NUMBER, 0.0);
+        return JSNumber(0.0).ToJSValue();
     case JS_TAG_BOOLEAN:
-        return JSValue(JS_TAG_NUMBER, value.getBoolean() ? 1.0 : 0.0);
+        return JSNumber(value.getBoolean() ? 1.0 : 0.0).ToJSValue();
     case JS_TAG_NUMBER:
         return value;
     case JS_TAG_STRING:
         // TODO:
-        return JSValue(JS_TAG_NUMBER, value.getString().size() == 0 ? 0.0 : 1.0);
+        return JSNumber(value.getString().size() == 0 ? 0.0 : 1.0).ToJSValue();
     case JS_TAG_OBJECT:
     case JS_TAG_FUNCTION:
         return ToNumber(ToPrimitive(value));
@@ -246,7 +243,7 @@ JSValue ToString(JSValue value)
     case JS_TAG_UNDEFINED:
     case JS_TAG_NULL:
     case JS_TAG_BOOLEAN:
-        return JSValue(JS_TAG_STRING, value.getString());
+        return JSString(value.getString()).ToJSValue();
     case JS_TAG_NUMBER:
         // TODO:
         return value;
@@ -284,12 +281,12 @@ JSValue CGetPrototypeOf(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<
     if (args[0].isObject())
     {
         if (args[0].getObject()->Prototype)
-            return args[0].getObject()->Prototype->CastJSValue();
+            return args[0].getObject()->Prototype->ToJSValue();
         else
             return JS_NULL;
     }
     else
-        return JSValue(JS_TAG_EXCEPTION, string("getPrototypeOf args is not a object"));
+        return JSException("getPrototypeOf args is not a object").ToJSValue();
 }
 JSValue CCall(JSFunction *fo, Slowjs *slow, JSValue caller, vector<JSValue> args)
 {

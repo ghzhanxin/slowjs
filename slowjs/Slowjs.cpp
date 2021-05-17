@@ -44,22 +44,22 @@ void Slowjs::addIntrinsic()
 {
     JSObject::CreateBuiltinObject();
 
-    global_obj->Put("global", global_obj->CastJSValue());
-    global_obj->Put("Object", JSObject::Object->CastJSValue());
-    global_obj->Put("Function", JSObject::Function->CastJSValue());
+    global_obj->Put("global", global_obj->ToJSValue());
+    global_obj->Put("Object", JSObject::Object->ToJSValue());
+    global_obj->Put("Function", JSObject::Function->ToJSValue());
 
     JSObject *process = new JSObject();
     JSFunction *nextTick_fo = new JSFunction("nextTick", (void *)CEnqueueTask);
-    process->Put("nextTick", nextTick_fo->CastJSValue());
-    global_obj->Put("process", process->CastJSValue());
+    process->Put("nextTick", nextTick_fo->ToJSValue());
+    global_obj->Put("process", process->ToJSValue());
 
     JSObject *console = new JSObject();
     JSFunction *clog_JSFunction = new JSFunction("log", (void *)CPrint);
-    console->Put("log", clog_JSFunction->CastJSValue());
-    global_obj->Put("console", console->CastJSValue());
+    console->Put("log", clog_JSFunction->ToJSValue());
+    global_obj->Put("console", console->ToJSValue());
 
     JSFunction *cprint_JSFunction = new JSFunction("print", (void *)CPrint);
-    global_obj->Put("print", cprint_JSFunction->CastJSValue());
+    global_obj->Put("print", cprint_JSFunction->ToJSValue());
 }
 void Slowjs::initGlobalExecutionContext(AST_Node *node)
 {
@@ -113,7 +113,7 @@ void Slowjs::declarationBindingInstantiation(AST_Node *node, vector<JSValue> arg
             string fn = top_level->childs[0]->value;
             JSFunction *fo = CreateFunctionObject(top_level);
             env->CreateMutableBinding(fn);
-            env->SetMutableBinding(fn, fo->CastJSValue());
+            env->SetMutableBinding(fn, fo->ToJSValue());
         }
         else if (stmt_type == nt::VariableDeclaration || stmt_type == nt::ForStatement || stmt_type == nt::IfStatement)
         {
@@ -272,7 +272,7 @@ JSValue Slowjs::evaluateUnaryExpression(AST_Node *node)
     if (op == "!")
         return oldValue.getBoolean() ? JS_FALSE : JS_TRUE;
     else
-        return JSValue(JS_TAG_EXCEPTION, string("Unsupported Type in UnaryExpression"));
+        return JSException("Unsupported Type in UnaryExpression").ToJSValue();
 }
 
 JSValue strictEqualityComparison(JSValue left, JSValue right)
@@ -286,15 +286,15 @@ JSValue strictEqualityComparison(JSValue left, JSValue right)
         return JS_TRUE;
     else if (left.isNumber())
         // TODO:
-        return JSValue(JS_TAG_BOOLEAN, left.getNumber() == right.getNumber());
+        return JSBoolean(left.getNumber() == right.getNumber()).ToJSValue();
     else if (left.isString())
-        return JSValue(JS_TAG_BOOLEAN, left.getString() == right.getString());
+        return JSBoolean(left.getString() == right.getString()).ToJSValue();
     else if (left.isBoolean())
-        return JSValue(JS_TAG_BOOLEAN, left.getBoolean() == right.getBoolean());
+        return JSBoolean(left.getBoolean() == right.getBoolean()).ToJSValue();
     else if (left.isObject())
-        return JSValue(JS_TAG_BOOLEAN, left.getPtr() == right.getPtr());
+        return JSBoolean(left.getPtr() == right.getPtr()).ToJSValue();
     else
-        return JSValue(JS_TAG_EXCEPTION, string("Unsupported Operator or Operand"));
+        return JSException("Unsupported Operator or Operand").ToJSValue();
 }
 JSValue Slowjs::evaluateBinaryExpression(AST_Node *node)
 {
@@ -315,7 +315,7 @@ JSValue Slowjs::evaluateBinaryExpression(AST_Node *node)
     else if (op == "!==" || op == "!=")
     {
         JSValue r = strictEqualityComparison(left, right);
-        return JSValue(JS_TAG_BOOLEAN, !r.getBoolean());
+        return JSBoolean(!r.getBoolean()).ToJSValue();
     }
     else if (op == "&&")
     {
@@ -333,56 +333,56 @@ JSValue Slowjs::evaluateBinaryExpression(AST_Node *node)
         JSValue lp = ToPrimitive(left);
         JSValue rp = ToPrimitive(right);
         if (lp.isNumber() && rp.isNumber())
-            return JSValue(JS_TAG_NUMBER, lp.getNumber() + rp.getNumber());
+            return JSNumber(lp.getNumber() + rp.getNumber()).ToJSValue();
         else if (lp.isString() && rp.isString())
-            return JSValue(JS_TAG_STRING, lp.getString() + rp.getString());
+            return JSString(lp.getString() + rp.getString()).ToJSValue();
         else
-            return JSValue(JS_TAG_EXCEPTION, string("Unsupported Type in '+'"));
+            return JSException("Unsupported Type in '+'").ToJSValue();
     }
     else if (op == "-")
     {
         JSValue ln = ToNumber(left);
         JSValue rn = ToNumber(right);
-        return JSValue(JS_TAG_NUMBER, ln.getNumber() - rn.getNumber());
+        return JSNumber(ln.getNumber() - rn.getNumber()).ToJSValue();
     }
     else if (op == "*")
     {
         JSValue ln = ToNumber(left);
         JSValue rn = ToNumber(right);
-        return JSValue(JS_TAG_NUMBER, ln.getNumber() * rn.getNumber());
+        return JSNumber(ln.getNumber() * rn.getNumber()).ToJSValue();
     }
     else if (op == "/")
     {
         JSValue ln = ToNumber(left);
         JSValue rn = ToNumber(right);
-        return JSValue(JS_TAG_NUMBER, ln.getNumber() / rn.getNumber());
+        return JSNumber(ln.getNumber() / rn.getNumber()).ToJSValue();
     }
     else if (op == ">")
     {
         JSValue ln = ToNumber(left);
         JSValue rn = ToNumber(right);
-        return JSValue(JS_TAG_BOOLEAN, ln.getNumber() > rn.getNumber());
+        return JSBoolean(ln.getNumber() > rn.getNumber()).ToJSValue();
     }
     else if (op == ">=")
     {
         JSValue ln = ToNumber(left);
         JSValue rn = ToNumber(right);
-        return JSValue(JS_TAG_BOOLEAN, ln.getNumber() >= rn.getNumber());
+        return JSBoolean(ln.getNumber() >= rn.getNumber()).ToJSValue();
     }
     else if (op == "<")
     {
         JSValue ln = ToNumber(left);
         JSValue rn = ToNumber(right);
-        return JSValue(JS_TAG_BOOLEAN, ln.getNumber() < rn.getNumber());
+        return JSBoolean(ln.getNumber() < rn.getNumber()).ToJSValue();
     }
     else if (op == "<=")
     {
         JSValue ln = ToNumber(left);
         JSValue rn = ToNumber(right);
-        return JSValue(JS_TAG_BOOLEAN, ln.getNumber() <= rn.getNumber());
+        return JSBoolean(ln.getNumber() <= rn.getNumber()).ToJSValue();
     }
     else
-        return JSValue(JS_TAG_EXCEPTION, string("Unsupported Operator or Operand"));
+        return JSException("Unsupported Operator or Operand").ToJSValue();
 }
 
 JSValue getJSValueFromLiteralNode(AST_Node *node)
@@ -391,17 +391,17 @@ JSValue getJSValueFromLiteralNode(AST_Node *node)
     switch (node->rawType)
     {
     case rt::Boolean:
-        return JSValue(JS_TAG_BOOLEAN, value == "true" ? true : false);
+        return JSBoolean(value == "true" ? true : false).ToJSValue();
     case rt::Number:
-        return JSValue(JS_TAG_NUMBER, stod(value));
+        return JSNumber(stod(value)).ToJSValue();
     case rt::String:
-        return JSValue(JS_TAG_STRING, value);
+        return JSString(value).ToJSValue();
     case rt::Undefined:
         return JS_UNDEFINED;
     case rt::Null:
         return JS_NULL;
     default:
-        return JSValue(JS_TAG_EXCEPTION, string("Literal support only Boolean, Number and String"));
+        return JSException("Literal support only Boolean, Number and String").ToJSValue();
     }
 }
 JSValue Slowjs::evaluateLiteral(AST_Node *node)
@@ -522,7 +522,7 @@ JSValue Slowjs::evaluateForStatement(AST_Node *node)
                 continue;
             }
             else
-                return JSValue(JS_TAG_EXCEPTION, string("evaluateForStatement"));
+                return JSException("evaluateForStatement").ToJSValue();
         }
 
         updateValue = evaluate(update);
@@ -546,12 +546,12 @@ JSValue Slowjs::evaluateUpdateExpression(AST_Node *node)
     if (oldValue.isNumber())
     {
         double v = op == "++" ? oldValue.getNumber() + 1 : oldValue.getNumber() - 1;
-        JSValue newValue = JSValue(JS_TAG_NUMBER, v);
+        JSValue newValue = JSNumber(v).ToJSValue();
         PutValue(lhs, newValue);
         return newValue;
     }
     else
-        return JSValue(JS_TAG_EXCEPTION, string("UpdateExpression only support Number"));
+        return JSException("UpdateExpression only support Number").ToJSValue();
 }
 
 vector<JSValue> Slowjs::getArgumentList(AST_Node *node)
@@ -587,7 +587,7 @@ JSValue Slowjs::evaluateCallExpression(AST_Node *node)
         return fo->Call(this, thisValue, argVector);
     }
     else
-        return JSValue(JS_TAG_EXCEPTION, string("'" + GetReferencedName(ref) + "' is not a function"));
+        return JSException("'" + GetReferencedName(ref) + "' is not a function").ToJSValue();
 }
 JSValue Slowjs::evaluateNewExpression(AST_Node *node)
 {
@@ -609,7 +609,7 @@ JSValue Slowjs::evaluateNewExpression(AST_Node *node)
         return ctor->Construct(this, argVector);
     }
     else
-        return JSValue(JS_TAG_EXCEPTION, string("not a construtor"));
+        return JSException("not a construtor").ToJSValue();
 }
 JSValue Slowjs::evaluateReturnStatement(AST_Node *node)
 {
@@ -687,13 +687,13 @@ JSValue Slowjs::evaluateMemberExpression(AST_Node *node)
 }
 JSValue Slowjs::evaluateFunctionExpression(AST_Node *node)
 {
-    return CreateFunctionObject(node)->CastJSValue();
+    return CreateFunctionObject(node)->ToJSValue();
 }
 JSValue Slowjs::evaluateThrowStatement(AST_Node *node)
 {
     JSValue expr = evaluate(node->childs[0]);
     if (!expr.isString())
-        return JSValue(JS_TAG_EXCEPTION, string("ThrowStatement Supported only string currently"));
+        return JSException("ThrowStatement Supported only string currently").ToJSValue();
 
     throw expr.getString();
 }

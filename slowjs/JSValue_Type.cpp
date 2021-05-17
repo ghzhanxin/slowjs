@@ -18,17 +18,17 @@ JSFunction *JSObject::Function = new JSFunction("Function");
 void JSObject::CreateBuiltinObject()
 {
     ObjectPrototype->Prototype = nullptr;
-    ObjectPrototype->Put("constructor", Object->CastJSValue());
+    ObjectPrototype->Put("constructor", Object->ToJSValue());
 
     Object->Prototype = ObjectPrototype;
-    Object->Put("prototype", ObjectPrototype->CastJSValue());
+    Object->Put("prototype", ObjectPrototype->ToJSValue());
     JSFunction *getPrototypeOf_fo = new JSFunction("getPrototypeOf", (void *)CGetPrototypeOf);
-    Object->Put("getPrototypeOf", getPrototypeOf_fo->CastJSValue());
+    Object->Put("getPrototypeOf", getPrototypeOf_fo->ToJSValue());
 
-    Function->Put("prototype", FunctionPrototype->CastJSValue());
-    FunctionPrototype->Put("constructor", Function->CastJSValue());
+    Function->Put("prototype", FunctionPrototype->ToJSValue());
+    FunctionPrototype->Put("constructor", Function->ToJSValue());
     JSFunction *call_fo = new JSFunction("call", (void *)CCall);
-    FunctionPrototype->Put("call", call_fo->CastJSValue());
+    FunctionPrototype->Put("call", call_fo->ToJSValue());
 };
 
 DataDescriptor *JSObject::GetOwnProperty(string P)
@@ -93,8 +93,8 @@ void JSFunction::initializeFunction()
     Prototype = JSObject::FunctionPrototype;
     JSFunction *fo = this;
     JSObject *proto = new JSObject();
-    proto->DefineOwnProperty("constructor", new DataDescriptor(fo->CastJSValue()));
-    fo->DefineOwnProperty("prototype", new DataDescriptor(proto->CastJSValue()));
+    proto->DefineOwnProperty("constructor", new DataDescriptor(fo->ToJSValue()));
+    fo->DefineOwnProperty("prototype", new DataDescriptor(proto->ToJSValue()));
 };
 JSValue JSFunction::Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 {
@@ -127,7 +127,7 @@ JSValue JSFunction::Construct(Slowjs *slow, vector<JSValue> args)
     JSObject *obj = new JSObject();
     JSValue proto = fo->Get("prototype");
     obj->Prototype = proto.isObject() ? proto.getObject() : JSObject::ObjectPrototype;
-    JSValue result = fo->Call(slow, obj->CastJSValue(), args);
+    JSValue result = fo->Call(slow, obj->ToJSValue(), args);
     slow->checkException(result);
-    return result.isObject() ? result : obj->CastJSValue();
+    return result.isObject() ? result : obj->ToJSValue();
 }

@@ -58,19 +58,6 @@ class JSValue
 {
 public:
     JSValue() : _tag(JS_TAG_NUMBER), _string("_default_JSValue"){};
-    JSValue(JS_TAG_ENUM tag, string val) : _tag(tag), _string(val){};
-    JSValue(JS_TAG_ENUM tag, double val) : _tag(tag)
-    {
-        _u.double64 = val;
-    };
-    JSValue(JS_TAG_ENUM tag, int val) : _tag(tag)
-    {
-        _u.double64 = val;
-    };
-    JSValue(JS_TAG_ENUM tag, bool val) : _tag(tag), _string(val ? "true" : "false")
-    {
-        _u.boolean = val;
-    };
 
     JS_TAG_ENUM getTag() { return _tag; }
     double getNumber() { return _u.double64; }
@@ -91,6 +78,8 @@ public:
     bool isException() { return _tag == JS_TAG_EXCEPTION; }
     bool isNaN() { return _tag == JS_TAG_NAN; }
 
+    JSValue ToJSValue() { return *((JSValue *)this); }
+
 protected:
     JSValueUnion _u;
     JS_TAG_ENUM _tag;
@@ -98,13 +87,110 @@ protected:
 };
 
 /* special values */
-#define JS_TRUE JSValue(JS_TAG_BOOLEAN, true)
-#define JS_FALSE JSValue(JS_TAG_BOOLEAN, false)
-#define JS_NULL JSValue(JS_TAG_NULL, string("null"))
-#define JS_UNDEFINED JSValue(JS_TAG_UNDEFINED, string("undefined"))
-#define JS_EXCEPTION JSValue(JS_TAG_EXCEPTION, string("Unknow Exception"))
-#define JS_UNINITIALIZED JSValue(JS_TAG_UNINITIALIZED, string("Uninitialized"))
-#define JS_NAN JSValue(JS_TAG_NAN, string("NaN"))
+#define JS_EXCEPTION JSException().ToJSValue()
+#define JS_UNINITIALIZED JSUinitialized().ToJSValue()
+#define JS_NAN JSNaN().ToJSValue()
+#define JS_NULL JSNull().ToJSValue()
+#define JS_UNDEFINED JSUndefined().ToJSValue()
+#define JS_TRUE JSBoolean(true).ToJSValue()
+#define JS_FALSE JSBoolean(false).ToJSValue()
+
+class JSException : public JSValue
+{
+public:
+    JSException()
+    {
+        _tag = JS_TAG_EXCEPTION;
+        _string = "Unknown Exception";
+    }
+    JSException(string value)
+    {
+        _tag = JS_TAG_EXCEPTION;
+        _string = value;
+    }
+};
+class JSUinitialized : public JSValue
+{
+public:
+    JSUinitialized()
+    {
+        _tag = JS_TAG_UNINITIALIZED;
+        _string = "Uninitialized";
+    }
+};
+class JSNaN : public JSValue
+{
+public:
+    JSNaN()
+    {
+        _tag = JS_TAG_NAN;
+        _string = "NaN";
+    }
+};
+class JSPrimitive : public JSValue
+{
+};
+
+class JSNull : public JSPrimitive
+{
+public:
+    JSNull()
+    {
+        _tag = JS_TAG_NULL;
+        _string = "null";
+    }
+};
+
+class JSUndefined : public JSPrimitive
+{
+public:
+    JSUndefined()
+    {
+        _tag = JS_TAG_UNDEFINED;
+        _string = "undefined";
+    }
+};
+
+class JSNumber : public JSPrimitive
+{
+public:
+    JSNumber(int value)
+    {
+        _tag = JS_TAG_NUMBER;
+        _u.double64 = value;
+    }
+    JSNumber(double value)
+    {
+        _tag = JS_TAG_NUMBER;
+        _u.double64 = value;
+    }
+
+    double Value() { return this->getNumber(); }
+};
+
+class JSBoolean : public JSPrimitive
+{
+public:
+    JSBoolean(bool value)
+    {
+        _tag = JS_TAG_BOOLEAN;
+        _u.boolean = value;
+    }
+
+    bool Value() { return this->getBoolean(); }
+};
+
+class JSString : public JSPrimitive
+{
+public:
+    JSString(string value)
+    {
+        _tag = JS_TAG_STRING;
+        _string = value;
+    }
+
+    string Value() { return this->getString(); }
+};
 
 // https://262.ecma-international.org/5.1/#sec-8.6
 class JSObject : public JSValue
@@ -139,7 +225,7 @@ public:
 
     map<string, DataDescriptor *> Properties;
 
-    JSValue CastJSValue() { return *((JSValue *)this); }
+    JSValue ToJSValue() { return *((JSValue *)this); }
 };
 
 class JSFunction : public JSObject
