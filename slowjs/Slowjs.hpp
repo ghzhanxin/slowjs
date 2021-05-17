@@ -70,6 +70,8 @@ public:
     JSValue evaluateMemberExpression(AST_Node *);
     JSValue evaluateFunctionExpression(AST_Node *);
     JSValue evaluateThrowStatement(AST_Node *);
+    JSValue evaluateDoWhileStatement(AST_Node *);
+    JSValue evaluateWhileStatement(AST_Node *);
 
     Reference getMemberExpressionReference(AST_Node *);
     Reference getReference(AST_Node *);

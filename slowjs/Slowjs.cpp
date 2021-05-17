@@ -219,6 +219,10 @@ JSValue Slowjs::evaluate(AST_Node *node)
         return evaluateFunctionExpression(node);
     case nt::ThrowStatement:
         return evaluateThrowStatement(node);
+    case nt::DoWhileStatement:
+        return evaluateDoWhileStatement(node);
+    case nt::WhileStatement:
+        return evaluateWhileStatement(node);
     default:
         throw string("Unknown AST Node");
     }
@@ -480,6 +484,91 @@ JSValue Slowjs::evaluateBlockStatement(AST_Node *node)
     }
     return result;
 }
+JSValue Slowjs::evaluateDoWhileStatement(AST_Node *node)
+{
+    vector<AST_Node *> fields = node->childs;
+    AST_Node *block = fields[0];
+    AST_Node *expr = fields[1];
+
+    JSValue result = JS_UNDEFINED;
+
+    JSValue testValue = evaluate(expr);
+    checkException(testValue);
+    bool condition = ToBoolean(testValue).getBoolean();
+
+    do
+    {
+        try
+        {
+            result = evaluate(block);
+            checkException(result);
+        }
+        catch (string &msg)
+        {
+            if (msg == "break")
+                break;
+            else if (msg == "continue")
+            {
+                testValue = evaluate(expr);
+                checkException(testValue);
+                condition = ToBoolean(testValue).getBoolean();
+
+                continue;
+            }
+            else
+                return JSException("evaluateDoWhileStatement").ToJSValue();
+        }
+
+        testValue = evaluate(expr);
+        checkException(testValue);
+        condition = ToBoolean(testValue).getBoolean();
+
+    } while (condition);
+
+    return result;
+}
+JSValue Slowjs::evaluateWhileStatement(AST_Node *node)
+{
+    vector<AST_Node *> fields = node->childs;
+    AST_Node *expr = fields[0];
+    AST_Node *block = fields[1];
+
+    JSValue result = JS_UNDEFINED;
+
+    JSValue testValue = evaluate(expr);
+    checkException(testValue);
+    bool condition = ToBoolean(testValue).getBoolean();
+
+    while (condition)
+    {
+        try
+        {
+            result = evaluate(block);
+            checkException(result);
+        }
+        catch (string &msg)
+        {
+            if (msg == "break")
+                break;
+            else if (msg == "continue")
+            {
+                testValue = evaluate(expr);
+                checkException(testValue);
+                condition = ToBoolean(testValue).getBoolean();
+
+                continue;
+            }
+            else
+                return JSException("evaluateWhileStatement").ToJSValue();
+        }
+
+        testValue = evaluate(expr);
+        checkException(testValue);
+        condition = ToBoolean(testValue).getBoolean();
+    }
+
+    return result;
+}
 JSValue Slowjs::evaluateForStatement(AST_Node *node)
 {
     vector<AST_Node *> fields = node->childs;
@@ -506,11 +595,11 @@ JSValue Slowjs::evaluateForStatement(AST_Node *node)
             result = evaluate(block);
             checkException(result);
         }
-        catch (string &value)
+        catch (string &msg)
         {
-            if (value == "break")
+            if (msg == "break")
                 break;
-            else if (value == "continue")
+            else if (msg == "continue")
             {
                 updateValue = evaluate(update);
                 checkException(updateValue);
