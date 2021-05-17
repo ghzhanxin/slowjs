@@ -114,7 +114,7 @@ function testHighOrderFunction(assert) {
     assert(test(), 3);
 }
 
-function testIfStatement(assert) {
+function testConditional(assert) {
     var num = 10;
     var less = 0;
     var great = 0;
@@ -128,8 +128,11 @@ function testIfStatement(assert) {
     }
     assert(less, 0);
     assert(great, 1);
+
+    less === 0 ? great++ : great--;
+    assert(great, 2);
 }
-function testIterationStatement(assert) {
+function testIteration(assert) {
     var i = 0;
     var forLess10 = 0;
     var forGreat10 = 0;
@@ -326,8 +329,8 @@ describe('testType', testType);
 describe('testOperator', testOperator);
 describe('testClosure', testClosure);
 describe('testHighOrderFunction', testHighOrderFunction);
-describe('testIfStatement', testIfStatement);
-describe('testIterationStatement', testIterationStatement);
+describe('testConditional', testConditional);
+describe('testIteration', testIteration);
 describe('testObjectPrototype', testObjectPrototype);
 describe('testNextTick', testNextTick);
 describe('testPromiseLike', testPromiseLike);
