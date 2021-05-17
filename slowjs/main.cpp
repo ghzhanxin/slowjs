@@ -26,8 +26,49 @@ string getContentFromFile(string fileName)
         throw string("error: open file fail! file does not exist");
 }
 
+class Base
+{
+public:
+    Base() { cout << "Base" << endl; }
+    Base(int _a) : a(_a)
+    {
+        p = this;
+        cout << "Baseint" << a << endl;
+    }
+    int a;
+    string b;
+    bool c;
+    void go() { cout << "go"; }
+    int k;
+    double m;
+
+    void *p;
+};
+class D : public Base
+{
+public:
+    D() { cout << "D" << endl; }
+    D(int x) : Base(x)
+    {
+
+        cout << "Dint" << a << endl;
+    }
+    // double z;
+    void run() { cout << "runt"; }
+    void go() { cout << "dgo" << endl; }
+};
+
 int main(int argc, const char *argv[])
 {
+    Base b(10);
+    D d(888);
+    b.go();
+    d.go();
+    cout << sizeof(b) << (Base *)b.p << endl
+         << &b << endl;
+    cout << sizeof(d) << (D *)d.p << endl
+         << &d << endl;
+    cout << "end" << endl;
     try
     {
         if (argc == 1)

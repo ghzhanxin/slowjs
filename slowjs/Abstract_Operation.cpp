@@ -284,7 +284,7 @@ JSValue CGetPrototypeOf(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<
     if (args[0].isObject())
     {
         if (args[0].getObject()->Prototype)
-            return JSValue(JS_TAG_OBJECT, args[0].getObject()->Prototype);
+            return args[0].getObject()->Prototype->CastJSValue();
         else
             return JS_NULL;
     }

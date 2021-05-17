@@ -44,21 +44,22 @@ void Slowjs::addIntrinsic()
 {
     JSObject::CreateBuiltinObject();
 
-    global_obj->Put("global", JSValue(JS_TAG_OBJECT, global_obj));
-    global_obj->Put("Object", JSValue(JS_TAG_FUNCTION, JSObject::Object));
-    global_obj->Put("Function", JSValue(JS_TAG_FUNCTION, JSObject::Function));
+    global_obj->Put("global", global_obj->CastJSValue());
+    global_obj->Put("Object", JSObject::Object->CastJSValue());
+    global_obj->Put("Function", JSObject::Function->CastJSValue());
 
     JSObject *process = new JSObject();
-    process->Put("nextTick", JSValue(JS_TAG_FUNCTION, new JSFunction("nextTick", (void *)CEnqueueTask)));
-    global_obj->Put("process", JSValue(JS_TAG_OBJECT, process));
+    JSFunction *nextTick_fo = new JSFunction("nextTick", (void *)CEnqueueTask);
+    process->Put("nextTick", nextTick_fo->CastJSValue());
+    global_obj->Put("process", process->CastJSValue());
 
     JSObject *console = new JSObject();
     JSFunction *clog_JSFunction = new JSFunction("log", (void *)CPrint);
-    console->Put("log", JSValue(JS_TAG_FUNCTION, clog_JSFunction));
-    global_obj->Put("console", JSValue(JS_TAG_OBJECT, console));
+    console->Put("log", clog_JSFunction->CastJSValue());
+    global_obj->Put("console", console->CastJSValue());
 
     JSFunction *cprint_JSFunction = new JSFunction("print", (void *)CPrint);
-    global_obj->Put("print", JSValue(JS_TAG_FUNCTION, cprint_JSFunction));
+    global_obj->Put("print", cprint_JSFunction->CastJSValue());
 }
 void Slowjs::initGlobalExecutionContext(AST_Node *node)
 {
@@ -112,7 +113,7 @@ void Slowjs::declarationBindingInstantiation(AST_Node *node, vector<JSValue> arg
             string fn = top_level->childs[0]->value;
             JSFunction *fo = CreateFunctionObject(top_level);
             env->CreateMutableBinding(fn);
-            env->SetMutableBinding(fn, JSValue(JS_TAG_FUNCTION, fo));
+            env->SetMutableBinding(fn, fo->CastJSValue());
         }
         else if (stmt_type == nt::VariableDeclaration || stmt_type == nt::ForStatement || stmt_type == nt::IfStatement)
         {
@@ -686,7 +687,7 @@ JSValue Slowjs::evaluateMemberExpression(AST_Node *node)
 }
 JSValue Slowjs::evaluateFunctionExpression(AST_Node *node)
 {
-    return JSValue(JS_TAG_FUNCTION, CreateFunctionObject(node));
+    return CreateFunctionObject(node)->CastJSValue();
 }
 JSValue Slowjs::evaluateThrowStatement(AST_Node *node)
 {

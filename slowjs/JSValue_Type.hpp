@@ -32,7 +32,7 @@ enum EXCEPTION_ENUM
     EXCEPTION_REFERENCE,
 };
 
-enum JS_TAG
+enum JS_TAG_ENUM
 {
     JS_TAG_FUNCTION = -2,
     JS_TAG_OBJECT = -1,
@@ -58,25 +58,21 @@ class JSValue
 {
 public:
     JSValue() : _tag(JS_TAG_NUMBER), _string("_default_JSValue"){};
-    JSValue(JS_TAG tag, string val) : _tag(tag), _string(val){};
-    JSValue(JS_TAG tag, double val) : _tag(tag)
+    JSValue(JS_TAG_ENUM tag, string val) : _tag(tag), _string(val){};
+    JSValue(JS_TAG_ENUM tag, double val) : _tag(tag)
     {
         _u.double64 = val;
     };
-    JSValue(JS_TAG tag, int val) : _tag(tag)
+    JSValue(JS_TAG_ENUM tag, int val) : _tag(tag)
     {
         _u.double64 = val;
     };
-    JSValue(JS_TAG tag, bool val) : _tag(tag), _string(val ? "true" : "false")
+    JSValue(JS_TAG_ENUM tag, bool val) : _tag(tag), _string(val ? "true" : "false")
     {
         _u.boolean = val;
     };
-    JSValue(JS_TAG tag, void *p) : _tag(tag)
-    {
-        _u.ptr = p;
-    };
 
-    JS_TAG getTag() { return _tag; }
+    JS_TAG_ENUM getTag() { return _tag; }
     double getNumber() { return _u.double64; }
     bool getBoolean() { return _u.boolean; }
     string getString() { return _string; }
@@ -97,7 +93,7 @@ public:
 
 protected:
     JSValueUnion _u;
-    JS_TAG _tag;
+    JS_TAG_ENUM _tag;
     string _string;
 };
 
@@ -123,6 +119,7 @@ public:
 
     JSObject()
     {
+        _u.ptr = (void *)this;
         _tag = JS_TAG_OBJECT;
         Prototype = ObjectPrototype;
     };
@@ -141,6 +138,8 @@ public:
     bool Extensible = true;
 
     map<string, DataDescriptor *> Properties;
+
+    JSValue CastJSValue() { return *((JSValue *)this); }
 };
 
 class JSFunction : public JSObject
