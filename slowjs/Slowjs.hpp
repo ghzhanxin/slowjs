@@ -27,17 +27,17 @@ public:
         global_obj = new JSObject();
         ctx_stack = new stack<Execution_Context *>;
     }
-    JSValue run(string input);
-    queue<Token *> tokenize(string input);
-    AST_Node *parse(queue<Token *> q);
+    JSValue run(const string &);
+    queue<Token *> tokenize(const string &);
+    AST_Node *parse(const queue<Token *> &);
 
     void addIntrinsic();
     // https://262.ecma-international.org/5.1/#sec-10.4.1.1
     void initGlobalExecutionContext(AST_Node *);
     // https://262.ecma-international.org/5.1/#sec-10.4.3
-    void initFunctionExecutionContext(JSFunction *, JSValue, vector<JSValue>);
+    void initFunctionExecutionContext(JSFunction *, const JSValue &, const vector<JSValue> &);
     // https://262.ecma-international.org/5.1/#sec-10.5
-    void declarationBindingInstantiation(AST_Node *, vector<JSValue>);
+    void declarationBindingInstantiation(AST_Node *, const vector<JSValue> &);
 
     Execution_Context *getCurrentContext();
     vector<JSValue> getArgumentList(AST_Node *);
@@ -74,9 +74,9 @@ public:
     Reference getMemberExpressionReference(AST_Node *);
     Reference getReference(AST_Node *);
 
-    void checkException(JSValue);
+    void checkException(const JSValue &);
     vector<JSValue> getParamList(AST_Node *);
     JSFunction *CreateFunctionObject(AST_Node *);
-    vector<string> getIdentifiersFromMemberExpression(AST_Node *, vector<string>);
+    vector<string> getIdentifiersFromMemberExpression(AST_Node *, vector<string> &);
 };
 #endif /* Slowjs_hpp */

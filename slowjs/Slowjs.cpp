@@ -8,19 +8,19 @@
 #include "Slowjs.hpp"
 #include <iostream>
 
-JSValue Slowjs::run(string input)
+JSValue Slowjs::run(const string &input)
 {
     queue<Token *> q = tokenize(input);
     AST_Node *ast = parse(q);
     addIntrinsic();
     return evaluate(ast);
 }
-queue<Token *> Slowjs::tokenize(string input)
+queue<Token *> Slowjs::tokenize(const string &input)
 {
     Tokenizer tokenizer = Tokenizer();
     return tokenizer.tokenize(input);
 }
-AST_Node *Slowjs::parse(queue<Token *> token_queue)
+AST_Node *Slowjs::parse(const queue<Token *> &token_queue)
 {
     Parser parser = Parser();
     return parser.parse(token_queue);
@@ -30,7 +30,7 @@ Execution_Context *Slowjs::getCurrentContext()
 {
     return ctx_stack->top();
 }
-void Slowjs::initFunctionExecutionContext(JSFunction *fo, JSValue thisValue, vector<JSValue> args)
+void Slowjs::initFunctionExecutionContext(JSFunction *fo, const JSValue &thisValue, const vector<JSValue> &args)
 {
     Lexical_Environment *outer = fo->Scope;
     Lexical_Environment *local_env = new Lexical_Environment(new Declarative_ER(), outer);
@@ -78,7 +78,7 @@ JSFunction *Slowjs::CreateFunctionObject(AST_Node *node)
     string fn = identifier ? identifier->value : "(anonymous)";
     return new JSFunction(formal_param, node, getCurrentContext()->var_env, fn);
 }
-void Slowjs::declarationBindingInstantiation(AST_Node *node, vector<JSValue> args)
+void Slowjs::declarationBindingInstantiation(AST_Node *node, const vector<JSValue> &args)
 {
     Execution_Context *running_ctx = getCurrentContext();
     Environment_Record *env = running_ctx->var_env->record;
@@ -161,7 +161,7 @@ void Slowjs::declarationBindingInstantiation(AST_Node *node, vector<JSValue> arg
     }
 }
 
-void Slowjs::checkException(JSValue value)
+void Slowjs::checkException(const JSValue &value)
 {
     if (value.isException())
     {
@@ -659,7 +659,7 @@ Reference Slowjs::getMemberExpressionReference(AST_Node *node)
     }
     throw throwRuntimeException(EXCEPTION_TYPE, string("is not a Object"));
 }
-vector<string> Slowjs::getIdentifiersFromMemberExpression(AST_Node *node, vector<string> idArr)
+vector<string> Slowjs::getIdentifiersFromMemberExpression(AST_Node *node, vector<string> &idArr)
 {
     vector<AST_Node *> fields = node->childs;
     if (fields[0]->type == nt::Identifier || fields[0]->type == nt::ThisExpression)

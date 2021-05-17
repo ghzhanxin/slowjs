@@ -59,24 +59,24 @@ class JSValue
 public:
     JSValue() : _tag(JS_TAG_NUMBER), _string("_default_JSValue"){};
 
-    JS_TAG_ENUM getTag() { return _tag; }
-    double getNumber() { return _u.double64; }
-    bool getBoolean() { return _u.boolean; }
-    string getString() { return _string; }
-    void *getPtr() { return _u.ptr; }
-    JSFunction *getFunction() { return (JSFunction *)getPtr(); }
-    JSObject *getObject() { return (JSObject *)getPtr(); }
+    JS_TAG_ENUM getTag() const { return _tag; }
+    double getNumber() const { return _u.double64; }
+    bool getBoolean() const { return _u.boolean; }
+    string getString() const { return _string; }
+    void *getPtr() const { return _u.ptr; }
+    JSFunction *getFunction() const { return (JSFunction *)getPtr(); }
+    JSObject *getObject() const { return (JSObject *)getPtr(); }
 
-    bool isNumber() { return _tag == JS_TAG_NUMBER; }
-    bool isBoolean() { return _tag == JS_TAG_BOOLEAN; }
-    bool isString() { return _tag == JS_TAG_STRING; }
-    bool isUndefined() { return _tag == JS_TAG_UNDEFINED; }
-    bool isNull() { return _tag == JS_TAG_NULL; }
-    bool isBaseObject() { return _tag == JS_TAG_OBJECT; }
-    bool isObject() { return _tag == JS_TAG_OBJECT || _tag == JS_TAG_FUNCTION; }
-    bool isFunction() { return _tag == JS_TAG_FUNCTION; }
-    bool isException() { return _tag == JS_TAG_EXCEPTION; }
-    bool isNaN() { return _tag == JS_TAG_NAN; }
+    bool isNumber() const { return _tag == JS_TAG_NUMBER; }
+    bool isBoolean() const { return _tag == JS_TAG_BOOLEAN; }
+    bool isString() const { return _tag == JS_TAG_STRING; }
+    bool isUndefined() const { return _tag == JS_TAG_UNDEFINED; }
+    bool isNull() const { return _tag == JS_TAG_NULL; }
+    bool isBaseObject() const { return _tag == JS_TAG_OBJECT; }
+    bool isObject() const { return _tag == JS_TAG_OBJECT || _tag == JS_TAG_FUNCTION; }
+    bool isFunction() const { return _tag == JS_TAG_FUNCTION; }
+    bool isException() const { return _tag == JS_TAG_EXCEPTION; }
+    bool isNaN() const { return _tag == JS_TAG_NAN; }
 
     JSValue ToJSValue() { return *((JSValue *)this); }
 

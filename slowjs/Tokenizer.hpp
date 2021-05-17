@@ -91,14 +91,14 @@ class Tokenizer
 {
 public:
     static void throwTokenizeError(char);
-    static tt::Token_Type getIdentifierType(string);
+    static tt::Token_Type getIdentifierType(const string &);
     static void printTokenQueue(queue<Token *>);
 
-    string getNumString(string input);
+    string getNumString(const string &input);
     bool isIdentifierStart(char c);
     void pushSingleToken(tt::Token_Type t, char c);
 
-    queue<Token *> tokenize(string s);
+    queue<Token *> tokenize(const string &s);
 
 private:
     queue<Token *> _q;

@@ -44,16 +44,15 @@ enum Record_Type
     Record_Type_Declarative,
     Record_Type_Object,
 };
-
 // https://262.ecma-international.org/5.1/#sec-10.2.1
 class Environment_Record : public map<string, JSValue>
 {
 public:
     Environment_Record(){};
-    virtual bool HasBinding(string name);
-    virtual void CreateMutableBinding(string name);
-    virtual void SetMutableBinding(string name, JSValue value);
-    virtual JSValue GetBindingValue(string name);
+    virtual bool HasBinding(const string);
+    virtual void CreateMutableBinding(string);
+    virtual void SetMutableBinding(string, JSValue);
+    virtual JSValue GetBindingValue(const string);
 
     Record_Type _tag;
 };
@@ -63,10 +62,10 @@ class Object_ER : public Environment_Record
 public:
     Object_ER(JSObject *obj) : binding_obj(obj) { _tag = Record_Type_Object; };
 
-    bool HasBinding(string name);
-    void CreateMutableBinding(string name);
-    void SetMutableBinding(string name, JSValue value);
-    JSValue GetBindingValue(string name);
+    bool HasBinding(const string);
+    void CreateMutableBinding(string);
+    void SetMutableBinding(string, JSValue);
+    JSValue GetBindingValue(const string);
     JSObject *binding_obj;
 };
 

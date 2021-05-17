@@ -963,7 +963,7 @@ AST_Node *Parser::Identifier()
         return nullptr;
 }
 
-void Parser::traversal(AST_Node *node, string prefix)
+void Parser::traversal(AST_Node *node, string &prefix)
 {
     cout << prefix << node->type << " -> " << node->value << endl;
     prefix += " ";

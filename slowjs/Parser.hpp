@@ -141,7 +141,7 @@ public:
     AST_Node *buildBinary(AST_Node *, AST_Node *, string);
     int check(bool, string);
 
-    static void traversal(AST_Node *node, string prefix);
+    static void traversal(AST_Node *node, string &prefix);
     static void printAST(AST_Node *node);
 };
 

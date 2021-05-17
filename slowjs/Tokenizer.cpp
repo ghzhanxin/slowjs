@@ -18,7 +18,7 @@ void Tokenizer::throwTokenizeError(char c)
     throw msg;
 }
 
-tt::Token_Type Tokenizer::getIdentifierType(string s)
+tt::Token_Type Tokenizer::getIdentifierType(const string &s)
 {
     if (s == "true")
         return tt::_true;
@@ -54,7 +54,7 @@ void Tokenizer::pushSingleToken(tt::Token_Type type, char c)
     _current++;
 }
 
-string Tokenizer::getNumString(string input)
+string Tokenizer::getNumString(const string &input)
 {
     string digitStr;
     digitStr += input[_current];
@@ -94,7 +94,7 @@ bool Tokenizer::isIdentifierStart(char c)
     return isalpha(c) || c == '_' || c == '$';
 }
 
-queue<Token *> Tokenizer::tokenize(string input)
+queue<Token *> Tokenizer::tokenize(const string &input)
 {
     _current = 0;
     size_t inputSize = input.size();

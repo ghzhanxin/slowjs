@@ -7,7 +7,7 @@
 
 #include "Execution_Context.hpp"
 
-bool Environment_Record::HasBinding(string name)
+bool Environment_Record::HasBinding(const string name)
 {
     return this->find(name) != this->end();
 }
@@ -26,13 +26,13 @@ void Environment_Record::SetMutableBinding(string name, JSValue value)
         it->second = value;
 };
 
-JSValue Environment_Record::GetBindingValue(string name)
+JSValue Environment_Record::GetBindingValue(const string name)
 {
     Environment_Record::iterator it = this->find(name);
     return it == this->end() ? JS_UNDEFINED : it->second;
 }
 
-bool Object_ER::HasBinding(string name)
+bool Object_ER::HasBinding(const string name)
 {
     return this->binding_obj->HasProperty(name);
 }
@@ -47,7 +47,7 @@ void Object_ER::SetMutableBinding(string name, JSValue value)
     this->binding_obj->Put(name, value);
 };
 
-JSValue Object_ER::GetBindingValue(string name)
+JSValue Object_ER::GetBindingValue(const string name)
 {
     return this->binding_obj->Get(name);
 }
