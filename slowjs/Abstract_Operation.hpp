@@ -51,5 +51,6 @@ JSValue CObject(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
 JSValue CGetPrototypeOf(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
 JSValue CCall(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
 JSValue CEnqueueTask(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
+JSValue CEnqueueJob(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
 
 #endif /* Abstract_Operation_hpp */

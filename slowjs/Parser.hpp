@@ -120,9 +120,9 @@ public:
     AST_Node *NewExpression();
     AST_Node *MemberExpression();
     AST_Node *PrimaryExpression();
-    vector<AST_Node *> ExpressionList();
     AST_Node *Literal();
     AST_Node *Identifier();
+    vector<AST_Node *> ExpressionList();
 
     queue<Token *> AssignmentExpressionTokenQueue;
     Token *AssignmentExpressionLookahead;

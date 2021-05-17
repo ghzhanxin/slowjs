@@ -29,16 +29,14 @@ public:
 class Task
 {
 public:
-    Task() {};
-    Task(Function_Data *_fn_data) : fn_data(_fn_data){};
+    Task(Function_Data *data) : fn_data(data){};
+
     Function_Data *fn_data;
 };
 class Job : public Task
 {
 public:
-    Job(){};
-    Job(Function_Data *_fn_data) : fn_data(_fn_data){};
-    Function_Data *fn_data;
+    Job(Function_Data *data) : Task(data){};
 };
 
 class Event_Loop
@@ -53,7 +51,7 @@ public:
 
     // https://html.spec.whatwg.org/#event-loop-processing-model
     void startLoop();
-    void Perform(Task);
+    void Perform(Task &);
     void PerformOldestTask();
     void PerformJobCheckPoint();
 

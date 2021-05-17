@@ -49,7 +49,7 @@ void Slowjs::addIntrinsic()
     global_obj->Put("Function", JSObject::Function->ToJSValue());
 
     JSObject *process = new JSObject();
-    JSFunction *nextTick_fo = new JSFunction("nextTick", (void *)CEnqueueTask);
+    JSFunction *nextTick_fo = new JSFunction("nextTick", (void *)CEnqueueJob);
     process->Put("nextTick", nextTick_fo->ToJSValue());
     global_obj->Put("process", process->ToJSValue());
 
