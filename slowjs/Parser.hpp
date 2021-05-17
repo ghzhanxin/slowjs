@@ -69,7 +69,7 @@ class AST_Node
 {
 public:
     AST_Node(){};
-    AST_Node(nt::Node_Type t, string v = "default") : type(t), value(v){};
+    AST_Node(nt::Node_Type t, string v = "AST_Node_default_value") : type(t), value(v){};
 
     nt::Node_Type type;
     string value;
@@ -86,15 +86,15 @@ public:
 
     void nextToken();
     template <typename T>
-    bool eat(T);
+    bool eat(const T &);
 
-    bool expect(string);
+    bool expect(const string &);
     bool expect(tt::Token_Type);
 
-    bool expectNot(string);
+    bool expectNot(const string &);
     bool expectNot(tt::Token_Type);
 
-    AST_Node *parse(queue<Token *>);
+    AST_Node *parse(const queue<Token *> &);
 
     AST_Node *Program();
     vector<AST_Node *> StatementList();
@@ -138,16 +138,10 @@ public:
     void storeAssignmentExpression();
     void restoreAssignmentExpression();
 
-    queue<Token *> MemberExpressionTokenQueue;
-    Token *MemberExpressionLookahead;
-    void storeMemberExpression();
-    void restoreMemberExpression();
+    AST_Node *buildBinary(AST_Node *, AST_Node *, string);
+    int check(bool, string);
 
-    int throwParseSyntaxError(string);
-    int checkParseResult(bool, string);
-
-    static void
-    traversal(AST_Node *node, string prefix);
+    static void traversal(AST_Node *node, string prefix);
     static void printAST(AST_Node *node);
 };
 

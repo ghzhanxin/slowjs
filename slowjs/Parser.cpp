@@ -87,8 +87,8 @@
 //          LeftHandSideExpression++
 //          LeftHandSideExpression--
 // LeftHandSideExpression :
-//          NewExpression
 //          CallExpression
+//          NewExpression
 // CallExpression :
 //          MemberExpression Arguments
 // Arguments :
@@ -103,8 +103,7 @@
 // MemberExpression:
 //          PrimaryExpression
 //          FunctionExpression
-//          this . MemberExpression
-//          Identifier . MemberExpression
+//          PrimaryExpression . MemberExpression
 // PrimaryExpression :
 //          this
 //          Identifier
@@ -126,16 +125,13 @@
 
 using namespace std;
 
-int Parser::throwParseSyntaxError(string s = "Unknown Parse Error")
-{
-    string msg = SyntaxErrorPrefix;
-    throw msg + s;
-}
-
-int Parser::checkParseResult(bool result, string msg)
+int Parser::check(bool result, string msg = "")
 {
     if (!result)
-        throwParseSyntaxError(msg);
+    {
+        string value = msg.size() ? msg : ExceptionTokenPrefix + string(" '" + lookahead->value + "' ");
+        throw value;
+    }
 
     return 0;
 }
@@ -150,7 +146,7 @@ void Parser::nextToken()
         lookahead = nullptr;
 }
 template <typename T>
-bool Parser::eat(T t)
+bool Parser::eat(const T &t)
 {
     if (expect(t))
     {
@@ -160,7 +156,7 @@ bool Parser::eat(T t)
     else
         return false;
 }
-bool Parser::expect(string s)
+bool Parser::expect(const string &s)
 {
     return lookahead && lookahead->value == s ? true : false;
 }
@@ -169,7 +165,7 @@ bool Parser::expect(tt::Token_Type t)
     return lookahead && lookahead->type == t ? true : false;
 }
 
-bool Parser::expectNot(string s)
+bool Parser::expectNot(const string &s)
 {
     return lookahead && lookahead->value != s ? true : false;
 }
@@ -181,8 +177,8 @@ bool Parser::expectNot(tt::Token_Type t)
 // Program : StatementList
 AST_Node *Parser::Program()
 {
-    root = new AST_Node(nt::Program);
     vector<AST_Node *> childs = StatementList();
+    root = new AST_Node(nt::Program);
     root->childs = childs;
     return root;
 }
@@ -196,10 +192,9 @@ vector<AST_Node *> Parser::StatementList()
     while (expectNot("}"))
     {
         AST_Node *stmt = Statement();
-        if (stmt)
-            childs.push_back(stmt);
-        else
-            throw throwParseSyntaxError("Statement exception");
+        check(stmt, "statement");
+
+        childs.push_back(stmt);
     }
     return childs;
 }
@@ -219,7 +214,7 @@ vector<AST_Node *> Parser::StatementList()
 AST_Node *Parser::Statement()
 {
     if (!lookahead)
-        throw throwParseSyntaxError();
+        throw "Statement lookahead is null";
 
     if (expect("break"))
         return BreakStatement();
@@ -248,19 +243,19 @@ AST_Node *Parser::Statement()
 // BreakStatement: break ;
 AST_Node *Parser::BreakStatement()
 {
-    if (eat("break") && eat(";"))
-        return new AST_Node(nt::BreakStatement);
-    else
-        throw throwParseSyntaxError("Expect 'break' or ';' in BreakStatement");
+    check(eat("break"));
+    check(eat(";"));
+
+    return new AST_Node(nt::BreakStatement);
 }
 
 // ContinueStatement: continue ;
 AST_Node *Parser::ContinueStatement()
 {
-    if (eat("continue") && eat(";"))
-        return new AST_Node(nt::ContinueStatement);
-    else
-        throw throwParseSyntaxError("Expect 'continue' or ';' in ContinueStatement");
+    check(eat("continue"));
+    check(eat(";"));
+
+    return new AST_Node(nt::ContinueStatement);
 }
 
 // ReturnStatement:
@@ -268,50 +263,40 @@ AST_Node *Parser::ContinueStatement()
 //          return expression ;
 AST_Node *Parser::ReturnStatement()
 {
-    if (eat("return"))
-    {
-        AST_Node *ret = new AST_Node(nt::ReturnStatement);
-        if (eat(";"))
-            return ret;
-        else
-        {
-            AST_Node *expr = Expression();
-            if (expr && eat(";"))
-            {
-                ret->childs.push_back(expr);
-                return ret;
-            }
-            else
-                throw throwParseSyntaxError("Expect expression or ';' in ReturnStatement");
-        }
-    }
+    check(eat("return"));
+
+    AST_Node *ret = new AST_Node(nt::ReturnStatement);
+    if (eat(";"))
+        return ret;
     else
-        throw throwParseSyntaxError("Expect 'return' in ReturnStatement");
+    {
+        AST_Node *expr = Expression();
+        check(expr, "expression");
+        check(eat(";"));
+
+        ret->childs.push_back(expr);
+        return ret;
+    }
 }
 
 // ThrowStatement: throw Expression ;
 AST_Node *Parser::ThrowStatement()
 {
-    if (eat("throw"))
-    {
-        AST_Node *expr = Expression();
-        if (expr && eat(";"))
-        {
-            AST_Node *thr = new AST_Node(nt::ThrowStatement);
-            thr->childs.push_back(expr);
-            return thr;
-        }
-        throw throwParseSyntaxError("Expect expression or ';' in ReturnStatement");
-    }
-    else
-        throw throwParseSyntaxError("Expect 'throw' in ReturnStatement");
+    check(eat("throw"));
+
+    AST_Node *expr = Expression();
+    check(expr, "expression");
+    check(eat(";"));
+
+    AST_Node *thr = new AST_Node(nt::ThrowStatement);
+    thr->childs.push_back(expr);
+    return thr;
 }
 
 // EmptyStatement : ;
 AST_Node *Parser::EmptyStatement()
 {
-    if (!eat(";"))
-        throw throwParseSyntaxError("Expect ';' in EmptyStatement");
+    check(eat(";"));
 
     return new AST_Node(nt::EmptyStatement);
 }
@@ -321,40 +306,30 @@ AST_Node *Parser::EmptyStatement()
 //          if (Expression) Statement else Statement
 AST_Node *Parser::IfStatement()
 {
+    check(eat("if"));
+    check(eat("("));
+
+    AST_Node *expr = Expression();
+
+    check(expr, "expression");
+    check(eat(")"));
+
+    AST_Node *stmt = Statement();
+    check(stmt, "statement");
+
     AST_Node *node = new AST_Node(nt::IfStatement);
+    node->childs.push_back(expr);
+    node->childs.push_back(stmt);
 
-    if (eat("if") && eat("("))
+    if (eat("else"))
     {
-        AST_Node *expr = Expression();
-        if (expr && eat(")"))
-        {
-            node->childs.push_back(expr);
-            AST_Node *stmt = Statement();
-
-            if (stmt)
-                node->childs.push_back(stmt);
-            else
-                throw throwParseSyntaxError("IfStatement");
-
-            if (eat("else"))
-            {
-                AST_Node *stmt = Statement();
-                if (stmt)
-                {
-                    node->childs.push_back(stmt);
-                    return node;
-                }
-                else
-                    throw throwParseSyntaxError("IfStatement");
-            }
-            else
-                return node;
-        }
-        else
-            throw throwParseSyntaxError("Expect expression or ')' in IfStatement");
+        AST_Node *stmt = Statement();
+        check(stmt, "statement");
+        node->childs.push_back(stmt);
+        return node;
     }
     else
-        throw throwParseSyntaxError("Expect 'if' or '(' in IfStatement");
+        return node;
 }
 
 // IterationStatement :
@@ -367,38 +342,40 @@ AST_Node *Parser::IterationStatement()
     if (eat("do"))
     {
         AST_Node *stmt = Statement();
-        if (stmt && eat("while") && eat("("))
-        {
-            AST_Node *expr = Expression();
+        check(stmt, "statement");
+        check(eat("while"));
+        check(eat("("));
 
-            if (expr && eat(")"))
-            {
-                AST_Node *node = new AST_Node(nt::DoWhileStatement);
-                node->childs.push_back(stmt);
-                node->childs.push_back(expr);
-                return node;
-            }
-            else
-                throw throwParseSyntaxError("DoWhileStatement");
-        }
-        else
-            throw throwParseSyntaxError("DoWhileStatement");
+        AST_Node *expr = Expression();
+        check(expr, "expression");
+        check(eat(")"));
+
+        AST_Node *node = new AST_Node(nt::DoWhileStatement);
+        node->childs.push_back(stmt);
+        node->childs.push_back(expr);
+        return node;
     }
     else if (eat("while"))
     {
-        eat("(");
+        check(eat("("));
+
         AST_Node *expr = Expression();
-        eat(")");
+        check(expr, "expression");
+        check(eat(")"));
+
         AST_Node *stmt = Statement();
+        check(stmt, "statement");
 
         AST_Node *node = new AST_Node(nt::WhileStatement);
         node->childs.push_back(expr);
         node->childs.push_back(stmt);
         return node;
     }
-    else if (eat("for") && eat("("))
+    else
     {
-        AST_Node *node = new AST_Node(nt::ForStatement);
+        check(eat("for"));
+        check(eat("("));
+
         AST_Node *first = nullptr;
         if (eat("var"))
         {
@@ -410,163 +387,114 @@ AST_Node *Parser::IterationStatement()
         else
             first = Expression();
 
-        if (first && eat(";"))
-        {
-            AST_Node *second = Expression();
-            if (second && eat(";"))
-            {
-                AST_Node *third = Expression();
-                if (third && eat(")"))
-                {
-                    node->childs.push_back(first);
-                    node->childs.push_back(second);
-                    node->childs.push_back(third);
-                    AST_Node *stmt = Statement();
-                    if (stmt)
-                    {
-                        node->childs.push_back(stmt);
-                        return node;
-                    }
-                    else
-                        throw throwParseSyntaxError("ForStatement");
-                }
-                else
-                    throw throwParseSyntaxError("Expect ')' in ForStatement");
-            }
-            throw throwParseSyntaxError("Expect ';' in ForStatement");
-        }
-        else
-            throw throwParseSyntaxError("Expect ';' in ForStatement");
+        check(first, "expression");
+        check(eat(";"));
+
+        AST_Node *second = Expression();
+        check(second, "expression");
+        check(eat(";"));
+
+        AST_Node *third = Expression();
+        check(third, "expression");
+        check(eat(")"));
+
+        AST_Node *node = new AST_Node(nt::ForStatement);
+        node->childs.push_back(first);
+        node->childs.push_back(second);
+        node->childs.push_back(third);
+        AST_Node *stmt = Statement();
+
+        check(stmt, "statement");
+        node->childs.push_back(stmt);
+        return node;
     }
-    else
-        throw throwParseSyntaxError("Expect 'for' 'do' or 'while' in IterationStatement");
 }
 
 // VariableDeclaration : var AssignmentExpression ;
 AST_Node *Parser::VariableDeclaration()
 {
+    check(eat("var"));
+    AST_Node *assign = AssignmentExpression();
+    check(assign, "AssignmentExpression");
+    check(eat(";"));
+
     AST_Node *node = new AST_Node(nt::VariableDeclaration);
-
-    if (eat("var"))
-    {
-        AST_Node *assign = AssignmentExpression();
-
-        if (assign && eat(";"))
-        {
-            node->childs.push_back(assign);
-            return node;
-        }
-        else
-            throw throwParseSyntaxError("Expect assignment or ';' in VariableDeclaration");
-    }
-    else
-        throw throwParseSyntaxError("Expect 'var' in VariableDeclaration");
+    node->childs.push_back(assign);
+    return node;
 }
 
 // FunctionDeclaration : function Identifier (FormalParameters) BlockStatement
 AST_Node *Parser::FunctionDeclaration()
 {
-    AST_Node *node = new AST_Node(nt::FunctionDeclaration);
+    check(eat("function"));
 
-    if (eat("function"))
-    {
-        AST_Node *id = Identifier();
-        if (id && eat("("))
-        {
-            AST_Node *param = FormalParameters();
-            if (param && eat(")"))
-            {
-                AST_Node *block = BlockStatement();
-                if (block)
-                {
-                    node->childs.push_back(id);
-                    node->childs.push_back(param);
-                    node->childs.push_back(block);
-                    return node;
-                }
-                else
-                    throw throwParseSyntaxError("FunctionDeclaration");
-            }
-            else
-                throw throwParseSyntaxError("Expect parameter or ')' in FunctionDeclaration");
-        }
-        else
-            throw throwParseSyntaxError("Expect function identifier or '(' in FunctionDeclaration");
-    }
-    else
-        throw throwParseSyntaxError("Expect 'function' in FunctionDeclaration");
+    AST_Node *id = Identifier();
+    check(id, "identifier");
+    check(eat("("));
+
+    AST_Node *param = FormalParameters();
+    check(param, "parameter");
+    check(eat(")"));
+
+    AST_Node *block = BlockStatement();
+    check(block, "block");
+
+    AST_Node *node = new AST_Node(nt::FunctionDeclaration);
+    node->childs.push_back(id);
+    node->childs.push_back(param);
+    node->childs.push_back(block);
+    return node;
 }
 
 // FunctionExpression : function [Identifier] (FormalParameters) BlockStatement
 AST_Node *Parser::FunctionExpression()
 {
-    AST_Node *node = new AST_Node(nt::FunctionExpression);
+    check(eat("function"));
 
-    if (eat("function"))
+    AST_Node *id = nullptr;
+    if (expectNot("("))
     {
-        AST_Node *id = nullptr;
-        if (expectNot("("))
-        {
-            id = Identifier();
-            if (!id)
-                throw throwParseSyntaxError("Expect 'Identifier' in FunctionExpression");
-        }
-        if (eat("("))
-        {
-            AST_Node *param = FormalParameters();
-            if (param && eat(")"))
-            {
-                AST_Node *block = BlockStatement();
-                if (block)
-                {
-                    node->childs.push_back(id);
-                    node->childs.push_back(param);
-                    node->childs.push_back(block);
-                    return node;
-                }
-                else
-                    throw throwParseSyntaxError("FunctionExpression");
-            }
-            else
-                throw throwParseSyntaxError("Expect parameter or ')' in FunctionExpression");
-        }
-        else
-            throw throwParseSyntaxError("Expect function identifier or '(' in FunctionExpression");
+        id = Identifier();
+        check(id, "Identifier");
     }
-    else
-        throw throwParseSyntaxError("Expect 'function' in FunctionExpression");
+
+    check(eat("("));
+
+    AST_Node *param = FormalParameters();
+    check(param, "FormalParameter");
+    check(eat(")"));
+
+    AST_Node *block = BlockStatement();
+    check(block, "BlockStatement");
+
+    AST_Node *node = new AST_Node(nt::FunctionExpression);
+    node->childs.push_back(id);
+    node->childs.push_back(param);
+    node->childs.push_back(block);
+    return node;
 }
 
 // BlockStatement : { StatementList }
 AST_Node *Parser::BlockStatement()
 {
+    check(eat("{"));
+    vector<AST_Node *> childs = StatementList();
+
+    check(eat("}"));
+
     AST_Node *node = new AST_Node(nt::BlockStatement);
-
-    if (eat("{"))
-    {
-        vector<AST_Node *> childs = StatementList();
-
-        if (eat("}"))
-        {
-            node->childs = childs;
-            return node;
-        }
-        else
-            throw throwParseSyntaxError("Expect '}' in BlockStatement");
-    }
-    else
-        throw throwParseSyntaxError("Expect '{' in BlockStatement");
+    node->childs = childs;
+    return node;
 }
 
 // ExpressionStatement : Expression ;
 AST_Node *Parser::ExpressionStatement()
 {
-    AST_Node *node = new AST_Node(nt::ExpressionStatement);
-
     AST_Node *expr = Expression();
-    if (!eat(";") || !expr)
-        throw throwParseSyntaxError("Expect ';' or expression in ExpressionStatement");
+    check(expr, "expression");
+    check(eat(";"));
 
+    AST_Node *node = new AST_Node(nt::ExpressionStatement);
     node->childs.push_back(expr);
     return node;
 }
@@ -594,29 +522,22 @@ vector<AST_Node *> Parser::IdentifierList()
     while (expectNot(")"))
     {
         AST_Node *id = Identifier();
-        if (id)
-        {
-            childs.push_back(id);
+        check(id, "Identifier");
+        childs.push_back(id);
 
-            if (expect(")"))
-                return childs;
+        if (expect(")"))
+            return childs;
 
-            if (!eat(","))
-                throw throwParseSyntaxError("Expect ',' in IdentifierList");
-        }
-        else
-            throw throwParseSyntaxError();
+        check(eat(","));
     }
-    throw throwParseSyntaxError("in IdentifierList");
+    throw "IdentifierList Error";
 }
 
 // Expression : AssignmentExpression
 AST_Node *Parser::Expression()
 {
     AST_Node *assign = AssignmentExpression();
-    if (!assign)
-        return nullptr;
-    return assign;
+    return assign ? assign : nullptr;
 }
 
 void Parser::storeAssignmentExpression()
@@ -640,15 +561,12 @@ AST_Node *Parser::AssignmentExpression()
     if (member && eat("="))
     {
         AST_Node *expr = Expression();
-        if (expr)
-        {
-            AST_Node *node = new AST_Node(nt::AssignmentExpression);
-            node->childs.push_back(member);
-            node->childs.push_back(expr);
-            return node;
-        }
-        else
-            throw throwParseSyntaxError("Expect expression in AssignmentExpression");
+        check(expr, "expression");
+
+        AST_Node *node = new AST_Node(nt::AssignmentExpression);
+        node->childs.push_back(member);
+        node->childs.push_back(expr);
+        return node;
     }
     else
     {
@@ -657,7 +575,7 @@ AST_Node *Parser::AssignmentExpression()
     }
 }
 
-AST_Node *buildBinary(AST_Node *left, AST_Node *right, string op)
+AST_Node *Parser::buildBinary(AST_Node *left, AST_Node *right, string op)
 {
     AST_Node *node = new AST_Node(nt::BinaryExpression);
     node->value = op;
@@ -677,21 +595,18 @@ AST_Node *Parser::LogicalExpression()
         return nullptr;
 
     if (!lookahead)
-        return nullptr;
+        return equality;
 
     string op = lookahead->value;
     if (eat("&&") || eat("||"))
     {
         AST_Node *logical = LogicalExpression();
-        if (logical)
-            return buildBinary(equality, logical, op);
-        else
-            throw throwParseSyntaxError("LogicalExpression");
+        check(logical, "LogicalExpression");
+
+        return buildBinary(equality, logical, op);
     }
     else
-    {
         return equality;
-    }
 }
 
 // EqualityExpression :
@@ -707,21 +622,18 @@ AST_Node *Parser::EqualityExpression()
         return nullptr;
 
     if (!lookahead)
-        return nullptr;
+        return relational;
 
     string op = lookahead->value;
     if (eat("==") || eat("!=") || eat("===") || eat("!=="))
     {
         AST_Node *equality = EqualityExpression();
-        if (equality)
-            return buildBinary(relational, equality, op);
-        else
-            throw throwParseSyntaxError("EqualityExpression");
+        check(equality, "EqualityExpression");
+
+        return buildBinary(relational, equality, op);
     }
     else
-    {
         return relational;
-    }
 }
 
 // RelationalExpression :
@@ -736,11 +648,15 @@ AST_Node *Parser::RelationalExpression()
     if (!add)
         return nullptr;
 
+    if (!lookahead)
+        return add;
+
     string op = lookahead->value;
     if (eat(">") || eat("<") || eat(">=") || eat("<="))
     {
         AST_Node *relation = RelationalExpression();
-        checkParseResult(relation, "RelationalExpression");
+        check(relation, "RelationalExpression");
+
         return buildBinary(add, relation, op);
     }
     else
@@ -757,19 +673,19 @@ AST_Node *Parser::AdditiveExpression()
     if (!multi)
         return nullptr;
 
+    if (!lookahead)
+        return multi;
+
     string op = lookahead->value;
     if (eat("+") || eat("-"))
     {
         AST_Node *add = AdditiveExpression();
-        if (add)
-            return buildBinary(multi, add, op);
-        else
-            throw throwParseSyntaxError("AdditiveExpression");
+        check(add, "AdditiveExpression");
+
+        return buildBinary(multi, add, op);
     }
     else
-    {
         return multi;
-    }
 }
 
 // MultiplicativeExpression :
@@ -783,19 +699,19 @@ AST_Node *Parser::MultiplicativeExpression()
     if (!postfix)
         return nullptr;
 
+    if (!lookahead)
+        return postfix;
+
     string op = lookahead->value;
     if (eat("*") || eat("/") || eat("%"))
     {
         AST_Node *multi = MultiplicativeExpression();
-        if (multi)
-            return buildBinary(postfix, multi, op);
-        else
-            throw throwParseSyntaxError("MultiplicativeExpression");
+        check(multi, "MultiplicativeExpression");
+
+        return buildBinary(postfix, multi, op);
     }
     else
-    {
         return postfix;
-    }
 }
 
 // UnaryExpression:
@@ -806,15 +722,12 @@ AST_Node *Parser::UnaryExpression()
     if (eat("!"))
     {
         AST_Node *unary = UnaryExpression();
-        if (unary)
-        {
-            AST_Node *node = new AST_Node(nt::UnaryExpression);
-            node->value = "!";
-            node->childs.push_back(unary);
-            return node;
-        }
-        else
-            throw throwParseSyntaxError("UnaryExpression");
+        check(unary, "UnaryExpression");
+
+        AST_Node *node = new AST_Node(nt::UnaryExpression);
+        node->value = "!";
+        node->childs.push_back(unary);
+        return node;
     }
     else
         return PostfixExpression();
@@ -831,7 +744,7 @@ AST_Node *Parser::PostfixExpression()
         return nullptr;
 
     if (!lookahead)
-        return nullptr;
+        return lhs;
 
     string op = lookahead->value;
     if (eat("++") || eat("--"))
@@ -846,12 +759,12 @@ AST_Node *Parser::PostfixExpression()
 };
 
 // LeftHandSideExpression :
-//          NewExpression
 //          CallExpression
+//          NewExpression
 AST_Node *Parser::LeftHandSideExpression()
 {
-    AST_Node *newExpre = NewExpression();
-    return newExpre ? newExpre : CallExpression();
+    AST_Node *newExpr = NewExpression();
+    return newExpr ? newExpr : CallExpression();
 }
 
 // CallExpression :
@@ -860,26 +773,21 @@ AST_Node *Parser::LeftHandSideExpression()
 AST_Node *Parser::CallExpression()
 {
     AST_Node *member = MemberExpression();
-    if (member)
+    if (!member)
+        return nullptr;
+
+    if (expect("("))
     {
-        if (expect("("))
-        {
-            AST_Node *args = Arguments();
-            if (args)
-            {
-                AST_Node *call = new AST_Node(nt::CallExpression);
-                call->childs.push_back(member);
-                call->childs.push_back(args);
-                return call;
-            }
-            else
-                throw throwParseSyntaxError("Expect Arguments in CallExpression");
-        }
-        else
-            return member;
+        AST_Node *args = Arguments();
+        check(args, "Arguments");
+
+        AST_Node *call = new AST_Node(nt::CallExpression);
+        call->childs.push_back(member);
+        call->childs.push_back(args);
+        return call;
     }
     else
-        return nullptr;
+        return member;
 }
 
 // Arguments :
@@ -887,32 +795,18 @@ AST_Node *Parser::CallExpression()
 //          (ExpressionList)
 AST_Node *Parser::Arguments()
 {
-    if (eat("("))
-    {
-        AST_Node *args = new AST_Node(nt::Arguments);
-        if (eat(")"))
-            return args;
-        else
-        {
-            try
-            {
-                vector<AST_Node *> childs = ExpressionList();
-                if (eat(")"))
-                {
-                    args->childs = childs;
-                    return args;
-                }
-                else
-                    throw throwParseSyntaxError("Expect ')' in Arguments");
-            }
-            catch (...)
-            {
-                throw throwParseSyntaxError("in Arguments");
-            }
-        }
-    }
+    check(eat("("));
+    AST_Node *args = new AST_Node(nt::Arguments);
+    if (eat(")"))
+        return args;
     else
-        throw throwParseSyntaxError("Expect '(' in Arguments");
+    {
+        vector<AST_Node *> childs = ExpressionList();
+        check(eat(")"));
+
+        args->childs = childs;
+        return args;
+    }
 }
 
 // ExpressionList :
@@ -924,95 +818,61 @@ vector<AST_Node *> Parser::ExpressionList()
     while (expectNot(")"))
     {
         AST_Node *expr = Expression();
-        if (expr)
-        {
-            childs.push_back(expr);
+        check(expr, "expression");
+        childs.push_back(expr);
 
-            if (expect(")"))
-                return childs;
+        if (expect(")"))
+            return childs;
 
-            if (!eat(","))
-                throw throwParseSyntaxError("Expect ',' in ExpressionList");
-        }
-        else
-            throw throwParseSyntaxError("in ExpressionList");
+        check(eat(","));
     }
-    throw throwParseSyntaxError("in ExpressionList");
+    throw "ExpressionList Error";
 }
 
 // NewExpression :
 //          new MemberExpression Arguments
 AST_Node *Parser::NewExpression()
 {
-    if (eat("new"))
-    {
-        AST_Node *member = MemberExpression();
-        if (member)
-        {
-            AST_Node *args = Arguments();
-            if (args)
-            {
-                AST_Node *newExpre = new AST_Node(nt::NewExpression);
-                newExpre->childs.push_back(member);
-                newExpre->childs.push_back(args);
-                return newExpre;
-            }
-            else
-                throw throwParseSyntaxError();
-        }
-        else
-            throw throwParseSyntaxError();
-    }
-    else
-        return nullptr;
-}
 
-void Parser::storeMemberExpression()
-{
-    MemberExpressionTokenQueue = tokenQueue;
-    MemberExpressionLookahead = lookahead;
-}
-void Parser::restoreMemberExpression()
-{
-    tokenQueue = MemberExpressionTokenQueue;
-    lookahead = MemberExpressionLookahead;
+    if (!eat("new"))
+        return nullptr;
+
+    AST_Node *member = MemberExpression();
+    check(member, "MemberExpression");
+
+    AST_Node *args = Arguments();
+    check(args, "Arguments");
+
+    AST_Node *newExpr = new AST_Node(nt::NewExpression);
+    newExpr->childs.push_back(member);
+    newExpr->childs.push_back(args);
+    return newExpr;
 }
 
 // MemberExpression:
 //          PrimaryExpression
 //          FunctionExpression
-//          this . MemberExpression
-//          Identifier . MemberExpression
+//          PrimaryExpression . MemberExpression
 AST_Node *Parser::MemberExpression()
 {
-    storeMemberExpression();
     if (expect("function"))
         return FunctionExpression();
-    else if (eat("this") && eat("."))
-    {
-        AST_Node *member = MemberExpression();
-        AST_Node *memberNode = new AST_Node(nt::MemberExpression);
-        memberNode->childs.push_back(new AST_Node(nt::ThisExpression, "this"));
-        memberNode->childs.push_back(member);
-        return memberNode;
-    }
     else
     {
-        restoreMemberExpression();
-        AST_Node *id = Identifier();
-        if (id && eat("."))
-        {
-            AST_Node *member = MemberExpression();
-            AST_Node *memberNode = new AST_Node(nt::MemberExpression);
-            memberNode->childs.push_back(id);
-            memberNode->childs.push_back(member);
-            return memberNode;
-        }
-        else
-        {
-            restoreMemberExpression();
-            return PrimaryExpression();
-        }
+        AST_Node *primary = PrimaryExpression();
+        if (!primary)
+            return nullptr;
+
+        if (!eat("."))
+            return primary;
+
+        AST_Node *member = MemberExpression();
+        check(member, "MemberExpression");
+
+        AST_Node *memberNode = new AST_Node(nt::MemberExpression);
+        memberNode->childs.push_back(primary);
+        memberNode->childs.push_back(member);
+        return memberNode;
     }
 }
 
@@ -1024,10 +884,10 @@ AST_Node *Parser::MemberExpression()
 AST_Node *Parser::PrimaryExpression()
 {
     if (!lookahead)
-        throw throwParseSyntaxError();
+        throw "PrimaryExpression lookahead is null";
 
     if (eat(tt::_this))
-        return new AST_Node(nt::ThisExpression);
+        return new AST_Node(nt::ThisExpression, "this");
     else if (expect(tt::name))
         return Identifier();
     else if (expectNot("("))
@@ -1035,13 +895,13 @@ AST_Node *Parser::PrimaryExpression()
     else if (eat("("))
     {
         AST_Node *expr = Expression();
-        if (!eat(")") || !expr)
-            throw throwParseSyntaxError("Expect ')'");
+        check(expr, "expression");
+        check(eat(")"));
 
         return expr;
     }
     else
-        throw throwParseSyntaxError("PrimaryExpression Error");
+        throw "PrimaryExpression";
 }
 
 // Literal :
@@ -1051,6 +911,9 @@ AST_Node *Parser::PrimaryExpression()
 //          StringLiteral
 AST_Node *Parser::Literal()
 {
+    if (!lookahead)
+        throw "Literal lookahead is null";
+
     AST_Node *node = new AST_Node(nt::Literal);
     node->value = lookahead->value;
 
@@ -1117,7 +980,7 @@ void Parser::printAST(AST_Node *node)
     traversal(node, prefix);
 }
 
-AST_Node *Parser::parse(queue<Token *> que)
+AST_Node *Parser::parse(const queue<Token *> &que)
 {
     tokenQueue = que;
     nextToken();
