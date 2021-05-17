@@ -34,7 +34,7 @@
 //          if (Expression) Statement
 //          if (Expression) Statement else Statement
 // IterationStatement :
-//          do Statement while ( Expression )
+//          do Statement while ( Expression );
 //          while ( Expression ) Statement
 //          for (var AssignmentExpression ; Expression ; Expression) Statement
 //          for ( [Expression] ; Expression ; Expression) Statement
@@ -336,7 +336,7 @@ AST_Node *Parser::IfStatement()
 }
 
 // IterationStatement :
-//          do Statement while ( Expression )
+//          do Statement while ( Expression );
 //          while ( Expression ) Statement
 //          for (var AssignmentExpression ; Expression ; Expression) Statement
 //          for ( [Expression] ; Expression ; Expression) Statement
@@ -352,6 +352,7 @@ AST_Node *Parser::IterationStatement()
         AST_Node *expr = Expression();
         check(expr, "expression");
         check(eat(")"));
+        check(eat(";"));
 
         AST_Node *node = new AST_Node(nt::DoWhileStatement);
         node->childs.push_back(stmt);
