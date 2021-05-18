@@ -135,12 +135,8 @@ public:
     AST_Node *Identifier();
     vector<AST_Node *> ExpressionList();
 
-    queue<Token *> AssignmentExpressionTokenQueue;
-    Token *AssignmentExpressionLookahead;
-    void storeAssignmentExpression();
-    void restoreAssignmentExpression();
-
-    AST_Node *buildBinary(AST_Node *, AST_Node *, string);
+    AST_Node *buildBinary(AST_Node *, AST_Node *, const string &);
+    int checkLeftHandSideValue(AST_Node *);
     int check(bool, string);
 
     static void traversal(AST_Node *node, string &prefix);

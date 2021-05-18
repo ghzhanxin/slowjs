@@ -53,7 +53,7 @@
 // Expression : AssignmentExpression
 // AssignmentExpression:
 //          ConditionalExpression
-//          MemberExpression = Expression
+//          LeftHandSideExpression = Expression
 // ConditionalExpression:
 //          LogicalExpression
 //          LogicalExpression ? LogicalExpression : LogicalExpression
@@ -523,38 +523,29 @@ AST_Node *Parser::Expression()
     return assign;
 }
 
-void Parser::storeAssignmentExpression()
+int Parser::checkLeftHandSideValue(AST_Node *node)
 {
-    AssignmentExpressionTokenQueue = tokenQueue;
-    AssignmentExpressionLookahead = lookahead;
-}
-void Parser::restoreAssignmentExpression()
-{
-    tokenQueue = AssignmentExpressionTokenQueue;
-    lookahead = AssignmentExpressionLookahead;
-}
+    return 0;
+};
 
 // AssignmentExpression:
 //          ConditionalExpression
-//          MemberExpression = Expression
+//          LeftHandSideExpression = Expression
 AST_Node *Parser::AssignmentExpression()
 {
-    storeAssignmentExpression();
-    AST_Node *member = MemberExpression();
-    if (member && eat("="))
-    {
-        AST_Node *expr = Expression();
+    AST_Node *left = ConditionalExpression();
+    check(left, "AssignmentExpression");
 
-        AST_Node *node = new AST_Node(nt::AssignmentExpression);
-        node->childs.push_back(member);
-        node->childs.push_back(expr);
-        return node;
-    }
-    else
-    {
-        restoreAssignmentExpression();
-        return ConditionalExpression();
-    }
+    if (!eat("="))
+        return left;
+
+    checkLeftHandSideValue(left);
+
+    AST_Node *right = Expression();
+    AST_Node *node = new AST_Node(nt::AssignmentExpression);
+    node->childs.push_back(left);
+    node->childs.push_back(right);
+    return node;
 }
 
 // ConditionalExpression:
@@ -584,7 +575,7 @@ AST_Node *Parser::ConditionalExpression()
     return node;
 }
 
-AST_Node *Parser::buildBinary(AST_Node *left, AST_Node *right, string op)
+AST_Node *Parser::buildBinary(AST_Node *left, AST_Node *right, const string &op)
 {
     AST_Node *node = new AST_Node(nt::BinaryExpression);
     node->value = op;
