@@ -61,8 +61,8 @@
         - [x] 首字母
           - [x] $
           - [x] _
-          - [x] a-z $ _ 0-9
-        - [x] a-z
+          - [x] a-z
+        - [x] a-z $ _ 0-9
       - [x] 字面量
         - [x] Primitive `undefined null true false 0-9 'singleQuoteString' "doubleQuoteString"`
         - [ ] 对象字面量
