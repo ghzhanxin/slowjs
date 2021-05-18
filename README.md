@@ -50,11 +50,11 @@
     - [x] continue
     - [x] throw
   - [ ] 表达式
-    - [ ] 函数表达式。如`var fn = function (){}` 不支持！太难了！尝试多次失败 T_T. 请用函数声明。
+    - [x] 函数表达式
+    - [x] 函数调用表达式
     - [ ] 成员表达式
       - [x] `object.property`
       - [ ] `object[property]`
-    - [x] 函数调用表达式 如 `fn();`
     - [x] 主值表达式
       - [x] this
       - [x] 标识符
@@ -104,9 +104,9 @@
     - [x] prototype
   - [x] process
     - [x] nextTick
+  - [x] setTimeout 目前只支持 0ms
   - [ ] Promise
   - [ ] Gererator
-  - [ ] setTimeout
 - [ ] 垃圾回收
 - [ ] 异常处理
   - [x] 异常类型提示
