@@ -9,16 +9,17 @@ function describe(title, fn) {
         print("got |", actual, "|", ", expected |", expected, "|");
         throw "";
     }
+    function done() {
+        print('PASS ' + title);
+    }
 
-    fn(assert);
-    print('PASS ' + title);
+    if (!fn(assert, done))
+        done();
 }
 
-describe('testHoist', testHoist);
-
-function testHoist(assert) {
+describe('testHoist', function (assert) {
     assert(hoist_var, undefined);
-}
+});
 var hoist_var = 'a';
 
 function testType(assert) {
@@ -90,11 +91,10 @@ function testClosure(assert) {
     var b = 2;
     function outer() {
         var c = 3;
-        function inner() {
+        return function inner() {
             var d = 4;
             return a + b + c + d;
-        }
-        return inner;
+        };
     }
     var closure = outer();
     assert(closure(), 10);
@@ -105,10 +105,9 @@ function testHighOrderFunction(assert) {
         return a + b;
     }
     function highOrderFunction(fn, num1, num2) {
-        function closure() {
+        return function closure() {
             return fn(num1, num2);
         };
-        return closure;
     }
     var test = highOrderFunction(add, 1, 2);
     assert(test(), 3);
@@ -235,7 +234,7 @@ function testObjectPrototype(assert) {
     assert(stu__proto__proto__proto, Object.prototype);
 }
 
-function testNextTick(assert) {
+function testMicroTask(assert, done) {
     var s = '';
     function addChar(char) {
         s = s + char;
@@ -245,40 +244,83 @@ function testNextTick(assert) {
     addChar('3');
     assert(s, '23');
 
-    function delayRead() {
+    process.nextTick(function () {
         assert(s, '231');
-    }
-    process.nextTick(delayRead);
+        done();
+    });
+
+    return done;
 }
 
-function testPromiseLike(assert) {
+function testMacroTask(assert, done) {
+    var s = '';
+    function addChar(char) {
+        s = s + char;
+    }
+    setTimeout(addChar, 0, '1');
+    addChar('2');
+    addChar('3');
+    assert(s, '23');
+
+    setTimeout(function () {
+        assert(s, '231');
+        done();
+    });
+
+    return done;
+}
+
+function testMicroTaskAndMacroTask(assert, done) {
+    var s = '';
+    function addChar(char) {
+        s = s + char;
+    }
+
+    // enqueue macro task
+    setTimeout(addChar, 0, '1');
+    // enqueue micro task
+    process.nextTick(addChar, '2');
+    addChar('3');
+    addChar('4');
+
+    assert(s, '34');
+    process.nextTick(function () {
+        assert(s, '342');
+    });
+    setTimeout(function () {
+        assert(s, '3421');
+        done();
+    });
+
+    return done;
+}
+
+function testPromiseLike(assert, done) {
 
     // simple Promise definition
     function Promise(executor) {
         var _this = this;
-        function nextTickDoResolveCallback(value) {
-            if (_this.onFulfilledCallback) {
-                _this.onFulfilledCallback(value);
-            }
-        }
         function PromiseResolve(value) {
             if (_this.state === 'PENDING') {
                 _this.state = 'FULFILLED';
                 _this.value = value;
 
-                process.nextTick(nextTickDoResolveCallback, value);
+                process.nextTick(function (value) {
+                    if (_this.onFulfilledCallback) {
+                        _this.onFulfilledCallback(value);
+                    }
+                }, value);
             }
-        }
-        function nextTickDoRejectCallback(reason) {
-            if (_this.onRejectedCallback)
-                _this.onRejectedCallback(reason);
         }
         function PromiseReject(reason) {
             if (_this.state === 'PENDING') {
                 _this.state = 'REJECTED';
                 _this.value = reason;
 
-                process.nextTick(nextTickDoRejectCallback, reason);
+                process.nextTick(function (reason) {
+                    if (_this.onRejectedCallback)
+                        _this.onRejectedCallback(reason);
+                }, reason);
             }
         }
 
@@ -289,40 +331,42 @@ function testPromiseLike(assert) {
 
         executor(PromiseResolve, PromiseReject);
     }
-    function prototypeThen(onFulfilled, onRejected) {
+
+    Promise.prototype.then = function (onFulfilled, onRejected) {
         var p1 = this;
         p1.onFulfilledCallback = onFulfilled;
         p1.onRejectedCallback = onRejected;
-    }
-    Promise.prototype.then = prototypeThen;
-
+    };
 
 
     // simple Promise use case
-    function executor(resolve, reject) {
+    var sequence = '';
+    var p1 = new Promise(function (resolve, reject) {
         process.nextTick(resolve, 'success');
-    }
-    function onFulfilled(value) {
+    });
+    p1.then(function (value) {
         assert(value, 'success');
-    }
-    function onRejected(reason) {
+        sequence = sequence + '-p1success-';
+    }, function (reason) {
         assert(reason, 'fail');
-    }
-    var promise = new Promise(executor);
-    promise.then(onFulfilled, onRejected);
+    });
 
-    // simple Promise use case 2
-    function executor2(resolve, reject) {
+    var p2 = new Promise(function (resolve, reject) {
         reject('fail');
-    }
-    function onFulfilled2(value) {
+    });
+    p2.then(function (value) {
         assert(value, 'success');
-    }
-    function onRejected2(reason) {
+    }, function (reason) {
+        sequence = sequence + '-p2fail-';
         assert(reason, 'fail');
-    }
-    var promise2 = new Promise(executor2);
-    promise2.then(onFulfilled2, onRejected2);
+    });
+
+    setTimeout(function () {
+        assert(sequence, "-p2fail--p1success-");
+        done();
+    });
+
+    return done;
 }
 
 describe('testType', testType);
@@ -332,5 +376,7 @@ describe('testHighOrderFunction', testHighOrderFunction);
 describe('testConditional', testConditional);
 describe('testIteration', testIteration);
 describe('testObjectPrototype', testObjectPrototype);
-describe('testNextTick', testNextTick);
+describe('testMicroTask', testMicroTask);
+describe('testMacroTask', testMacroTask);
+describe('testMicroTaskAndMacroTask', testMicroTaskAndMacroTask);
 describe('testPromiseLike', testPromiseLike);
