@@ -52,5 +52,6 @@ JSValue C_GetPrototypeOf(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
 JSValue C_FunctionPrototypeCall(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
 JSValue C_EnqueueTask(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
 JSValue C_EnqueueJob(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
+JSValue C_SetTimeout(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
 
 #endif /* Abstract_Operation_hpp */

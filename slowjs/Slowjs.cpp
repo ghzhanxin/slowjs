@@ -53,8 +53,8 @@ void Slowjs::addIntrinsic()
     process->Put("nextTick", nextTick_fo->ToJSValue());
     global_obj->Put("process", process->ToJSValue());
 
-    JSFunction *setTimeout0_fo = new JSFunction("setTimeout0", (void *)C_EnqueueTask);
-    global_obj->Put("setTimeout0", setTimeout0_fo->ToJSValue());
+    JSFunction *setTimeout_fo = new JSFunction("setTimeout", (void *)C_SetTimeout);
+    global_obj->Put("setTimeout", setTimeout_fo->ToJSValue());
 
     JSObject *console = new JSObject();
     JSFunction *clog_JSFunction = new JSFunction("log", (void *)C_Print);

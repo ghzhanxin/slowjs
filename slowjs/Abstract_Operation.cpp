@@ -327,3 +327,23 @@ JSValue C_EnqueueJob(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSV
 
     return JS_UNDEFINED;
 }
+JSValue C_SetTimeout(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
+{
+    if (args.size() == 0)
+        return JSException("1 argument required, but only 0 present.");
+    else
+    {
+        JSFunction *delay_fo = args[0].getFunction();
+        args.erase(args.begin());
+
+        if (args.size() != 0)
+            // TODO: timeout supported 0 currently, just erase it
+            args.erase(args.begin());
+
+        Function_Data *fn_data = new Function_Data(delay_fo, thisValue, args);
+        Task task(fn_data);
+        slow->loop->task_queue.push(task);
+    }
+
+    return JS_UNDEFINED;
+}
