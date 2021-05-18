@@ -26,7 +26,7 @@ namespace nt
         VariableDeclaration,
         ExpressionStatement,
         FunctionDeclaration,
-        FormalParameters,
+        FormalParameterList,
         ForStatement,
         IfStatement,
         BlockStatement,
@@ -112,7 +112,7 @@ public:
     AST_Node *VariableDeclaration();
     AST_Node *FunctionDeclaration();
     AST_Node *FunctionExpression();
-    AST_Node *FormalParameters();
+    AST_Node *FormalParameterList();
     vector<AST_Node *> IdentifierList();
 
     AST_Node *Expression();

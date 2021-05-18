@@ -39,11 +39,11 @@
 //          for (var AssignmentExpression ; Expression ; Expression) Statement
 //          for ( [Expression] ; Expression ; Expression) Statement
 // VariableDeclaration : var AssignmentExpression ;
-// FunctionDeclaration : function Identifier (FormalParameters) BlockStatement
-// FunctionExpression : function [Identifier] (FormalParameters) BlockStatement
+// FunctionDeclaration : function Identifier (FormalParameterList) BlockStatement
+// FunctionExpression : function [Identifier] (FormalParameterList) BlockStatement
 // BlockStatement : { StatementList }
 // ExpressionStatement : Expression ;
-// FormalParameters :
+// FormalParameterList :
 //          [empty]
 //          IdentifierList
 // IdentifierList :
@@ -93,6 +93,7 @@
 //          CallExpression
 //          NewExpression
 // CallExpression :
+//          MemberExpression
 //          MemberExpression Arguments
 // Arguments :
 //          ()
@@ -101,8 +102,7 @@
 //          Expression
 //          ExpressionList, Expression
 // NewExpression :
-//          MemberExpression
-//          new NewExpression
+//          new MemberExpression Arguments
 // MemberExpression:
 //          PrimaryExpression
 //          FunctionExpression
@@ -195,8 +195,6 @@ vector<AST_Node *> Parser::StatementList()
     while (expectNot("}"))
     {
         AST_Node *stmt = Statement();
-        check(stmt, "statement");
-
         childs.push_back(stmt);
     }
     return childs;
@@ -274,7 +272,6 @@ AST_Node *Parser::ReturnStatement()
     else
     {
         AST_Node *expr = Expression();
-        check(expr, "expression");
         check(eat(";"));
 
         ret->childs.push_back(expr);
@@ -288,7 +285,6 @@ AST_Node *Parser::ThrowStatement()
     check(eat("throw"));
 
     AST_Node *expr = Expression();
-    check(expr, "expression");
     check(eat(";"));
 
     AST_Node *thr = new AST_Node(nt::ThrowStatement);
@@ -300,7 +296,6 @@ AST_Node *Parser::ThrowStatement()
 AST_Node *Parser::EmptyStatement()
 {
     check(eat(";"));
-
     return new AST_Node(nt::EmptyStatement);
 }
 
@@ -313,12 +308,8 @@ AST_Node *Parser::IfStatement()
     check(eat("("));
 
     AST_Node *expr = Expression();
-
-    check(expr, "expression");
     check(eat(")"));
-
     AST_Node *stmt = Statement();
-    check(stmt, "statement");
 
     AST_Node *node = new AST_Node(nt::IfStatement);
     node->childs.push_back(expr);
@@ -327,7 +318,6 @@ AST_Node *Parser::IfStatement()
     if (eat("else"))
     {
         AST_Node *stmt = Statement();
-        check(stmt, "statement");
         node->childs.push_back(stmt);
         return node;
     }
@@ -345,12 +335,10 @@ AST_Node *Parser::IterationStatement()
     if (eat("do"))
     {
         AST_Node *stmt = Statement();
-        check(stmt, "statement");
         check(eat("while"));
         check(eat("("));
 
         AST_Node *expr = Expression();
-        check(expr, "expression");
         check(eat(")"));
         check(eat(";"));
 
@@ -364,11 +352,9 @@ AST_Node *Parser::IterationStatement()
         check(eat("("));
 
         AST_Node *expr = Expression();
-        check(expr, "expression");
         check(eat(")"));
 
         AST_Node *stmt = Statement();
-        check(stmt, "statement");
 
         AST_Node *node = new AST_Node(nt::WhileStatement);
         node->childs.push_back(expr);
@@ -391,15 +377,12 @@ AST_Node *Parser::IterationStatement()
         else
             first = Expression();
 
-        check(first, "expression");
         check(eat(";"));
 
         AST_Node *second = Expression();
-        check(second, "expression");
         check(eat(";"));
 
         AST_Node *third = Expression();
-        check(third, "expression");
         check(eat(")"));
 
         AST_Node *node = new AST_Node(nt::ForStatement);
@@ -408,7 +391,6 @@ AST_Node *Parser::IterationStatement()
         node->childs.push_back(third);
         AST_Node *stmt = Statement();
 
-        check(stmt, "statement");
         node->childs.push_back(stmt);
         return node;
     }
@@ -427,7 +409,7 @@ AST_Node *Parser::VariableDeclaration()
     return node;
 }
 
-// FunctionDeclaration : function Identifier (FormalParameters) BlockStatement
+// FunctionDeclaration : function Identifier (FormalParameterList) BlockStatement
 AST_Node *Parser::FunctionDeclaration()
 {
     check(eat("function"));
@@ -436,12 +418,10 @@ AST_Node *Parser::FunctionDeclaration()
     check(id, "identifier");
     check(eat("("));
 
-    AST_Node *param = FormalParameters();
-    check(param, "parameter");
+    AST_Node *param = FormalParameterList();
     check(eat(")"));
 
     AST_Node *block = BlockStatement();
-    check(block, "block");
 
     AST_Node *node = new AST_Node(nt::FunctionDeclaration);
     node->childs.push_back(id);
@@ -450,7 +430,7 @@ AST_Node *Parser::FunctionDeclaration()
     return node;
 }
 
-// FunctionExpression : function [Identifier] (FormalParameters) BlockStatement
+// FunctionExpression : function [Identifier] (FormalParameterList) BlockStatement
 AST_Node *Parser::FunctionExpression()
 {
     check(eat("function"));
@@ -464,12 +444,10 @@ AST_Node *Parser::FunctionExpression()
 
     check(eat("("));
 
-    AST_Node *param = FormalParameters();
-    check(param, "FormalParameter");
+    AST_Node *param = FormalParameterList();
     check(eat(")"));
 
     AST_Node *block = BlockStatement();
-    check(block, "BlockStatement");
 
     AST_Node *node = new AST_Node(nt::FunctionExpression);
     node->childs.push_back(id);
@@ -495,7 +473,6 @@ AST_Node *Parser::BlockStatement()
 AST_Node *Parser::ExpressionStatement()
 {
     AST_Node *expr = Expression();
-    check(expr, "expression");
     check(eat(";"));
 
     AST_Node *node = new AST_Node(nt::ExpressionStatement);
@@ -503,12 +480,12 @@ AST_Node *Parser::ExpressionStatement()
     return node;
 }
 
-// FormalParameters :
+// FormalParameterList :
 //          [empty]
 //          IdentifierList
-AST_Node *Parser::FormalParameters()
+AST_Node *Parser::FormalParameterList()
 {
-    AST_Node *node = new AST_Node(nt::FormalParameters);
+    AST_Node *node = new AST_Node(nt::FormalParameterList);
     if (expect(")"))
         return node;
 
@@ -541,7 +518,9 @@ vector<AST_Node *> Parser::IdentifierList()
 AST_Node *Parser::Expression()
 {
     AST_Node *assign = AssignmentExpression();
-    return assign ? assign : nullptr;
+    check(assign, "Expression Exception!");
+
+    return assign;
 }
 
 void Parser::storeAssignmentExpression()
@@ -565,7 +544,6 @@ AST_Node *Parser::AssignmentExpression()
     if (member && eat("="))
     {
         AST_Node *expr = Expression();
-        check(expr, "expression");
 
         AST_Node *node = new AST_Node(nt::AssignmentExpression);
         node->childs.push_back(member);
@@ -810,7 +788,6 @@ AST_Node *Parser::CallExpression()
     if (expect("("))
     {
         AST_Node *args = Arguments();
-        check(args, "Arguments");
 
         AST_Node *call = new AST_Node(nt::CallExpression);
         call->childs.push_back(member);
@@ -849,7 +826,6 @@ vector<AST_Node *> Parser::ExpressionList()
     while (expectNot(")"))
     {
         AST_Node *expr = Expression();
-        check(expr, "expression");
         childs.push_back(expr);
 
         if (expect(")"))
@@ -864,7 +840,6 @@ vector<AST_Node *> Parser::ExpressionList()
 //          new MemberExpression Arguments
 AST_Node *Parser::NewExpression()
 {
-
     if (!eat("new"))
         return nullptr;
 
@@ -872,7 +847,6 @@ AST_Node *Parser::NewExpression()
     check(member, "MemberExpression");
 
     AST_Node *args = Arguments();
-    check(args, "Arguments");
 
     AST_Node *newExpr = new AST_Node(nt::NewExpression);
     newExpr->childs.push_back(member);
@@ -926,7 +900,6 @@ AST_Node *Parser::PrimaryExpression()
     else if (eat("("))
     {
         AST_Node *expr = Expression();
-        check(expr, "expression");
         check(eat(")"));
 
         return expr;
