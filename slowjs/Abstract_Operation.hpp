@@ -41,17 +41,37 @@ JSValue ToNumber(JSValue);
 JSValue ToString(JSValue);
 JSValue ToObject(JSValue);
 
+class Function_Data
+{
+public:
+    Function_Data(
+        Slowjs *_slow,
+        JSFunction *_fo,
+        JSValue _thisValue,
+        vector<JSValue> _args)
+        : fo(_fo),
+          slow(_slow),
+          thisValue(_thisValue),
+          args(_args) {}
+
+    Slowjs *slow;
+    JSFunction *fo;
+    JSValue thisValue;
+    vector<JSValue> args;
+};
+
 // helper function
 void printJSValue(JSValue);
-int throwRuntimeException(EXCEPTION_ENUM t, string s);
+int ThrowRuntimeException(EXCEPTION_ENUM t, string s);
+void EnqueueTask(const Function_Data &);
+void EnqueueJob(const Function_Data &);
 
-// C_Function
-JSValue C_Print(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
-JSValue C_Builtin_Object(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
-JSValue C_GetPrototypeOf(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
-JSValue C_FunctionPrototypeCall(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
-JSValue C_EnqueueTask(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
-JSValue C_EnqueueJob(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
-JSValue C_SetTimeout(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
+// Builtin Objects
+JSValue Builtin_Console_log(const Function_Data &);
+JSValue Builtin_Object(const Function_Data &);
+JSValue Builtin_GetPrototypeOf(const Function_Data &);
+JSValue Builtin_Function_Prototype_Call(const Function_Data &);
+JSValue Builtin_SetTimeout(const Function_Data &);
+JSValue Builtin_Process_Nexttick(const Function_Data &);
 
 #endif /* Abstract_Operation_hpp */

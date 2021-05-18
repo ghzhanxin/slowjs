@@ -13,19 +13,6 @@
 
 #include "JSValue_Type.hpp"
 
-class Function_Data
-{
-public:
-    Function_Data(
-        JSFunction *_fo,
-        JSValue _thisValue,
-        vector<JSValue> _args)
-        : fo(_fo), thisValue(_thisValue), args(_args){};
-
-    JSFunction *fo;
-    JSValue thisValue;
-    vector<JSValue> args;
-};
 class Task
 {
 public:

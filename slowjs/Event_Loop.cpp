@@ -6,6 +6,7 @@
 //
 
 #include "Event_Loop.hpp"
+#include "Abstract_Operation.hpp"
 
 void Event_Loop::startLoop()
 {

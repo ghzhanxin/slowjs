@@ -25,6 +25,7 @@ class DataDescriptor;
 class AccessorDescriptor;
 class JSObject;
 class JSFunction;
+class Function_Data;
 
 enum EXCEPTION_ENUM
 {
@@ -266,7 +267,7 @@ public:
 
     bool isIntrinsic() { return !!_c_function_ptr; };
 
-    typedef JSValue (*C_Function)(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue>);
+    typedef JSValue (*C_Function)(const Function_Data &);
     C_Function getCFunction() { return (C_Function)_c_function_ptr; };
 
 private:

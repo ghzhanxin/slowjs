@@ -10,7 +10,7 @@
 #include <iostream>
 
 JSObject *JSObject::ObjectPrototype = new JSObject();
-JSFunction *JSObject::Object = new JSFunction("Object", (void *)C_Builtin_Object);
+JSFunction *JSObject::Object = new JSFunction("Object", (void *)Builtin_Object);
 
 JSObject *JSObject::FunctionPrototype = new JSObject();
 JSFunction *JSObject::Function = new JSFunction("Function");
@@ -22,12 +22,12 @@ void JSObject::CreateBuiltinObject()
 
     Object->Prototype = ObjectPrototype;
     Object->Put("prototype", ObjectPrototype->ToJSValue());
-    JSFunction *getPrototypeOf_fo = new JSFunction("getPrototypeOf", (void *)C_GetPrototypeOf);
+    JSFunction *getPrototypeOf_fo = new JSFunction("getPrototypeOf", (void *)Builtin_GetPrototypeOf);
     Object->Put("getPrototypeOf", getPrototypeOf_fo->ToJSValue());
 
     Function->Put("prototype", FunctionPrototype->ToJSValue());
     FunctionPrototype->Put("constructor", Function->ToJSValue());
-    JSFunction *call_fo = new JSFunction("call", (void *)C_FunctionPrototypeCall);
+    JSFunction *call_fo = new JSFunction("call", (void *)Builtin_Function_Prototype_Call);
     FunctionPrototype->Put("call", call_fo->ToJSValue());
 };
 
@@ -100,7 +100,7 @@ JSValue JSFunction::Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 {
     JSFunction *fo = this;
     if (fo->isIntrinsic())
-        return fo->getCFunction()(fo, slow, thisValue, args);
+        return fo->getCFunction()(Function_Data(slow, fo, thisValue, args));
     else
     {
         slow->initFunctionExecutionContext(fo, thisValue, args);

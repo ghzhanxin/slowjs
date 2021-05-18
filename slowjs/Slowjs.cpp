@@ -49,19 +49,19 @@ void Slowjs::addIntrinsic()
     global_obj->Put("Function", JSObject::Function->ToJSValue());
 
     JSObject *process = new JSObject();
-    JSFunction *nextTick_fo = new JSFunction("nextTick", (void *)C_EnqueueJob);
-    process->Put("nextTick", nextTick_fo->ToJSValue());
     global_obj->Put("process", process->ToJSValue());
+    JSFunction *nextTick_fo = new JSFunction("nextTick", (void *)Builtin_Process_Nexttick);
+    process->Put("nextTick", nextTick_fo->ToJSValue());
 
-    JSFunction *setTimeout_fo = new JSFunction("setTimeout", (void *)C_SetTimeout);
+    JSFunction *setTimeout_fo = new JSFunction("setTimeout", (void *)Builtin_SetTimeout);
     global_obj->Put("setTimeout", setTimeout_fo->ToJSValue());
 
     JSObject *console = new JSObject();
-    JSFunction *clog_JSFunction = new JSFunction("log", (void *)C_Print);
+    JSFunction *clog_JSFunction = new JSFunction("log", (void *)Builtin_Console_log);
     console->Put("log", clog_JSFunction->ToJSValue());
     global_obj->Put("console", console->ToJSValue());
 
-    JSFunction *cprint_JSFunction = new JSFunction("print", (void *)C_Print);
+    JSFunction *cprint_JSFunction = new JSFunction("print", (void *)Builtin_Console_log);
     global_obj->Put("print", cprint_JSFunction->ToJSValue());
 }
 void Slowjs::initGlobalExecutionContext(AST_Node *node)
@@ -169,7 +169,7 @@ void Slowjs::checkException(const JSValue &value)
     if (value.isException())
     {
         string msg = value.getString();
-        throwRuntimeException(EXCEPTION_TYPE, msg);
+        ThrowRuntimeException(EXCEPTION_TYPE, msg);
     }
 }
 
@@ -427,7 +427,7 @@ Reference Slowjs::getReference(AST_Node *node)
     case nt::MemberExpression:
         return getMemberExpressionReference(node);
     default:
-        throw throwRuntimeException(EXCEPTION_TYPE, "Unknown Reference");
+        throw ThrowRuntimeException(EXCEPTION_TYPE, "Unknown Reference");
     }
 }
 JSValue Slowjs::evaluateAssignmentExpression(AST_Node *node)
@@ -736,7 +736,7 @@ Reference Slowjs::getMemberExpressionReference(AST_Node *node)
         {
             temp = name == "this" ? evaluate(node->childs[0]) : GetValue(IdentifierResolution(lex, name));
             if (!temp.isObject())
-                throw throwRuntimeException(EXCEPTION_TYPE, string(name + " is not a Object"));
+                throw ThrowRuntimeException(EXCEPTION_TYPE, string(name + " is not a Object"));
         }
         else if (i == count - 1)
         {
@@ -752,10 +752,10 @@ Reference Slowjs::getMemberExpressionReference(AST_Node *node)
             if (res.isObject())
                 temp = res;
             else
-                throw throwRuntimeException(EXCEPTION_TYPE, string(name + " is not a Object"));
+                throw ThrowRuntimeException(EXCEPTION_TYPE, string(name + " is not a Object"));
         }
     }
-    throw throwRuntimeException(EXCEPTION_TYPE, string("is not a Object"));
+    throw ThrowRuntimeException(EXCEPTION_TYPE, string("is not a Object"));
 }
 vector<string> Slowjs::getIdentifiersFromMemberExpression(AST_Node *node, vector<string> &idArr)
 {
@@ -771,7 +771,7 @@ vector<string> Slowjs::getIdentifiersFromMemberExpression(AST_Node *node, vector
     else if (fields[1]->type == nt::MemberExpression)
         return getIdentifiersFromMemberExpression(fields[1], idArr);
     else
-        throw throwRuntimeException(EXCEPTION_TYPE, string("getIdentifiersFromMemberExpression"));
+        throw ThrowRuntimeException(EXCEPTION_TYPE, string("getIdentifiersFromMemberExpression"));
 }
 
 JSValue Slowjs::evaluateThisExpression(AST_Node *node)

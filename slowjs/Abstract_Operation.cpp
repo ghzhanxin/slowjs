@@ -11,7 +11,7 @@
 #define TypeErrorPrefix "TypeError: "
 #define ReferenceErrorPrefix "ReferenceError: "
 
-int throwRuntimeException(EXCEPTION_ENUM t = EXCEPTION_TYPE, string s = "Unknown Runtime Error")
+int ThrowRuntimeException(EXCEPTION_ENUM t = EXCEPTION_TYPE, string s = "Unknown Runtime Error")
 {
     string msg;
     if (t == EXCEPTION_REFERENCE)
@@ -22,53 +22,43 @@ int throwRuntimeException(EXCEPTION_ENUM t = EXCEPTION_TYPE, string s = "Unknown
         msg = s;
     throw msg;
 }
-BaseUnion GetBase(Reference V)
-{
-    return V.base;
-};
+
+BaseUnion GetBase(Reference V) { return V.base; };
 string GetReferencedName(Reference V) { return V.name; };
 bool HasPrimitiveBase(Reference V)
 {
-    if (V.getBaseType() == BASE_TYPE_JSVALUE)
-    {
-        JSValue *value = GetBase(V).js_value;
-        if (value->isBoolean() || value->isString() || value->isNumber())
-            return true;
-        else
-            return false;
-    }
-    else
+    if (V.getBaseType() != BASE_TYPE_JSVALUE)
         return false;
+
+    JSValue *value = GetBase(V).js_value;
+    return value->isBoolean() || value->isString() || value->isNumber();
 };
 bool IsPropertyReference(Reference V)
 {
-    if (V.getBaseType() == BASE_TYPE_JSVALUE)
-        return GetBase(V).js_value->isObject() || HasPrimitiveBase(V);
-    else
+    if (V.getBaseType() != BASE_TYPE_JSVALUE)
         return false;
+
+    return GetBase(V).js_value->isObject() || HasPrimitiveBase(V);
 };
 bool IsUnresolvableReference(Reference V)
 {
-    if (V.getBaseType() == BASE_TYPE_JSVALUE)
-        return GetBase(V).js_value->isUndefined();
-    else
+    if (V.getBaseType() != BASE_TYPE_JSVALUE)
         return false;
+
+    return GetBase(V).js_value->isUndefined();
 };
 
-JSValue GetValue(JSValue V)
-{
-    return V;
-};
+JSValue GetValue(JSValue V) { return V; };
 JSValue GetValue(Reference V)
 {
     BaseUnion base = GetBase(V);
     if (IsUnresolvableReference(V))
-        throw throwRuntimeException(EXCEPTION_REFERENCE, V.name);
+        throw ThrowRuntimeException(EXCEPTION_REFERENCE, V.name);
 
     if (IsPropertyReference(V))
     {
         if (HasPrimitiveBase(V))
-            throw throwRuntimeException(EXCEPTION_REFERENCE, V.name);
+            throw ThrowRuntimeException(EXCEPTION_REFERENCE, V.name);
         else
         {
             JSObject *obj = base.js_value->getObject();
@@ -81,17 +71,17 @@ JSValue GetValue(Reference V)
 
 void PutValue(JSValue V, JSValue value)
 {
-    throw throwRuntimeException(EXCEPTION_REFERENCE, "");
+    throw ThrowRuntimeException(EXCEPTION_REFERENCE, "");
 }
 void PutValue(Reference V, JSValue value)
 {
     BaseUnion base = GetBase(V);
     if (IsUnresolvableReference(V))
-        throw throwRuntimeException(EXCEPTION_REFERENCE, V.name);
+        throw ThrowRuntimeException(EXCEPTION_REFERENCE, V.name);
     else if (IsPropertyReference(V))
     {
         if (HasPrimitiveBase(V))
-            throw throwRuntimeException(EXCEPTION_REFERENCE, V.name);
+            throw ThrowRuntimeException(EXCEPTION_REFERENCE, V.name);
         else
         {
             JSObject *obj = base.js_value->getObject();
@@ -171,7 +161,7 @@ void printJSValue(JSValue value)
         printJSObject(value.getObject());
         break;
     default:
-        throw throwRuntimeException(EXCEPTION_TYPE, "printJSValue");
+        throw ThrowRuntimeException(EXCEPTION_TYPE, "printJSValue");
     }
     cout << " ";
 }
@@ -191,7 +181,7 @@ JSValue ToPrimitive(JSValue value)
     case JS_TAG_FUNCTION:
         return value.getFunction()->DefaultValue();
     default:
-        throw throwRuntimeException(EXCEPTION_TYPE, "ToPrimitive");
+        throw ThrowRuntimeException(EXCEPTION_TYPE, "ToPrimitive");
     }
 }
 JSValue ToBoolean(JSValue value)
@@ -211,7 +201,7 @@ JSValue ToBoolean(JSValue value)
     case JS_TAG_FUNCTION:
         return JS_TRUE;
     default:
-        throw throwRuntimeException(EXCEPTION_TYPE, "ToBoolean");
+        throw ThrowRuntimeException(EXCEPTION_TYPE, "ToBoolean");
     }
 }
 JSValue ToNumber(JSValue value)
@@ -233,7 +223,7 @@ JSValue ToNumber(JSValue value)
     case JS_TAG_FUNCTION:
         return ToNumber(ToPrimitive(value));
     default:
-        throw throwRuntimeException(EXCEPTION_TYPE, "ToNumber");
+        throw ThrowRuntimeException(EXCEPTION_TYPE, "ToNumber");
     }
 }
 JSValue ToString(JSValue value)
@@ -253,31 +243,34 @@ JSValue ToString(JSValue value)
     case JS_TAG_FUNCTION:
         return ToNumber(ToPrimitive(value));
     default:
-        throw throwRuntimeException(EXCEPTION_TYPE, "ToString");
+        throw ThrowRuntimeException(EXCEPTION_TYPE, "ToString");
     }
 }
 JSValue ToObject(JSValue value)
 {
     // TODO:
-    throw throwRuntimeException(EXCEPTION_TYPE, "ToObject");
+    throw ThrowRuntimeException(EXCEPTION_TYPE, "ToObject");
 }
 
-JSValue C_Print(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
+JSValue Builtin_Console_log(const Function_Data &param)
 {
+    vector<JSValue> args = param.args;
+
     for (size_t i = 0; i < args.size(); i++)
-    {
         printJSValue(args[i]);
-    }
+
     cout << endl;
     return JS_UNDEFINED;
 }
 
-JSValue C_Builtin_Object(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
+JSValue Builtin_Object(const Function_Data &param)
 {
     return JS_UNDEFINED;
 }
-JSValue C_GetPrototypeOf(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
+JSValue Builtin_GetPrototypeOf(const Function_Data &param)
 {
+    vector<JSValue> args = param.args;
+
     if (args[0].isObject())
     {
         if (args[0].getObject()->Prototype)
@@ -288,47 +281,32 @@ JSValue C_GetPrototypeOf(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector
     else
         return JSException("getPrototypeOf args is not a object").ToJSValue();
 }
-JSValue C_FunctionPrototypeCall(JSFunction *fo, Slowjs *slow, JSValue caller, vector<JSValue> args)
+JSValue Builtin_Function_Prototype_Call(const Function_Data &param)
 {
+    vector<JSValue> args = param.args;
     JSValue thisValue = JS_UNDEFINED;
-    JSFunction *caller_fo = caller.getFunction();
     if (args.size() > 0)
     {
         thisValue = args[0];
         args.erase(args.begin());
     }
-    return caller_fo->Call(slow, thisValue, args);
+    JSFunction *caller_fo = param.thisValue.getFunction();
+    return caller_fo->Call(param.slow, thisValue, args);
 }
-JSValue C_EnqueueTask(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
+void EnqueueTask(const Function_Data &param)
 {
-    if (args.size() > 0)
-    {
-        JSFunction *delay_fo = args[0].getFunction();
-        args.erase(args.begin());
-
-        Function_Data *fn_data = new Function_Data(delay_fo, thisValue, args);
-        Task task(fn_data);
-        slow->loop->task_queue.push(task);
-    }
-
-    return JS_UNDEFINED;
+    Task task(new Function_Data(param));
+    param.slow->loop->task_queue.push(task);
 }
-JSValue C_EnqueueJob(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
+void EnqueueJob(const Function_Data &param)
 {
-    if (args.size() > 0)
-    {
-        JSFunction *delay_fo = args[0].getFunction();
-        args.erase(args.begin());
-
-        Function_Data *fn_data = new Function_Data(delay_fo, thisValue, args);
-        Job job(fn_data);
-        slow->loop->job_queue.push(job);
-    }
-
-    return JS_UNDEFINED;
+    Job job(new Function_Data(param));
+    param.slow->loop->job_queue.push(job);
 }
-JSValue C_SetTimeout(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
+JSValue Builtin_SetTimeout(const Function_Data &param)
 {
+    vector<JSValue> args = param.args;
+
     if (args.size() == 0)
         return JSException("1 argument required, but only 0 present.");
     else
@@ -340,10 +318,22 @@ JSValue C_SetTimeout(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSV
             // TODO: timeout supported 0 currently, just erase it
             args.erase(args.begin());
 
-        Function_Data *fn_data = new Function_Data(delay_fo, thisValue, args);
-        Task task(fn_data);
-        slow->loop->task_queue.push(task);
+        EnqueueTask(Function_Data(param.slow, delay_fo, param.thisValue, args));
+        return JS_UNDEFINED;
     }
+}
+JSValue Builtin_Process_Nexttick(const Function_Data &param)
+{
+    vector<JSValue> args = param.args;
 
-    return JS_UNDEFINED;
+    if (args.size() != 0 && args[0].isFunction())
+    {
+        JSFunction *delay_fo = args[0].getFunction();
+        args.erase(args.begin());
+
+        EnqueueJob(Function_Data(param.slow, delay_fo, param.thisValue, args));
+        return JS_UNDEFINED;
+    }
+    else
+        return JSException("Callback must be a function.");
 }
