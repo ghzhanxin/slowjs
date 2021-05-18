@@ -75,7 +75,7 @@ JSFunction *Slowjs::CreateFunctionObject(AST_Node *node)
 {
     AST_Node *identifier = node->childs[0];
     AST_Node *formal_param = node->childs[1];
-    string fn = identifier ? identifier->value : "(anonymous)";
+    string fn = identifier ? identifier->value : "";
     return new JSFunction(formal_param, node, getCurrentContext()->var_env, fn);
 }
 void Slowjs::declarationBindingInstantiation(AST_Node *node, const vector<JSValue> &args)
@@ -85,7 +85,7 @@ void Slowjs::declarationBindingInstantiation(AST_Node *node, const vector<JSValu
     vector<AST_Node *> top_levels;
     if (node->type == nt::Program)
         top_levels = node->childs;
-    else if (node->type == nt::FunctionDeclaration)
+    else if (node->type == nt::FunctionDeclaration || node->type == nt::FunctionExpression)
     {
         top_levels = node->childs[2]->childs;
         AST_Node *names = node->childs[1];
