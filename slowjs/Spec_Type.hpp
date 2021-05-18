@@ -38,7 +38,7 @@ public:
     {
         base.js_value = value;
     }
-    Base_Type getBaseType() { return _base_type; };
+    Base_Type getBaseType() const { return _base_type; };
 
     BaseUnion base;
     string name;
@@ -58,7 +58,6 @@ public:
 class DataDescriptor : public PropertyDescriptor
 {
 public:
-    DataDescriptor(){};
     DataDescriptor(JSValue v) : Value(v){};
     JSValue Value = JS_UNDEFINED;
     JSValue Writable = JS_FALSE;

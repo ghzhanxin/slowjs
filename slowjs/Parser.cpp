@@ -128,13 +128,10 @@
 
 using namespace std;
 
-int Parser::check(bool result, string msg = "")
+int Parser::check(bool result, const string &msg = "")
 {
     if (!result)
-    {
-        string value = msg.size() ? msg : ExceptionTokenPrefix + string(" '" + lookahead->value + "' ");
-        throw value;
-    }
+        throw msg.size() ? msg : ExceptionTokenPrefix + string(" '" + lookahead->value + "' ");
 
     return 0;
 }

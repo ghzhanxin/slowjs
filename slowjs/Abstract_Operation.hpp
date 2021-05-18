@@ -17,29 +17,29 @@
 class Slowjs;
 
 // https://262.ecma-international.org/5.1/#sec-8.7
-BaseUnion GetBase(Reference V);
-string GetReferencedName(Reference V);
-bool HasPrimitiveBase(Reference V);
-bool IsPropertyReference(Reference V);
-bool IsUnresolvableReference(Reference V);
+BaseUnion GetBase(const Reference &);
+string GetReferencedName(const Reference &);
+bool HasPrimitiveBase(const Reference &);
+bool IsPropertyReference(const Reference &);
+bool IsUnresolvableReference(const Reference &);
 
 // https://262.ecma-international.org/5.1/#sec-8.7.1
-JSValue GetValue(JSValue V);
-JSValue GetValue(Reference V);
+JSValue GetValue(Reference);
+JSValue GetValue(JSValue);
 
-void PutValue(JSValue V, JSValue W);
-void PutValue(Reference V, JSValue W);
+void PutValue(const JSValue &, const JSValue &);
+void PutValue(const Reference &, const JSValue &);
 
 // https://262.ecma-international.org/5.1/#sec-10.3.1
 // https://262.ecma-international.org/5.1/#sec-10.2.2.1
-Reference IdentifierResolution(Lexical_Environment *lex, string name);
+Reference IdentifierResolution(Lexical_Environment *lex, const string &name);
 
 // https://262.ecma-international.org/5.1/#sec-9
-JSValue ToPrimitive(JSValue);
-JSValue ToBoolean(JSValue);
-JSValue ToNumber(JSValue);
-JSValue ToString(JSValue);
-JSValue ToObject(JSValue);
+JSValue ToPrimitive(const JSValue &);
+JSValue ToBoolean(const JSValue &);
+JSValue ToNumber(const JSValue &);
+JSValue ToString(const JSValue &);
+JSValue ToObject(const JSValue &);
 
 class Function_Data
 {
@@ -54,15 +54,15 @@ public:
           thisValue(_thisValue),
           args(_args) {}
 
-    Slowjs *slow;
-    JSFunction *fo;
-    JSValue thisValue;
-    vector<JSValue> args;
+    Slowjs *const slow;
+    JSFunction *const fo;
+    const JSValue thisValue;
+    const vector<JSValue> args;
 };
 
 // helper function
-void printJSValue(JSValue);
-int ThrowRuntimeException(EXCEPTION_ENUM t, string s);
+int ThrowRuntimeException(const EXCEPTION_ENUM &, const string &);
+void printJSValue(JSValue &);
 void EnqueueTask(const Function_Data &);
 void EnqueueJob(const Function_Data &);
 

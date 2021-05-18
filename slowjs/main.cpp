@@ -14,16 +14,14 @@ using namespace std;
 string getContentFromFile(string fileName)
 {
     ifstream in(fileName);
-    if (in)
-    {
-        istreambuf_iterator<char> begin(in);
-        istreambuf_iterator<char> end;
-        string code(begin, end);
-        in.close();
-        return code;
-    }
-    else
+    if (!in)
         throw string("error: open file fail! file does not exist");
+
+    istreambuf_iterator<char> begin(in);
+    istreambuf_iterator<char> end;
+    string code(begin, end);
+    in.close();
+    return code;
 }
 
 int main(int argc, const char *argv[])

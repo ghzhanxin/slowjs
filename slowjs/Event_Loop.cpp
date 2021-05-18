@@ -27,18 +27,15 @@ bool Event_Loop::hasJob()
 {
     return !!job_queue.size();
 }
-void Event_Loop::Perform(Task &task)
+void Event_Loop::Perform(Task *task)
 {
-    JSFunction *fo = task.fn_data->fo;
-    JSValue thisValue = task.fn_data->thisValue;
-    vector<JSValue> args = task.fn_data->args;
-    fo->Call(slow, thisValue, args);
+    task->fn_data->fo->Call(slow, task->fn_data->thisValue, task->fn_data->args);
 }
 void Event_Loop::PerformOldestTask()
 {
     if (hasTask())
     {
-        Task task = task_queue.front();
+        Task *task = task_queue.front();
         task_queue.pop();
         Perform(task);
     }
@@ -47,9 +44,8 @@ void Event_Loop::PerformJobCheckPoint()
 {
     while (hasJob())
     {
-        Job job = job_queue.front();
+        Job *job = job_queue.front();
         job_queue.pop();
-
-        Perform((Task &)job);
+        Perform(job);
     }
 }

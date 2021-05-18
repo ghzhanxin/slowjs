@@ -26,6 +26,13 @@ class AccessorDescriptor;
 class JSObject;
 class JSFunction;
 class Function_Data;
+class JSNaN;
+class JSNull;
+class JSUndefined;
+class JSBoolean;
+class JSBoolean;
+class JSException;
+class JSUinitialized;
 
 enum EXCEPTION_ENUM
 {
@@ -35,6 +42,7 @@ enum EXCEPTION_ENUM
 
 enum JS_TAG_ENUM
 {
+    JS_TAG_DEFAULT,
     JS_TAG_FUNCTION = -2,
     JS_TAG_OBJECT = -1,
 
@@ -58,7 +66,15 @@ typedef union JSValueUnion
 class JSValue
 {
 public:
-    JSValue() : _tag(JS_TAG_NUMBER), _string("_default_JSValue"){};
+    static const JSNaN *const GLOBAL_JS_NAN;
+    static const JSNull *const GLOBAL_JS_NULL;
+    static const JSUndefined *const GLOBAL_JS_UNDEFINED;
+    static const JSBoolean *const GLOBAL_JS_TRUE;
+    static const JSBoolean *const GLOBAL_JS_FALSE;
+    static const JSException *const GLOBAL_JS_EXCEPTION;
+    static const JSUinitialized *const GLOBAL_JS_UNINITIALIZED;
+
+    JSValue() : _tag(JS_TAG_DEFAULT), _string("default_JSValue") { _u.ptr = this; };
 
     JS_TAG_ENUM getTag() const { return _tag; }
     double getNumber() const { return _u.double64; }
@@ -79,7 +95,7 @@ public:
     bool isException() const { return _tag == JS_TAG_EXCEPTION; }
     bool isNaN() const { return _tag == JS_TAG_NAN; }
 
-    JSValue ToJSValue() { return *((JSValue *)this); }
+    JSValue ToJSValue() const { return *((JSValue *)this); }
 
 protected:
     JSValueUnion _u;
@@ -88,13 +104,13 @@ protected:
 };
 
 /* special values */
-#define JS_EXCEPTION JSException().ToJSValue()
-#define JS_UNINITIALIZED JSUinitialized().ToJSValue()
-#define JS_NAN JSNaN().ToJSValue()
-#define JS_NULL JSNull().ToJSValue()
-#define JS_UNDEFINED JSUndefined().ToJSValue()
-#define JS_TRUE JSBoolean(true).ToJSValue()
-#define JS_FALSE JSBoolean(false).ToJSValue()
+#define JS_EXCEPTION JSValue::GLOBAL_JS_EXCEPTION->ToJSValue()
+#define JS_UNINITIALIZED JSValue::GLOBAL_JS_UNINITIALIZED->ToJSValue()
+#define JS_NAN JSValue::GLOBAL_JS_NAN->ToJSValue()
+#define JS_NULL JSValue::GLOBAL_JS_NULL->ToJSValue()
+#define JS_UNDEFINED JSValue::JSValue::GLOBAL_JS_UNDEFINED->ToJSValue()
+#define JS_TRUE JSValue::GLOBAL_JS_TRUE->ToJSValue()
+#define JS_FALSE JSValue::GLOBAL_JS_FALSE->ToJSValue()
 
 class JSException : public JSValue
 {
@@ -199,35 +215,32 @@ class JSObject : public JSValue
 {
 public:
     // builtins
-    static JSObject *ObjectPrototype;
-    static JSFunction *Object;
-    static JSObject *FunctionPrototype;
-    static JSFunction *Function;
+    static JSObject *const ObjectPrototype;
+    static JSFunction *const Object;
+    static JSObject *const FunctionPrototype;
+    static JSFunction *const Function;
     static void CreateBuiltinObject();
 
     JSObject()
     {
-        _u.ptr = (void *)this;
         _tag = JS_TAG_OBJECT;
         Prototype = ObjectPrototype;
     };
-    DataDescriptor *GetOwnProperty(string P);
-    DataDescriptor *GetProperty(string P);
-    JSValue Get(string P);
-    bool CanPut(string P);
-    void Put(string P, JSValue V);
-    bool HasProperty(string P);
+    DataDescriptor *GetOwnProperty(const string &P);
+    DataDescriptor *GetProperty(const string &P);
+    JSValue Get(const string &P);
+    bool CanPut(const string &P);
+    void Put(const string &P, const JSValue &V);
+    bool HasProperty(const string &P);
     void Delete();
     JSValue DefaultValue();
-    void DefineOwnProperty(string P, DataDescriptor *D);
+    void DefineOwnProperty(const string &P, DataDescriptor *D);
 
     JSObject *Prototype = nullptr;
     string Class = "Object";
     bool Extensible = true;
 
     map<string, DataDescriptor *> Properties;
-
-    JSValue ToJSValue() { return *((JSValue *)this); }
 };
 
 class JSFunction : public JSObject
@@ -239,25 +252,23 @@ public:
         initializeFunction();
     };
     JSFunction(
+        string name,
         AST_Node *formal_param,
         AST_Node *func_code,
-        Lexical_Environment *scope,
-        string name)
-        : FormalParameters(formal_param),
+        Lexical_Environment *scope)
+        : Name(name),
+          FormalParameters(formal_param),
           Code(func_code),
-          Scope(scope),
-          Name(name)
+          Scope(scope)
     {
         initializeFunction();
     };
-    // https://262.ecma-international.org/5.1/#sec-13.2
-    void initializeFunction();
 
     AST_Node *FormalParameters;
     AST_Node *Code;
     Lexical_Environment *Scope;
     string Name;
-    string Class = "Function";
+    const string Class = "Function";
 
     // https://262.ecma-international.org/5.1/#sec-13.2.1
     JSValue Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args);
@@ -272,6 +283,8 @@ public:
 
 private:
     void *_c_function_ptr = nullptr;
+    // https://262.ecma-international.org/5.1/#sec-13.2
+    void initializeFunction();
 };
 
 #endif /* JSValue_Type_hpp */

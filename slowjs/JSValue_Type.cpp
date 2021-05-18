@@ -9,11 +9,19 @@
 #include "Slowjs.hpp"
 #include <iostream>
 
-JSObject *JSObject::ObjectPrototype = new JSObject();
-JSFunction *JSObject::Object = new JSFunction("Object", (void *)Builtin_Object);
+const JSNaN *const JSValue::GLOBAL_JS_NAN = new JSNaN();
+const JSNull *const JSValue::GLOBAL_JS_NULL = new JSNull();
+const JSUndefined *const JSValue::GLOBAL_JS_UNDEFINED = new JSUndefined();
+const JSBoolean *const JSValue::GLOBAL_JS_TRUE = new JSBoolean(true);
+const JSBoolean *const JSValue::GLOBAL_JS_FALSE = new JSBoolean(false);
+const JSException *const JSValue::GLOBAL_JS_EXCEPTION = new JSException();
+const JSUinitialized *const JSValue::GLOBAL_JS_UNINITIALIZED = new JSUinitialized();
 
-JSObject *JSObject::FunctionPrototype = new JSObject();
-JSFunction *JSObject::Function = new JSFunction("Function");
+JSObject *const JSObject::ObjectPrototype = new JSObject();
+JSFunction *const JSObject::Object = new JSFunction("Object", (void *)Builtin_Object);
+
+JSObject *const JSObject::FunctionPrototype = new JSObject();
+JSFunction *const JSObject::Function = new JSFunction("Function");
 
 void JSObject::CreateBuiltinObject()
 {
@@ -31,60 +39,55 @@ void JSObject::CreateBuiltinObject()
     FunctionPrototype->Put("call", call_fo->ToJSValue());
 };
 
-DataDescriptor *JSObject::GetOwnProperty(string P)
+DataDescriptor *JSObject::GetOwnProperty(const string &P)
 {
     map<string, DataDescriptor *>::iterator it = this->Properties.find(P);
-    if (it == this->Properties.end())
-        return nullptr;
-    else
-        return it->second;
+    return it == this->Properties.end() ? nullptr : it->second;
 }
-DataDescriptor *JSObject::GetProperty(string P)
+DataDescriptor *JSObject::GetProperty(const string &P)
 {
     DataDescriptor *prop = this->GetOwnProperty(P);
     if (prop)
         return prop;
-    else
-    {
-        JSObject *proto = this->Prototype;
-        return proto ? proto->GetProperty(P) : nullptr;
-    }
+
+    JSObject *proto = this->Prototype;
+    return proto ? proto->GetProperty(P) : nullptr;
 }
-JSValue JSObject::Get(string P)
+JSValue JSObject::Get(const string &P)
 {
     DataDescriptor *desc = GetProperty(P);
     return desc ? desc->Value : JS_UNDEFINED;
 }
-bool CanPut(string P);
-void JSObject::Put(string P, JSValue V)
+bool CanPut(const string &P);
+void JSObject::Put(const string &P, const JSValue &V)
 {
     DataDescriptor *valueDesc = new DataDescriptor(V);
     DefineOwnProperty(P, valueDesc);
 }
-bool JSObject::HasProperty(string P)
+bool JSObject::HasProperty(const string &P)
 {
-    DataDescriptor *desc = GetProperty(P);
-    return !!desc;
+    return !!GetProperty(P);
 }
 void JSObject::Delete(){};
 JSValue JSObject::DefaultValue() { return JS_UNDEFINED; };
-void JSObject::DefineOwnProperty(string P, DataDescriptor *Desc)
+void JSObject::DefineOwnProperty(const string &P, DataDescriptor *Desc)
 {
     DataDescriptor *prop = GetOwnProperty(P);
 
-    if (prop)
+    if (!prop)
     {
-        // TODO: HACK replace Object.prototype
-        if (((JSFunction *)this)->Name == "Object" && P == "prototype" && prop->Value.getObject() == ObjectPrototype)
-        {
-            *ObjectPrototype = *(Desc->Value.getObject());
-            ObjectPrototype->Prototype = nullptr;
-        }
-        else
-            this->Properties.find(P)->second = Desc;
+        this->Properties.insert(pair<string, DataDescriptor *>(P, Desc));
+        return;
+    }
+
+    // TODO: HACK replace Object.prototype
+    if (((JSFunction *)this)->Name == "Object" && P == "prototype" && prop->Value.getObject() == ObjectPrototype)
+    {
+        *ObjectPrototype = *(Desc->Value.getObject());
+        ObjectPrototype->Prototype = nullptr;
     }
     else
-        this->Properties.insert(pair<string, DataDescriptor *>(P, Desc));
+        this->Properties.find(P)->second = Desc;
 }
 
 void JSFunction::initializeFunction()
@@ -101,25 +104,23 @@ JSValue JSFunction::Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args)
     JSFunction *fo = this;
     if (fo->isIntrinsic())
         return fo->getCFunction()(Function_Data(slow, fo, thisValue, args));
-    else
+
+    slow->initFunctionExecutionContext(fo, thisValue, args);
+    AST_Node *func_body = fo->Code->childs[2];
+    JSValue normal_Result = JS_UNDEFINED;
+    try
     {
-        slow->initFunctionExecutionContext(fo, thisValue, args);
-        AST_Node *func_body = fo->Code->childs[2];
-        JSValue normal_Result = JS_UNDEFINED;
-        try
-        {
-            normal_Result = slow->evaluate(func_body);
-        }
-        catch (JSValue &value)
-        {
-            slow->checkException(value);
-            slow->ctx_stack->pop();
-            return value;
-        }
-        slow->checkException(normal_Result);
-        slow->ctx_stack->pop();
-        return normal_Result;
+        normal_Result = slow->evaluate(func_body);
     }
+    catch (JSValue &value)
+    {
+        slow->checkException(value);
+        slow->ctx_stack->pop();
+        return value;
+    }
+    slow->checkException(normal_Result);
+    slow->ctx_stack->pop();
+    return normal_Result;
 }
 JSValue JSFunction::Construct(Slowjs *slow, vector<JSValue> args)
 {

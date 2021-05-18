@@ -39,40 +39,32 @@ public:
     Lexical_Environment *outer;
 };
 
-enum Record_Type
-{
-    Record_Type_Declarative,
-    Record_Type_Object,
-};
 // https://262.ecma-international.org/5.1/#sec-10.2.1
 class Environment_Record : public map<string, JSValue>
 {
 public:
-    Environment_Record(){};
-    virtual bool HasBinding(const string);
-    virtual void CreateMutableBinding(string);
-    virtual void SetMutableBinding(string, JSValue);
-    virtual JSValue GetBindingValue(const string);
-
-    Record_Type _tag;
+    virtual bool HasBinding(const string &);
+    virtual void CreateMutableBinding(const string &);
+    virtual void SetMutableBinding(const string &, const JSValue &);
+    virtual JSValue GetBindingValue(const string &);
 };
 
 class Object_ER : public Environment_Record
 {
 public:
-    Object_ER(JSObject *obj) : binding_obj(obj) { _tag = Record_Type_Object; };
+    Object_ER(JSObject *obj) : binding_obj(obj){};
 
-    bool HasBinding(const string);
-    void CreateMutableBinding(string);
-    void SetMutableBinding(string, JSValue);
-    JSValue GetBindingValue(const string);
-    JSObject *binding_obj;
+    bool HasBinding(const string &);
+    void CreateMutableBinding(const string &);
+    void SetMutableBinding(const string &, const JSValue &);
+    JSValue GetBindingValue(const string &);
+
+private:
+    JSObject *const binding_obj;
 };
 
 class Declarative_ER : public Environment_Record
 {
-public:
-    Declarative_ER() { _tag = Record_Type_Declarative; };
 };
 
 #endif /* Execution_Context_hpp */

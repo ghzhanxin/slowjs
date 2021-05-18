@@ -78,8 +78,8 @@ JSFunction *Slowjs::CreateFunctionObject(AST_Node *node)
 {
     AST_Node *identifier = node->childs[0];
     AST_Node *formal_param = node->childs[1];
-    string fn = identifier ? identifier->value : "";
-    return new JSFunction(formal_param, node, getCurrentContext()->var_env, fn);
+    string fn_name = identifier ? identifier->value : "";
+    return new JSFunction(fn_name, formal_param, node, getCurrentContext()->var_env);
 }
 void Slowjs::declarationBindingInstantiation(AST_Node *node, const vector<JSValue> &args)
 {

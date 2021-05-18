@@ -30,15 +30,15 @@ class Event_Loop
 {
 public:
     Event_Loop(Slowjs *_slow) : slow(_slow){};
-    queue<Task> task_queue;
-    queue<Job> job_queue;
+    queue<Task *> task_queue;
+    queue<Job *> job_queue;
 
     bool hasTask();
     bool hasJob();
 
     // https://html.spec.whatwg.org/#event-loop-processing-model
     void startLoop();
-    void Perform(Task &);
+    void Perform(Task *);
     void PerformOldestTask();
     void PerformJobCheckPoint();
 
