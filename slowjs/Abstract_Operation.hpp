@@ -45,12 +45,12 @@ JSValue ToObject(JSValue);
 void printJSValue(JSValue);
 int throwRuntimeException(EXCEPTION_ENUM t, string s);
 
-// CFunction
-JSValue CPrint(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
-JSValue CObject(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
-JSValue CGetPrototypeOf(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
-JSValue CCall(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
-JSValue CEnqueueTask(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
-JSValue CEnqueueJob(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
+// C_Function
+JSValue C_Print(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
+JSValue C_Builtin_Object(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
+JSValue C_GetPrototypeOf(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
+JSValue C_FunctionPrototypeCall(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
+JSValue C_EnqueueTask(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
+JSValue C_EnqueueJob(JSFunction *, Slowjs *, JSValue, vector<JSValue>);
 
 #endif /* Abstract_Operation_hpp */

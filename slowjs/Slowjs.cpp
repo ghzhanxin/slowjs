@@ -49,16 +49,19 @@ void Slowjs::addIntrinsic()
     global_obj->Put("Function", JSObject::Function->ToJSValue());
 
     JSObject *process = new JSObject();
-    JSFunction *nextTick_fo = new JSFunction("nextTick", (void *)CEnqueueJob);
+    JSFunction *nextTick_fo = new JSFunction("nextTick", (void *)C_EnqueueJob);
     process->Put("nextTick", nextTick_fo->ToJSValue());
     global_obj->Put("process", process->ToJSValue());
 
+    JSFunction *setTimeout0_fo = new JSFunction("setTimeout0", (void *)C_EnqueueTask);
+    global_obj->Put("setTimeout0", setTimeout0_fo->ToJSValue());
+
     JSObject *console = new JSObject();
-    JSFunction *clog_JSFunction = new JSFunction("log", (void *)CPrint);
+    JSFunction *clog_JSFunction = new JSFunction("log", (void *)C_Print);
     console->Put("log", clog_JSFunction->ToJSValue());
     global_obj->Put("console", console->ToJSValue());
 
-    JSFunction *cprint_JSFunction = new JSFunction("print", (void *)CPrint);
+    JSFunction *cprint_JSFunction = new JSFunction("print", (void *)C_Print);
     global_obj->Put("print", cprint_JSFunction->ToJSValue());
 }
 void Slowjs::initGlobalExecutionContext(AST_Node *node)

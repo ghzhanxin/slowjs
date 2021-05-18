@@ -262,7 +262,7 @@ JSValue ToObject(JSValue value)
     throw throwRuntimeException(EXCEPTION_TYPE, "ToObject");
 }
 
-JSValue CPrint(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
+JSValue C_Print(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 {
     for (size_t i = 0; i < args.size(); i++)
     {
@@ -272,11 +272,11 @@ JSValue CPrint(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> 
     return JS_UNDEFINED;
 }
 
-JSValue CObject(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
+JSValue C_Builtin_Object(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 {
     return JS_UNDEFINED;
 }
-JSValue CGetPrototypeOf(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
+JSValue C_GetPrototypeOf(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 {
     if (args[0].isObject())
     {
@@ -288,7 +288,7 @@ JSValue CGetPrototypeOf(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<
     else
         return JSException("getPrototypeOf args is not a object").ToJSValue();
 }
-JSValue CCall(JSFunction *fo, Slowjs *slow, JSValue caller, vector<JSValue> args)
+JSValue C_FunctionPrototypeCall(JSFunction *fo, Slowjs *slow, JSValue caller, vector<JSValue> args)
 {
     JSValue thisValue = JS_UNDEFINED;
     JSFunction *caller_fo = caller.getFunction();
@@ -299,7 +299,7 @@ JSValue CCall(JSFunction *fo, Slowjs *slow, JSValue caller, vector<JSValue> args
     }
     return caller_fo->Call(slow, thisValue, args);
 }
-JSValue CEnqueueTask(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
+JSValue C_EnqueueTask(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 {
     if (args.size() > 0)
     {
@@ -313,7 +313,7 @@ JSValue CEnqueueTask(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSV
 
     return JS_UNDEFINED;
 }
-JSValue CEnqueueJob(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
+JSValue C_EnqueueJob(JSFunction *fo, Slowjs *slow, JSValue thisValue, vector<JSValue> args)
 {
     if (args.size() > 0)
     {
