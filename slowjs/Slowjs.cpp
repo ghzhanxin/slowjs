@@ -310,6 +310,12 @@ JSValue Slowjs::evaluateBinaryExpression(AST_Node *node)
     string op = node->value;
     vector<AST_Node *> fields = node->childs;
     JSValue left = evaluate(fields[0]);
+
+    if (op == "&&")
+        return !ToBoolean(left).getBoolean() ? left : evaluate(fields[1]);
+    else if (op == "||")
+        return ToBoolean(left).getBoolean() ? left : evaluate(fields[1]);
+
     JSValue right = evaluate(fields[1]);
 
     checkException(left);
@@ -325,16 +331,6 @@ JSValue Slowjs::evaluateBinaryExpression(AST_Node *node)
     {
         JSValue r = strictEqualityComparison(left, right);
         return JSBoolean(!r.getBoolean()).ToJSValue();
-    }
-    else if (op == "&&")
-    {
-        JSValue l = ToBoolean(left);
-        return !l.getBoolean() ? left : right;
-    }
-    else if (op == "||")
-    {
-        JSValue l = ToBoolean(left);
-        return l.getBoolean() ? left : right;
     }
     else if (op == "+")
     {
