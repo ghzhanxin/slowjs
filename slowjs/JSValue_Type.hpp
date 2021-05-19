@@ -269,12 +269,21 @@ public:
     Lexical_Environment *Scope;
     string Name;
     const string Class = "Function";
+    JSFunction *TargetFunction = nullptr;
+    JSValue BoundThis;
+    vector<JSValue> BoundArgs;
 
     // https://262.ecma-international.org/5.1/#sec-13.2.1
-    JSValue Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args);
+    JSValue Call(Slowjs *, const JSValue &, const vector<JSValue> &);
 
     // https://262.ecma-international.org/5.1/#sec-13.2.2
-    JSValue Construct(Slowjs *slow, vector<JSValue> args);
+    JSValue Construct(Slowjs *, const vector<JSValue> &);
+
+    // https://262.ecma-international.org/5.1/#sec-15.3.4.5.1
+    JSValue Bound_Function_Call(Slowjs *, const vector<JSValue> &);
+
+    // https://262.ecma-international.org/5.1/#sec-15.3.4.5.2
+    JSValue Bound_Function_Construct(Slowjs *, const vector<JSValue> &);
 
     bool isIntrinsic() { return !!_c_function_ptr; };
 
