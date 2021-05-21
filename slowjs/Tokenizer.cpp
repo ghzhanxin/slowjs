@@ -9,12 +9,19 @@
 
 using namespace std;
 
-void Tokenizer::throwTokenizeError(char c)
+void Tokenizer::throwCharError(char c)
 {
     string msg = ExceptionTokenPrefix;
     msg.push_back('\'');
     msg.push_back(c);
     msg.push_back('\'');
+    msg += " in line: " + to_string(_line) + " column: " + to_string(_column);
+    throw msg;
+}
+void Tokenizer::throwTokenError(const string &token)
+{
+    string msg = ExceptionTokenPrefix;
+    msg += "'" + token + "'" + " in line: " + to_string(_line) + " column: " + to_string(_column);
     throw msg;
 }
 
@@ -50,28 +57,32 @@ tt::Token_Type Tokenizer::getIdentifierType(const string &s)
 void Tokenizer::pushSingleToken(tt::Token_Type type, char c)
 {
     string s;
-    _q.push(new Token(type, s + c));
-    _current++;
+    _q.push(NewToken(type, s + c));
+    ++_pos;
+}
+Token *Tokenizer::NewToken(tt::Token_Type t, const string &v = "")
+{
+    return new Token(t, v, _line, _column, _pos);
 }
 
 string Tokenizer::getNumString(const string &input)
 {
     string digitStr;
-    digitStr += input[_current];
-    char nextChar = input[++_current];
+    digitStr += input[_pos];
+    char nextChar = input[++_pos];
     bool hasDot = false;
     while (isdigit(nextChar) || nextChar == '.')
     {
         if (nextChar == '.')
         {
-            if (!hasDot)
-                hasDot = true;
+            if (hasDot)
+                throwCharError(nextChar);
             else
-                throwTokenizeError(nextChar);
+                hasDot = true;
         }
 
         digitStr += nextChar;
-        nextChar = input[++_current];
+        nextChar = input[++_pos];
     }
     return digitStr;
 }
@@ -85,7 +96,8 @@ void Tokenizer::printTokenQueue(queue<Token *> q)
     {
         Token *tok = q.front();
         q.pop();
-        cout << tok->type << "  -> " << tok->value << endl;
+        cout << tok->type << "  -> " << tok->value << "    line: " << tok->line << "    column: " << tok->column << endl;
+        cout << "linebreak   " <<tok->isNextLineBreak << endl;
     }
 }
 
@@ -96,15 +108,32 @@ bool Tokenizer::isIdentifierStart(char c)
 
 queue<Token *> Tokenizer::tokenize(const string &input)
 {
-    _current = 0;
+    _pos = 0;
+    _line = 1;
+    _column = 0;
+    int last_pos = _pos;
+
     size_t inputSize = input.size();
-    while (_current < inputSize)
+    while (_pos < inputSize)
     {
-        char c = input[_current];
+        int token_length = _pos - last_pos;
+        _column += token_length;
+
+        last_pos = _pos;
+
+        char c = input[_pos];
 
         if (isspace(c))
         {
-            _current++;
+            if (c == '\n')
+            {
+                _line++;
+                _column = 0;
+
+                if (!_q.empty())
+                    _q.back()->isNextLineBreak = true;
+            }
+            _pos++;
             continue;
         }
 
@@ -171,7 +200,7 @@ queue<Token *> Tokenizer::tokenize(const string &input)
         if (isdigit(c))
         {
             string digitStr = getNumString(input);
-            _q.push(new Token(tt::num, digitStr));
+            _q.push(NewToken(tt::num, digitStr));
             continue;
         }
 
@@ -181,11 +210,11 @@ queue<Token *> Tokenizer::tokenize(const string &input)
             while (isIdentifierStart(c) || isdigit(c))
             {
                 alphaStr += c;
-                c = input[++_current];
+                c = input[++_pos];
             }
 
             tt::Token_Type type = getIdentifierType(alphaStr);
-            _q.push(new Token(type, alphaStr));
+            _q.push(NewToken(type, alphaStr));
             continue;
         }
 
@@ -193,103 +222,103 @@ queue<Token *> Tokenizer::tokenize(const string &input)
         {
             char quote = c;
             string s;
-            char nextChar = input[++_current];
+            char nextChar = input[++_pos];
             while (nextChar != quote)
             {
                 if (nextChar == '\n')
-                    throwTokenizeError(nextChar);
+                    throwCharError(nextChar);
 
                 s += nextChar;
-                nextChar = input[++_current];
+                nextChar = input[++_pos];
             }
-            _q.push(new Token(tt::string, s));
-            _current++;
+            _q.push(NewToken(tt::string, s));
+            _pos++;
             continue;
         }
 
         if (c == '>')
         {
             string s = ">";
-            char nextChar = input[++_current];
+            char nextChar = input[++_pos];
             while (nextChar == '=')
             {
                 s += nextChar;
-                nextChar = input[++_current];
+                nextChar = input[++_pos];
             }
 
             if (s == ">" || s == ">=")
-                _q.push(new Token(tt::relational, s));
+                _q.push(NewToken(tt::relational, s));
             else
-                throwTokenizeError(nextChar);
+                throwTokenError(s);
             continue;
         }
 
         if (c == '<')
         {
             string s = "<";
-            char nextChar = input[++_current];
+            char nextChar = input[++_pos];
             while (nextChar == '=')
             {
                 s += nextChar;
-                nextChar = input[++_current];
+                nextChar = input[++_pos];
             }
 
             if (s == "<" || s == "<=")
-                _q.push(new Token(tt::relational, s));
+                _q.push(NewToken(tt::relational, s));
             else
-                throwTokenizeError(nextChar);
+                throwTokenError(s);
             continue;
         }
 
         if (c == '%')
         {
             string s = "%";
-            char nextChar = input[++_current];
+            char nextChar = input[++_pos];
             while (nextChar == '=')
             {
                 s += nextChar;
-                nextChar = input[++_current];
+                nextChar = input[++_pos];
             }
 
             if (s == "%")
-                _q.push(new Token(tt::equality, s));
+                _q.push(NewToken(tt::equality, s));
             else if (s == "%=")
-                _q.push(new Token(tt::assign, s));
+                _q.push(NewToken(tt::assign, s));
             else
-                throwTokenizeError(nextChar);
+                throwTokenError(s);
             continue;
         }
 
         if (c == '*')
         {
             string s = "*";
-            char nextChar = input[++_current];
+            char nextChar = input[++_pos];
             while (nextChar == '=')
             {
                 s += nextChar;
-                nextChar = input[++_current];
+                nextChar = input[++_pos];
             }
 
             if (s == "*")
-                _q.push(new Token(tt::star, s));
+                _q.push(NewToken(tt::star, s));
             else if (s == "*=")
-                _q.push(new Token(tt::assign, s));
+                _q.push(NewToken(tt::assign, s));
             else
-                throwTokenizeError(nextChar);
+                throwTokenError(s);
             continue;
         }
 
         if (c == '/')
         {
-            char nextChar = input[++_current];
+            char nextChar = input[++_pos];
             if (nextChar == '/')
             {
                 string commentStr = "//";
-                nextChar = input[++_current];
+                nextChar = input[++_pos];
                 while (nextChar != '\n')
                 {
                     commentStr += nextChar;
-                    nextChar = input[++_current];
+                    nextChar = input[++_pos];
                 }
                 continue;
             }
@@ -299,15 +328,15 @@ queue<Token *> Tokenizer::tokenize(const string &input)
                 while (nextChar == '=')
                 {
                     s += nextChar;
-                    nextChar = input[++_current];
+                    nextChar = input[++_pos];
                 }
 
                 if (s == "/")
-                    _q.push(new Token(tt::slash, s));
+                    _q.push(NewToken(tt::slash, s));
                 else if (s == "/=")
-                    _q.push(new Token(tt::assign, s));
+                    _q.push(NewToken(tt::assign, s));
                 else
-                    throwTokenizeError(nextChar);
+                    throwTokenError(s);
                 continue;
             }
         }
@@ -315,12 +344,12 @@ queue<Token *> Tokenizer::tokenize(const string &input)
         if (c == '+')
         {
             string s = "+";
-            char nextChar = input[++_current];
+            char nextChar = input[++_pos];
             if (isdigit(nextChar))
             {
                 string digiStr = getNumString(input);
                 string signedStr = s + digiStr;
-                _q.push(new Token(tt::num, signedStr));
+                _q.push(NewToken(tt::num, signedStr));
                 continue;
             }
             else
@@ -328,17 +357,17 @@ queue<Token *> Tokenizer::tokenize(const string &input)
                 while (nextChar == '=' || nextChar == '+')
                 {
                     s += nextChar;
-                    nextChar = input[++_current];
+                    nextChar = input[++_pos];
                 }
 
                 if (s == "+")
-                    _q.push(new Token(tt::plus, s));
+                    _q.push(NewToken(tt::plus, s));
                 else if (s == "+=")
-                    _q.push(new Token(tt::assign, s));
+                    _q.push(NewToken(tt::assign, s));
                 else if (s == "++")
-                    _q.push(new Token(tt::inc, s));
+                    _q.push(NewToken(tt::inc, s));
                 else
-                    throwTokenizeError(nextChar);
+                    throwTokenError(s);
                 continue;
             }
         }
@@ -346,12 +375,12 @@ queue<Token *> Tokenizer::tokenize(const string &input)
         if (c == '-')
         {
             string s = "-";
-            char nextChar = input[++_current];
+            char nextChar = input[++_pos];
             if (isdigit(nextChar))
             {
                 string digiStr = getNumString(input);
                 string signedStr = s + digiStr;
-                _q.push(new Token(tt::num, signedStr));
+                _q.push(NewToken(tt::num, signedStr));
                 continue;
             }
             else
@@ -359,17 +388,17 @@ queue<Token *> Tokenizer::tokenize(const string &input)
                 while (nextChar == '=' || nextChar == '-')
                 {
                     s += nextChar;
-                    nextChar = input[++_current];
+                    nextChar = input[++_pos];
                 }
 
                 if (s == "-")
-                    _q.push(new Token(tt::minus, s));
+                    _q.push(NewToken(tt::minus, s));
                 else if (s == "-=")
-                    _q.push(new Token(tt::assign, s));
+                    _q.push(NewToken(tt::assign, s));
                 else if (s == "--")
-                    _q.push(new Token(tt::dec, s));
+                    _q.push(NewToken(tt::dec, s));
                 else
-                    throwTokenizeError(nextChar);
+                    throwTokenError(s);
                 continue;
             }
         }
@@ -377,82 +406,82 @@ queue<Token *> Tokenizer::tokenize(const string &input)
         if (c == '!')
         {
             string s = "!";
-            char nextChar = input[++_current];
+            char nextChar = input[++_pos];
             while (nextChar == '=')
             {
                 s += nextChar;
-                nextChar = input[++_current];
+                nextChar = input[++_pos];
             }
 
             if (s == "!")
-                _q.push(new Token(tt::prefix, s));
+                _q.push(NewToken(tt::prefix, s));
             else if (s == "!=")
-                _q.push(new Token(tt::equality, s));
+                _q.push(NewToken(tt::equality, s));
             else if (s == "!==")
-                _q.push(new Token(tt::equality, s));
+                _q.push(NewToken(tt::equality, s));
             else
-                throwTokenizeError(nextChar);
+                throwTokenError(s);
             continue;
         }
 
         if (c == '=')
         {
             string s = "=";
-            char nextChar = input[++_current];
+            char nextChar = input[++_pos];
             while (nextChar == '=')
             {
                 s += nextChar;
-                nextChar = input[++_current];
+                nextChar = input[++_pos];
             }
 
             if (s == "=")
-                _q.push(new Token(tt::eq, s));
+                _q.push(NewToken(tt::eq, s));
             else if (s == "==" || s == "===")
-                _q.push(new Token(tt::equality, s));
+                _q.push(NewToken(tt::equality, s));
             else
-                throwTokenizeError(nextChar);
+                throwTokenError(s);
             continue;
         }
 
         if (c == '&')
         {
             string s = "&";
-            char nextChar = input[++_current];
+            char nextChar = input[++_pos];
             while (nextChar == '&')
             {
                 s += nextChar;
-                nextChar = input[++_current];
+                nextChar = input[++_pos];
             }
 
             if (s == "&")
-                _q.push(new Token(tt::bitwiseAND, s));
+                _q.push(NewToken(tt::bitwiseAND, s));
             else if (s == "&&")
-                _q.push(new Token(tt::logicalAND, s));
+                _q.push(NewToken(tt::logicalAND, s));
             else
-                throwTokenizeError(nextChar);
+                throwTokenError(s);
             continue;
         }
 
         if (c == '|')
         {
             string s = "|";
-            char nextChar = input[++_current];
+            char nextChar = input[++_pos];
             while (nextChar == '|')
             {
                 s += nextChar;
-                nextChar = input[++_current];
+                nextChar = input[++_pos];
             }
 
             if (s == "|")
-                _q.push(new Token(tt::bitwiseOR, s));
+                _q.push(NewToken(tt::bitwiseOR, s));
             else if (s == "||")
-                _q.push(new Token(tt::logicalOR, s));
+                _q.push(NewToken(tt::logicalOR, s));
             else
-                throwTokenizeError(nextChar);
+                throwTokenError(s);
             continue;
         }
 
-        throwTokenizeError(c);
+        throwCharError(c);
     };
 
     return _q;

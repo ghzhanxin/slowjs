@@ -128,10 +128,10 @@
 
 using namespace std;
 
-int Parser::check(bool result, const string &msg = "")
+int Parser::check(bool result)
 {
     if (!result)
-        throw msg.size() ? msg : ExceptionTokenPrefix + string(" '" + lookahead->value + "' ");
+        throw ExceptionTokenPrefix + string(" '" + lookahead->value + "' " + " in line: " + to_string(lookahead->line) + " column: " + to_string(lookahead->column));
 
     return 0;
 }
@@ -139,6 +139,7 @@ void Parser::nextToken()
 {
     if (!tokenQueue.empty())
     {
+        current = lookahead;
         lookahead = tokenQueue.front();
         tokenQueue.pop();
     }
@@ -173,7 +174,14 @@ bool Parser::expectNot(tt::Token_Type t)
 {
     return lookahead && lookahead->type != t ? true : false;
 }
+bool Parser::semicolon()
+{
+    bool canInsertSemicolon = !lookahead || lookahead->type == tt::parenR || current->isNextLineBreak;
+    if (!eat(";") && !canInsertSemicolon)
+        return false;
 
+    return true;
+}
 // Program : StatementList
 AST_Node *Parser::Program()
 {
@@ -242,7 +250,7 @@ AST_Node *Parser::Statement()
 AST_Node *Parser::BreakStatement()
 {
     check(eat("break"));
-    check(eat(";"));
+    check(semicolon());
 
     return new AST_Node(nt::BreakStatement);
 }
@@ -251,7 +259,7 @@ AST_Node *Parser::BreakStatement()
 AST_Node *Parser::ContinueStatement()
 {
     check(eat("continue"));
-    check(eat(";"));
+    check(semicolon());
 
     return new AST_Node(nt::ContinueStatement);
 }
@@ -264,12 +272,12 @@ AST_Node *Parser::ReturnStatement()
     check(eat("return"));
 
     AST_Node *ret = new AST_Node(nt::ReturnStatement);
-    if (eat(";"))
+    if (semicolon())
         return ret;
     else
     {
         AST_Node *expr = Expression();
-        check(eat(";"));
+        check(semicolon());
 
         ret->childs.push_back(expr);
         return ret;
@@ -282,7 +290,7 @@ AST_Node *Parser::ThrowStatement()
     check(eat("throw"));
 
     AST_Node *expr = Expression();
-    check(eat(";"));
+    check(semicolon());
 
     AST_Node *thr = new AST_Node(nt::ThrowStatement);
     thr->childs.push_back(expr);
@@ -292,7 +300,7 @@ AST_Node *Parser::ThrowStatement()
 // EmptyStatement : ;
 AST_Node *Parser::EmptyStatement()
 {
-    check(eat(";"));
+    check(semicolon());
     return new AST_Node(nt::EmptyStatement);
 }
 
@@ -337,7 +345,7 @@ AST_Node *Parser::IterationStatement()
 
         AST_Node *expr = Expression();
         check(eat(")"));
-        check(eat(";"));
+        check(semicolon());
 
         AST_Node *node = new AST_Node(nt::DoWhileStatement);
         node->childs.push_back(stmt);
@@ -374,10 +382,10 @@ AST_Node *Parser::IterationStatement()
         else
             first = Expression();
 
-        check(eat(";"));
+        check(semicolon());
 
         AST_Node *second = Expression();
-        check(eat(";"));
+        check(semicolon());
 
         AST_Node *third = Expression();
         check(eat(")"));
@@ -398,8 +406,8 @@ AST_Node *Parser::VariableDeclaration()
 {
     check(eat("var"));
     AST_Node *assign = AssignmentExpression();
-    check(assign, "AssignmentExpression");
-    check(eat(";"));
+    check(assign);
+    check(semicolon());
 
     AST_Node *node = new AST_Node(nt::VariableDeclaration);
     node->childs.push_back(assign);
@@ -412,7 +420,7 @@ AST_Node *Parser::FunctionDeclaration()
     check(eat("function"));
 
     AST_Node *id = Identifier();
-    check(id, "identifier");
+    check(id);
     check(eat("("));
 
     AST_Node *param = FormalParameterList();
@@ -436,7 +444,7 @@ AST_Node *Parser::FunctionExpression()
     if (expectNot("("))
     {
         id = Identifier();
-        check(id, "Identifier");
+        check(id);
     }
 
     check(eat("("));
@@ -470,7 +478,7 @@ AST_Node *Parser::BlockStatement()
 AST_Node *Parser::ExpressionStatement()
 {
     AST_Node *expr = Expression();
-    check(eat(";"));
+    check(semicolon());
 
     AST_Node *node = new AST_Node(nt::ExpressionStatement);
     node->childs.push_back(expr);
@@ -500,7 +508,7 @@ vector<AST_Node *> Parser::IdentifierList()
     while (expectNot(")"))
     {
         AST_Node *id = Identifier();
-        check(id, "Identifier");
+        check(id);
         childs.push_back(id);
 
         if (expect(")"))
@@ -515,11 +523,12 @@ vector<AST_Node *> Parser::IdentifierList()
 AST_Node *Parser::Expression()
 {
     AST_Node *assign = AssignmentExpression();
-    check(assign, "Expression Exception!");
+    check(assign);
 
     return assign;
 }
 
+// TODO:
 int Parser::checkLeftHandSideValue(AST_Node *node)
 {
     return 0;
@@ -531,7 +540,7 @@ int Parser::checkLeftHandSideValue(AST_Node *node)
 AST_Node *Parser::AssignmentExpression()
 {
     AST_Node *left = ConditionalExpression();
-    check(left, "AssignmentExpression");
+    check(left);
 
     if (!eat("="))
         return left;
@@ -558,12 +567,12 @@ AST_Node *Parser::ConditionalExpression()
         return test;
 
     AST_Node *consequence = LogicalExpression();
-    check(consequence, "consequence in ConditionalExpression");
+    check(consequence);
 
     check(eat(":"));
 
     AST_Node *alternate = LogicalExpression();
-    check(alternate, "alternate in ConditionalExpression");
+    check(alternate);
 
     AST_Node *node = new AST_Node(nt::ConditionalExpression);
     node->childs.push_back(test);
@@ -598,7 +607,7 @@ AST_Node *Parser::LogicalExpression()
     if (eat("&&") || eat("||"))
     {
         AST_Node *logical = LogicalExpression();
-        check(logical, "LogicalExpression");
+        check(logical);
 
         return buildBinary(equality, logical, op);
     }
@@ -625,7 +634,7 @@ AST_Node *Parser::EqualityExpression()
     if (eat("==") || eat("!=") || eat("===") || eat("!=="))
     {
         AST_Node *equality = EqualityExpression();
-        check(equality, "EqualityExpression");
+        check(equality);
 
         return buildBinary(relational, equality, op);
     }
@@ -652,7 +661,7 @@ AST_Node *Parser::RelationalExpression()
     if (eat(">") || eat("<") || eat(">=") || eat("<="))
     {
         AST_Node *relation = RelationalExpression();
-        check(relation, "RelationalExpression");
+        check(relation);
 
         return buildBinary(add, relation, op);
     }
@@ -677,7 +686,7 @@ AST_Node *Parser::AdditiveExpression()
     if (eat("+") || eat("-"))
     {
         AST_Node *add = AdditiveExpression();
-        check(add, "AdditiveExpression");
+        check(add);
 
         return buildBinary(multi, add, op);
     }
@@ -703,7 +712,7 @@ AST_Node *Parser::MultiplicativeExpression()
     if (eat("*") || eat("/") || eat("%"))
     {
         AST_Node *multi = MultiplicativeExpression();
-        check(multi, "MultiplicativeExpression");
+        check(multi);
 
         return buildBinary(postfix, multi, op);
     }
@@ -719,7 +728,7 @@ AST_Node *Parser::UnaryExpression()
     if (eat("!"))
     {
         AST_Node *unary = UnaryExpression();
-        check(unary, "UnaryExpression");
+        check(unary);
 
         AST_Node *node = new AST_Node(nt::UnaryExpression);
         node->value = "!";
@@ -832,7 +841,7 @@ AST_Node *Parser::NewExpression()
         return nullptr;
 
     AST_Node *member = MemberExpression();
-    check(member, "MemberExpression");
+    check(member);
 
     AST_Node *args = Arguments();
 
@@ -860,7 +869,7 @@ AST_Node *Parser::MemberExpression()
             return primary;
 
         AST_Node *member = MemberExpression();
-        check(member, "MemberExpression");
+        check(member);
 
         AST_Node *memberNode = new AST_Node(nt::MemberExpression);
         memberNode->childs.push_back(primary);
@@ -976,6 +985,7 @@ AST_Node *Parser::parse(const queue<Token *> &que)
 {
     tokenQueue = que;
     nextToken();
+
     if (Program())
     {
         cout << endl

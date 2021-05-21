@@ -83,6 +83,7 @@ class Parser
 public:
     AST_Node *root = nullptr;
     Token *lookahead = nullptr;
+    Token *current = nullptr;
     queue<Token *> tokenQueue;
 
     void nextToken();
@@ -94,6 +95,8 @@ public:
 
     bool expectNot(const string &);
     bool expectNot(tt::Token_Type);
+
+    bool semicolon();
 
     AST_Node *parse(const queue<Token *> &);
 
@@ -137,7 +140,7 @@ public:
 
     AST_Node *buildBinary(AST_Node *, AST_Node *, const string &);
     int checkLeftHandSideValue(AST_Node *);
-    int check(bool, const string &);
+    int check(bool);
 
     static void traversal(AST_Node *node, string &prefix);
     static void printAST(AST_Node *node);

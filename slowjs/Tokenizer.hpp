@@ -29,6 +29,7 @@ namespace tt
         string,
         name,
         eof,
+        lineBreak,
 
         // punctuation
         bracketL,
@@ -81,28 +82,36 @@ namespace tt
 class Token
 {
 public:
-    Token(tt::Token_Type t, string v = "") : type(t), value(v) {}
+    Token(tt::Token_Type t, string v = "", int l = 0, int c = 0, int p = 0)
+        : type(t), value(v), line(l), column(c) {}
 
     tt::Token_Type type;
     string value;
+    int line;
+    int column;
+    bool isNextLineBreak = false;
 };
 
 class Tokenizer
 {
 public:
-    static void throwTokenizeError(char);
     static tt::Token_Type getIdentifierType(const string &);
     static void printTokenQueue(queue<Token *>);
 
-    string getNumString(const string &input);
+    void throwCharError(char);
+    void throwTokenError(const string &);
+    string getNumString(const string &);
     bool isIdentifierStart(char c);
-    void pushSingleToken(tt::Token_Type t, char c);
+    void pushSingleToken(tt::Token_Type, char);
+    Token *NewToken(tt::Token_Type, const string &);
 
     queue<Token *> tokenize(const string &s);
 
 private:
     queue<Token *> _q;
-    uint _current;
+    uint _pos;
+    int _line = 1;
+    int _column = 1;
 };
 
 #endif /* Tokenizer_hpp */
