@@ -71,6 +71,7 @@ JSValue Builtin_Console_log(const Function_Data &);
 JSValue Builtin_Object(const Function_Data &);
 JSValue Builtin_GetPrototypeOf(const Function_Data &);
 JSValue Builtin_Function_Prototype_Call(const Function_Data &);
+JSValue Builtin_Function_Prototype_Bind(const Function_Data &);
 JSValue Builtin_SetTimeout(const Function_Data &);
 JSValue Builtin_Process_Nexttick(const Function_Data &);
 

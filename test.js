@@ -368,6 +368,23 @@ function testPromiseLike(assert, done) {
     return done
 }
 
+function testCallAndBind(assert) {
+    var obj = new Object()
+    obj.greeting = 'hi'
+    function fn1(s) {
+        return this === obj && this.greeting + s
+    }
+    assert(fn1('zx'), false)
+    assert(fn1.call(obj, 'zx'), 'hizx')
+
+    function fn2(s1, s2) {
+        return this === obj && this.greeting + s1 + s2
+    }
+    var binded = fn2.bind(obj, 'z')
+    assert(fn2('x'), false)
+    assert(binded('x'), 'hizx')
+}
+
 describe('testType', testType)
 describe('testOperator', testOperator)
 describe('testClosure', testClosure)
@@ -379,3 +396,4 @@ describe('testMicroTask', testMicroTask)
 describe('testMacroTask', testMacroTask)
 describe('testMicroTaskAndMacroTask', testMicroTaskAndMacroTask)
 describe('testPromiseLike', testPromiseLike)
+describe('testCallAndBind', testCallAndBind)

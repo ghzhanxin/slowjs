@@ -32,9 +32,9 @@
       - [x] 闭包
       - [x] 一等公民
       - [x] 对象方法
-      - [ ] prototype
+      - [x] prototype
         - [x] call
-        - [ ] bind
+        - [x] bind
     - [ ] Array
 - [ ] 语法
   - [ ] 自动分号，暂不支持，目前语句一定要加分号。

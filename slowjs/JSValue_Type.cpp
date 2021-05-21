@@ -30,13 +30,20 @@ void JSObject::CreateBuiltinObject()
 
     Object->Prototype = ObjectPrototype;
     Object->Put("prototype", ObjectPrototype->ToJSValue());
-    JSFunction *getPrototypeOf_fo = new JSFunction("getPrototypeOf", (void *)Builtin_GetPrototypeOf);
-    Object->Put("getPrototypeOf", getPrototypeOf_fo->ToJSValue());
+    string name_getPrototypeOf = "getPrototypeOf";
+    JSFunction *getPrototypeOf_fo = new JSFunction(name_getPrototypeOf, (void *)Builtin_GetPrototypeOf);
+    Object->Put(name_getPrototypeOf, getPrototypeOf_fo->ToJSValue());
 
     Function->Put("prototype", FunctionPrototype->ToJSValue());
     FunctionPrototype->Put("constructor", Function->ToJSValue());
-    JSFunction *call_fo = new JSFunction("call", (void *)Builtin_Function_Prototype_Call);
-    FunctionPrototype->Put("call", call_fo->ToJSValue());
+
+    string name_call = "call";
+    JSFunction *call_fo = new JSFunction(name_call, (void *)Builtin_Function_Prototype_Call);
+    FunctionPrototype->Put(name_call, call_fo->ToJSValue());
+
+    string name_bind = "bind";
+    JSFunction *bind_fo = new JSFunction(name_bind, (void *)Builtin_Function_Prototype_Bind);
+    FunctionPrototype->Put(name_bind, bind_fo->ToJSValue());
 };
 
 DataDescriptor *JSObject::GetOwnProperty(const string &P)
@@ -99,11 +106,14 @@ void JSFunction::initializeFunction()
     proto->DefineOwnProperty("constructor", new DataDescriptor(fo->ToJSValue()));
     fo->DefineOwnProperty("prototype", new DataDescriptor(proto->ToJSValue()));
 };
-JSValue JSFunction::Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args)
+JSValue JSFunction::Call(Slowjs *slow, const JSValue &thisValue, const vector<JSValue> &args)
 {
     JSFunction *fo = this;
     if (fo->isIntrinsic())
         return fo->getCFunction()(Function_Data(slow, fo, thisValue, args));
+
+    if (fo->TargetFunction)
+        return fo->Bound_Function_Call(slow, args);
 
     slow->initFunctionExecutionContext(fo, thisValue, args);
     AST_Node *func_body = fo->Code->childs[2];
@@ -122,13 +132,29 @@ JSValue JSFunction::Call(Slowjs *slow, JSValue thisValue, vector<JSValue> args)
     slow->ctx_stack->pop();
     return normal_Result;
 }
-JSValue JSFunction::Construct(Slowjs *slow, vector<JSValue> args)
+JSValue JSFunction::Construct(Slowjs *slow, const vector<JSValue> &args)
 {
     JSFunction *fo = this;
+
+    if (fo->TargetFunction)
+        return fo->Bound_Function_Construct(slow, args);
+
     JSObject *obj = new JSObject();
     JSValue proto = fo->Get("prototype");
     obj->Prototype = proto.isObject() ? proto.getObject() : JSObject::ObjectPrototype;
     JSValue result = fo->Call(slow, obj->ToJSValue(), args);
     slow->checkException(result);
     return result.isObject() ? result : obj->ToJSValue();
+}
+JSValue JSFunction::Bound_Function_Call(Slowjs *slow, const vector<JSValue> &ExtraArgs)
+{
+    vector<JSValue> args = BoundArgs;
+    args.insert(args.end(), ExtraArgs.begin(), ExtraArgs.end());
+    return TargetFunction->Call(slow, BoundThis, args);
+}
+JSValue JSFunction::Bound_Function_Construct(Slowjs *slow, const vector<JSValue> &ExtraArgs)
+{
+    vector<JSValue> args = BoundArgs;
+    args.insert(args.end(), ExtraArgs.begin(), ExtraArgs.end());
+    return TargetFunction->Construct(slow, args);
 }

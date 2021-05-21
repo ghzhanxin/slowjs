@@ -289,8 +289,28 @@ JSValue Builtin_Function_Prototype_Call(const Function_Data &fn_data)
     }
     JSFunction *caller_fo = fn_data.thisValue.getFunction();
     return caller_fo->Call(fn_data.slow, thisValue, args);
+    return JS_UNDEFINED;
 }
-
+JSValue Builtin_Function_Prototype_Bind(const Function_Data &fn_data)
+{
+    vector<JSValue> args = fn_data.args;
+    JSValue thisArg;
+    vector<JSValue> boundArgs;
+    if (args.size() == 0)
+        thisArg = JS_UNDEFINED;
+    else
+    {
+        thisArg = args[0];
+        args.erase(args.begin());
+        boundArgs = args;
+    }
+    JSFunction *target = fn_data.thisValue.getFunction();
+    JSFunction *F = new JSFunction(target->Name);
+    F->TargetFunction = target;
+    F->BoundThis = thisArg;
+    F->BoundArgs = boundArgs;
+    return F->ToJSValue();
+}
 JSValue Builtin_SetTimeout(const Function_Data &fn_data)
 {
     vector<JSValue> args = fn_data.args;
