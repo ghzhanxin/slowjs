@@ -37,7 +37,7 @@
         - [x] bind
     - [ ] Array
 - [ ] 语法
-  - [ ] 自动分号，暂不支持，目前语句一定要加分号。
+  - [x] 自动分号
   - [x] 语句
     - [x] 空语句
     - [x] var 声明语句
@@ -104,13 +104,13 @@
     - [x] prototype
   - [x] process
     - [x] nextTick
-  - [x] setTimeout 目前只支持 0ms
+  - [x] setTimeout 目前只支持 0 ms
   - [ ] Promise
   - [ ] Gererator
 - [ ] 垃圾回收
 - [ ] 异常处理
   - [x] 异常类型提示
-  - [ ] 异常位置提示
+  - [x] 异常位置提示
   - [ ] try catch
 
 [可执行代码示例](https://github.com/halolantern/slowjs/blob/main/test.js)
