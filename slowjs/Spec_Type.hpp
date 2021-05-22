@@ -29,7 +29,6 @@ enum Base_Type
 class Reference
 {
 public:
-    Reference(){};
     Reference(Environment_Record *record, string _name) : name(_name), _base_type(BASE_TYPE_RECORD)
     {
         base.env_recored = record;

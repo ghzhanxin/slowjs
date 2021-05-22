@@ -17,13 +17,11 @@ JSValue Slowjs::run(const string &input)
 }
 queue<Token *> Slowjs::tokenize(const string &input)
 {
-    Tokenizer tokenizer = Tokenizer();
-    return tokenizer.tokenize(input);
+    return Tokenizer().tokenize(input);
 }
 AST_Node *Slowjs::parse(const queue<Token *> &token_queue)
 {
-    Parser parser = Parser();
-    return parser.parse(token_queue);
+    return Parser().parse(token_queue);
 }
 
 Execution_Context *Slowjs::getCurrentContext()
@@ -167,10 +165,7 @@ void Slowjs::declarationBindingInstantiation(AST_Node *node, const vector<JSValu
 void Slowjs::checkException(const JSValue &value)
 {
     if (value.isException())
-    {
-        string msg = value.getString();
-        ThrowRuntimeException(EXCEPTION_TYPE, msg);
-    }
+        ThrowRuntimeException(EXCEPTION_TYPE, value.getString());
 }
 
 // evaluate
@@ -247,9 +242,7 @@ JSValue Slowjs::evaluateProgram(AST_Node *node)
     {
         AST_Node *stmt = childs[i];
         if (stmt->type == nt::FunctionDeclaration)
-        {
             continue;
-        }
         else
         {
             result = evaluate(stmt);
@@ -436,10 +429,7 @@ JSValue Slowjs::evaluateAssignmentExpression(AST_Node *node)
     Reference lhs = getReference(left_node);
     JSValue rValue = JS_UNDEFINED;
     if (right_node->type == nt::Identifier || right_node->type == nt::MemberExpression)
-    {
-        Reference rhs = getReference(right_node);
-        rValue = GetValue(rhs);
-    }
+        rValue = GetValue(getReference(right_node));
     else
         rValue = this->evaluate(right_node);
 
@@ -637,15 +627,13 @@ JSValue Slowjs::evaluateUpdateExpression(AST_Node *node)
 
     JSValue oldValue = GetValue(lhs);
     checkException(oldValue);
-    if (oldValue.isNumber())
-    {
-        double v = op == "++" ? oldValue.getNumber() + 1 : oldValue.getNumber() - 1;
-        JSValue newValue = JSNumber(v).ToJSValue();
-        PutValue(lhs, newValue);
-        return newValue;
-    }
-    else
+    if (!oldValue.isNumber())
         return JSException("UpdateExpression only support Number").ToJSValue();
+
+    double v = op == "++" ? oldValue.getNumber() + 1 : oldValue.getNumber() - 1;
+    JSValue newValue = JSNumber(v).ToJSValue();
+    PutValue(lhs, newValue);
+    return newValue;
 }
 
 vector<JSValue> Slowjs::getArgumentList(AST_Node *node)
@@ -671,17 +659,15 @@ JSValue Slowjs::evaluateCallExpression(AST_Node *node)
     Reference ref = getReference(left);
     JSValue result = GetValue(ref);
 
-    if (result.isFunction())
-    {
-        JSFunction *fo = result.getFunction();
-        JSValue thisValue = JS_UNDEFINED;
-        if (IsPropertyReference(ref))
-            thisValue = *GetBase(ref).js_value;
-
-        return fo->Call(this, thisValue, argVector);
-    }
-    else
+    if (!result.isFunction())
         return JSException("'" + GetReferencedName(ref) + "' is not a function").ToJSValue();
+
+    JSFunction *fo = result.getFunction();
+    JSValue thisValue = JS_UNDEFINED;
+    if (IsPropertyReference(ref))
+        thisValue = *GetBase(ref).js_value;
+
+    return fo->Call(this, thisValue, argVector);
 }
 JSValue Slowjs::evaluateNewExpression(AST_Node *node)
 {
@@ -697,13 +683,11 @@ JSValue Slowjs::evaluateNewExpression(AST_Node *node)
     Reference ref = getReference(left);
     JSValue result = GetValue(ref);
 
-    if (result.isFunction())
-    {
-        JSFunction *ctor = result.getFunction();
-        return ctor->Construct(this, argVector);
-    }
-    else
+    if (!result.isFunction())
         return JSException("not a construtor").ToJSValue();
+
+    JSFunction *ctor = result.getFunction();
+    return ctor->Construct(this, argVector);
 }
 JSValue Slowjs::evaluateReturnStatement(AST_Node *node)
 {
@@ -717,64 +701,18 @@ JSValue Slowjs::evaluateContinueStatement(AST_Node *)
 {
     throw string("continue");
 }
-Reference Slowjs::getMemberExpressionReference(AST_Node *node)
-{
-    vector<string> idArr;
-    idArr = getIdentifiersFromMemberExpression(node, idArr);
-
-    JSValue temp = JS_UNDEFINED;
-    Lexical_Environment *lex = getCurrentContext()->lex_env;
-    size_t count = idArr.size();
-    for (size_t i = 0; i < count; i++)
-    {
-        string name = idArr[i];
-        if (i == 0)
-        {
-            temp = name == "this" ? evaluate(node->childs[0]) : GetValue(IdentifierResolution(lex, name));
-            if (!temp.isObject())
-                throw ThrowRuntimeException(EXCEPTION_TYPE, string(name + " is not a Object"));
-        }
-        else if (i == count - 1)
-        {
-            JSValue *v = new JSValue();
-            *v = temp;
-            return Reference(v, name);
-        }
-        else
-        {
-            JSObject *obj = temp.getObject();
-            JSValue res = obj->GetProperty(name)->Value;
-            checkException(res);
-            if (res.isObject())
-                temp = res;
-            else
-                throw ThrowRuntimeException(EXCEPTION_TYPE, string(name + " is not a Object"));
-        }
-    }
-    throw ThrowRuntimeException(EXCEPTION_TYPE, string("is not a Object"));
-}
-vector<string> Slowjs::getIdentifiersFromMemberExpression(AST_Node *node, vector<string> &idArr)
-{
-    vector<AST_Node *> fields = node->childs;
-    if (fields[0]->type == nt::Identifier || fields[0]->type == nt::ThisExpression)
-        idArr.push_back(fields[0]->value);
-
-    if (fields[1]->type == nt::Identifier)
-    {
-        idArr.push_back(fields[1]->value);
-        return idArr;
-    }
-    else if (fields[1]->type == nt::MemberExpression)
-        return getIdentifiersFromMemberExpression(fields[1], idArr);
-    else
-        throw ThrowRuntimeException(EXCEPTION_TYPE, string("getIdentifiersFromMemberExpression"));
-}
-
 JSValue Slowjs::evaluateThisExpression(AST_Node *node)
 {
     return getCurrentContext()->this_binding;
 }
+Reference Slowjs::getMemberExpressionReference(AST_Node *node)
+{
+    JSValue base = evaluate(node->childs[0]);
+    AST_Node *right = node->childs[1];
+    string propertyString = node->computed ? ToString(evaluate(right)).getString() : right->value;
 
+    return Reference(new JSValue(base), propertyString);
+}
 JSValue Slowjs::evaluateMemberExpression(AST_Node *node)
 {
     return GetValue(getMemberExpressionReference(node));

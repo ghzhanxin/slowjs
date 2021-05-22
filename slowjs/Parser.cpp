@@ -106,7 +106,8 @@
 // MemberExpression:
 //          PrimaryExpression
 //          FunctionExpression
-//          PrimaryExpression . MemberExpression
+//          MemberExpression . Identifier
+//          MemberExpression [ Expression ]
 // PrimaryExpression :
 //          this
 //          Identifier
@@ -219,9 +220,6 @@ vector<AST_Node *> Parser::StatementList()
 //          ExpressionStatement
 AST_Node *Parser::Statement()
 {
-    if (!lookahead)
-        throw "Statement lookahead is null";
-
     if (expect("break"))
         return BreakStatement();
     else if (expect("continue"))
@@ -851,31 +849,48 @@ AST_Node *Parser::NewExpression()
     return newExpr;
 }
 
+AST_Node *Parser::MemberExpressionRight(AST_Node *node)
+{
+    if (!expect(".") && !expect("["))
+        return node;
+
+    AST_Node *memberNode = new AST_Node(nt::MemberExpression);
+    memberNode->childs.push_back(node);
+    AST_Node *right;
+
+    if (eat("."))
+    {
+        right = Identifier();
+        check(right);
+    }
+    else
+    {
+        check(eat("["));
+        right = Expression();
+        check(eat("]"));
+        memberNode->computed = true;
+    }
+
+    memberNode->childs.push_back(right);
+    return MemberExpression(memberNode);
+}
 // MemberExpression:
 //          PrimaryExpression
 //          FunctionExpression
-//          PrimaryExpression . MemberExpression
-AST_Node *Parser::MemberExpression()
+//          MemberExpression . Identifier
+//          MemberExpression [ Expression ]
+AST_Node *Parser::MemberExpression(AST_Node *node)
 {
+    if (node && node->type == nt::MemberExpression)
+        return MemberExpressionRight(node);
+
     if (expect("function"))
         return FunctionExpression();
-    else
-    {
-        AST_Node *primary = PrimaryExpression();
-        if (!primary)
-            return nullptr;
 
-        if (!eat("."))
-            return primary;
+    AST_Node *primary = PrimaryExpression();
+    check(primary);
 
-        AST_Node *member = MemberExpression();
-        check(member);
-
-        AST_Node *memberNode = new AST_Node(nt::MemberExpression);
-        memberNode->childs.push_back(primary);
-        memberNode->childs.push_back(member);
-        return memberNode;
-    }
+    return MemberExpressionRight(primary);
 }
 
 // PrimaryExpression :
@@ -885,9 +900,6 @@ AST_Node *Parser::MemberExpression()
 //          (Expression)
 AST_Node *Parser::PrimaryExpression()
 {
-    if (!lookahead)
-        throw "PrimaryExpression lookahead is null";
-
     if (eat(tt::_this))
         return new AST_Node(nt::ThisExpression, "this");
     else if (expect(tt::name))

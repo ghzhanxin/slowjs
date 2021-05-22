@@ -69,13 +69,13 @@ namespace rt
 class AST_Node
 {
 public:
-    AST_Node(){};
     AST_Node(nt::Node_Type t, string v = "AST_Node_default_value") : type(t), value(v){};
 
     nt::Node_Type type;
     string value;
     rt::Raw_Type rawType = rt::Default;
     vector<AST_Node *> childs;
+    bool computed = false;
 };
 
 class Parser
@@ -132,7 +132,8 @@ public:
     AST_Node *CallExpression();
     AST_Node *Arguments();
     AST_Node *NewExpression();
-    AST_Node *MemberExpression();
+    AST_Node *MemberExpression(AST_Node *node = nullptr);
+    AST_Node *MemberExpressionRight(AST_Node *);
     AST_Node *PrimaryExpression();
     AST_Node *Literal();
     AST_Node *Identifier();

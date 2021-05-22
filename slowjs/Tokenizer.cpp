@@ -97,7 +97,7 @@ void Tokenizer::printTokenQueue(queue<Token *> q)
         Token *tok = q.front();
         q.pop();
         cout << tok->type << "  -> " << tok->value << "    line: " << tok->line << "    column: " << tok->column << endl;
-        cout << "linebreak   " <<tok->isNextLineBreak << endl;
+        cout << "linebreak   " << tok->isNextLineBreak << endl;
     }
 }
 
@@ -137,6 +137,16 @@ queue<Token *> Tokenizer::tokenize(const string &input)
             continue;
         }
 
+        if (c == '[')
+        {
+            pushSingleToken(tt::bracketL, c);
+            continue;
+        }
+        if (c == ']')
+        {
+            pushSingleToken(tt::bracketR, c);
+            continue;
+        }
         if (c == '^')
         {
             pushSingleToken(tt::bitwiseXOR, c);

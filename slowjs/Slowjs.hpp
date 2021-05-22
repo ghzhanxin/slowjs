@@ -80,6 +80,5 @@ public:
     void checkException(const JSValue &);
     vector<JSValue> getParamList(AST_Node *);
     JSFunction *CreateFunctionObject(AST_Node *);
-    vector<string> getIdentifiersFromMemberExpression(AST_Node *, vector<string> &);
 };
 #endif /* Slowjs_hpp */
