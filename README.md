@@ -52,9 +52,9 @@
   - [ ] 表达式
     - [x] 函数表达式
     - [x] 函数调用表达式
-    - [ ] 成员表达式
+    - [x] 成员表达式
       - [x] `object.property`
-      - [ ] `object[property]`
+      - [x] `object[property]`
     - [x] 主值表达式
       - [x] this
       - [x] 标识符
