@@ -179,7 +179,7 @@ function testIteration(assert) {
     assert(doGreat10, 5)
 }
 
-function testObjectPrototype(assert) {
+function testObject(assert) {
     Object.prototype.onObjectPrototype = 0
     var obj = new Object()
     assert(obj.onObjectPrototype, 0)
@@ -385,15 +385,51 @@ function testCallAndBind(assert) {
     assert(binded('x'), 'hizx')
 }
 
+function testArray(assert) {
+    var arr = new Array();
+    assert(arr.length, 0)
+
+    arr.push(100)
+    assert(arr.length, 1)
+    assert(arr[0], 100)
+
+    arr.push(true)
+    assert(arr.length, 2)
+    assert(arr[1], true)
+
+    arr.push('s', undefined, null, new Object(), new Array());
+    assert(arr.length, 7)
+
+    arr.pop()
+    arr.pop()
+    var _null = arr.pop();
+    assert(_null, null)
+    var _unde = arr.pop();
+    assert(_unde, undefined)
+    var s = arr.pop()
+    assert(s, 's')
+    assert(arr.length, 2)
+
+    var arr1 = new Array(10)
+    assert(arr1.length, 10)
+    arr1.push(1)
+    assert(arr1.length, 11)
+    var num = arr1.pop()
+    assert(num, 1)
+    assert(arr1.length, 10)
+}
+
 describe('testType', testType)
 describe('testOperator', testOperator)
 describe('testClosure', testClosure)
 describe('testHighOrderFunction', testHighOrderFunction)
 describe('testConditional', testConditional)
 describe('testIteration', testIteration)
-describe('testObjectPrototype', testObjectPrototype)
+describe('testObject', testObject)
+describe('testArray', testArray)
 describe('testMicroTask', testMicroTask)
 describe('testMacroTask', testMacroTask)
 describe('testMicroTaskAndMacroTask', testMicroTaskAndMacroTask)
 describe('testPromiseLike', testPromiseLike)
 describe('testCallAndBind', testCallAndBind)
+
