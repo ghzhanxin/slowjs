@@ -10,7 +10,7 @@
 
 #### 已支持的语言特性：
 
-- [ ] 类型
+- [x] 类型
   - [x] Undefined
     - [x] undefined
   - [x] Null
@@ -24,7 +24,7 @@
   - [x] String
     - [x] 单引号
     - [x] 双引号
-  - [ ] Object
+  - [x] Object
     - [x] 创建对象 `new Object() 或者 new 函数名()`
     - [x] Function
       - [x] 普通调用
@@ -35,7 +35,11 @@
       - [x] prototype
         - [x] call
         - [x] bind
-    - [ ] Array
+    - [x] Array
+      - [x] 创建数组 `new Array([item [, ...] ]) 或者 new Array(length)`
+      - [x] prototype
+        - [x] push
+        - [x] pop
 - [ ] 语法
   - [x] 自动分号
   - [x] 语句
@@ -107,7 +111,6 @@
   - [x] setTimeout 目前只支持 0 ms
   - [ ] Promise
   - [ ] Gererator
-- [ ] 垃圾回收
 - [ ] 异常处理
   - [x] 异常类型提示
   - [x] 异常位置提示
@@ -118,6 +121,7 @@
 #### 已支持的运行环境特性：
 
 - [x] Event Loop
+- [ ] 垃圾回收
 - [ ] 多进程
 - [ ] 多线程
 - [ ] 协程
