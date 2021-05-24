@@ -21,7 +21,10 @@ JSObject *const JSObject::ObjectPrototype = new JSObject();
 JSFunction *const JSObject::Object = new JSFunction("Object", (void *)Builtin_Object);
 
 JSObject *const JSObject::FunctionPrototype = new JSObject();
-JSFunction *const JSObject::Function = new JSFunction("Function");
+JSFunction *const JSObject::Function = new JSFunction("Function", (void *)Builtin_Function);
+
+JSObject *const JSObject::ArrayPrototype = new JSObject();
+JSFunction *const JSObject::Array = new JSFunction("Array", (void *)Builtin_Array);
 
 void JSObject::CreateBuiltinObject()
 {
@@ -44,6 +47,21 @@ void JSObject::CreateBuiltinObject()
     string name_bind = "bind";
     JSFunction *bind_fo = new JSFunction(name_bind, (void *)Builtin_Function_Prototype_Bind);
     FunctionPrototype->Put(name_bind, bind_fo->ToJSValue());
+
+    Array->Put("prototype", ArrayPrototype->ToJSValue());
+    ArrayPrototype->Put("constructor", Array->ToJSValue());
+
+    string name_isArray = "isArray";
+    JSFunction *isArray_fo = new JSFunction(name_isArray, (void *)Builtin_Array_IsArray);
+    Array->Put("isArray", isArray_fo->ToJSValue());
+
+    string name_push = "push";
+    JSFunction *push_fo = new JSFunction(name_push, (void *)Builtin_Array_Prototype_Push);
+    ArrayPrototype->Put(name_push, push_fo->ToJSValue());
+
+    string name_pop = "pop";
+    JSFunction *pop_fo = new JSFunction(name_pop, (void *)Builtin_Array_Prototype_Pop);
+    ArrayPrototype->Put(name_pop, pop_fo->ToJSValue());
 };
 
 DataDescriptor *JSObject::GetOwnProperty(const string &P)
@@ -75,7 +93,16 @@ bool JSObject::HasProperty(const string &P)
 {
     return !!GetProperty(P);
 }
-void JSObject::Delete(){};
+bool JSObject::Delete(const string &P)
+{
+    DataDescriptor *desc = GetOwnProperty(P);
+    if (desc->Value.isUndefined())
+        return true;
+
+    // TODO: https://262.ecma-international.org/5.1/#sec-8.12.7
+    Properties.erase(P);
+    return true;
+};
 JSValue JSObject::DefaultValue() { return JS_UNDEFINED; };
 void JSObject::DefineOwnProperty(const string &P, DataDescriptor *Desc)
 {

@@ -33,6 +33,7 @@ class JSBoolean;
 class JSBoolean;
 class JSException;
 class JSUinitialized;
+class JSArray;
 
 enum EXCEPTION_ENUM
 {
@@ -42,7 +43,8 @@ enum EXCEPTION_ENUM
 
 enum JS_TAG_ENUM
 {
-    JS_TAG_DEFAULT,
+    JS_TAG_DEFAULT = -4,
+    JS_TAG_ARRAY = -3,
     JS_TAG_FUNCTION = -2,
     JS_TAG_OBJECT = -1,
 
@@ -83,6 +85,7 @@ public:
     void *getPtr() const { return _u.ptr; }
     JSFunction *getFunction() const { return (JSFunction *)getPtr(); }
     JSObject *getObject() const { return (JSObject *)getPtr(); }
+    JSArray *getArray() const { return (JSArray *)getPtr(); }
 
     bool isNumber() const { return _tag == JS_TAG_NUMBER; }
     bool isBoolean() const { return _tag == JS_TAG_BOOLEAN; }
@@ -90,10 +93,11 @@ public:
     bool isUndefined() const { return _tag == JS_TAG_UNDEFINED; }
     bool isNull() const { return _tag == JS_TAG_NULL; }
     bool isBaseObject() const { return _tag == JS_TAG_OBJECT; }
-    bool isObject() const { return _tag == JS_TAG_OBJECT || _tag == JS_TAG_FUNCTION; }
+    bool isObject() const { return _tag == JS_TAG_OBJECT || _tag == JS_TAG_FUNCTION || _tag == JS_TAG_ARRAY; }
     bool isFunction() const { return _tag == JS_TAG_FUNCTION; }
     bool isException() const { return _tag == JS_TAG_EXCEPTION; }
     bool isNaN() const { return _tag == JS_TAG_NAN; }
+    bool isArray() const { return _tag == JS_TAG_ARRAY; }
 
     JSValue ToJSValue() const { return *((JSValue *)this); }
 
@@ -219,6 +223,9 @@ public:
     static JSFunction *const Object;
     static JSObject *const FunctionPrototype;
     static JSFunction *const Function;
+    static JSObject *const ArrayPrototype;
+    static JSFunction *const Array;
+
     static void CreateBuiltinObject();
 
     JSObject()
@@ -232,7 +239,7 @@ public:
     bool CanPut(const string &P);
     void Put(const string &P, const JSValue &V);
     bool HasProperty(const string &P);
-    void Delete();
+    bool Delete(const string &P);
     JSValue DefaultValue();
     void DefineOwnProperty(const string &P, DataDescriptor *D);
 
@@ -294,6 +301,18 @@ private:
     void *_c_function_ptr = nullptr;
     // https://262.ecma-international.org/5.1/#sec-13.2
     void initializeFunction();
+};
+
+class JSArray : public JSObject
+{
+public:
+    JSArray()
+    {
+        _tag = JS_TAG_ARRAY;
+        Prototype = JSObject::ArrayPrototype;
+    }
+
+    const string Class = "Array";
 };
 
 #endif /* JSValue_Type_hpp */

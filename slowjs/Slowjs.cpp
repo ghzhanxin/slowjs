@@ -45,6 +45,7 @@ void Slowjs::addIntrinsic()
     global_obj->Put("global", global_obj->ToJSValue());
     global_obj->Put("Object", JSObject::Object->ToJSValue());
     global_obj->Put("Function", JSObject::Function->ToJSValue());
+    global_obj->Put("Array", JSObject::Array->ToJSValue());
 
     JSObject *process = new JSObject();
     global_obj->Put("process", process->ToJSValue());

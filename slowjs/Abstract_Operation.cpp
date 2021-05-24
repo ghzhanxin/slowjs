@@ -85,24 +85,6 @@ Reference IdentifierResolution(Lexical_Environment *lex, const string &name)
     return IdentifierResolution(lex->outer, name);
 }
 
-void printJSObject(JSObject *obj)
-{
-    map<string, DataDescriptor *>::iterator it;
-    map<string, DataDescriptor *> m = obj->Properties;
-    cout << endl
-         << "{" << endl;
-    for (it = m.begin(); it != m.end(); it++)
-    {
-        cout << "  " << it->first << ": ";
-        if (it->second->Value.isBaseObject())
-            cout << "[ Object ]";
-        else
-            printJSValue(it->second->Value);
-        cout << "," << endl;
-    }
-    cout << "}";
-}
-
 JSValue ToPrimitive(const JSValue &value)
 {
     switch (value.getTag())
@@ -173,7 +155,7 @@ JSValue ToString(const JSValue &value)
         return JSString(value.getString()).ToJSValue();
     case JS_TAG_NUMBER:
         // TODO:
-        return value;
+        return JSString(to_string((int)(value.getNumber())));
     case JS_TAG_STRING:
         return value;
     case JS_TAG_OBJECT:
@@ -200,6 +182,72 @@ int ThrowRuntimeException(const EXCEPTION_ENUM &t = EXCEPTION_TYPE, const string
         msg = s;
     throw msg;
 }
+void printString(const JSValue &value, string quote = "")
+{
+    if (quote.size() != 0)
+        cout << quote;
+
+    string s = value.getString();
+    if (s == "\\n")
+        cout << endl;
+    else
+        cout << s;
+
+    if (quote.size() != 0)
+        cout << quote;
+}
+void printJSObject(JSObject *obj)
+{
+    map<string, DataDescriptor *>::iterator it;
+    map<string, DataDescriptor *> m = obj->Properties;
+    cout << "{" << endl;
+    for (it = m.begin(); it != m.end();)
+    {
+        cout << "  " << it->first << ": ";
+        if (it->second->Value.isBaseObject())
+            cout << "[ Object ]";
+        else if (it->second->Value.isArray())
+            cout << "[ Array ]";
+        else
+            printJSValue(it->second->Value);
+
+        it++;
+        if (it != m.end())
+            cout << "," << endl;
+    }
+    cout << endl
+         << "}";
+}
+void printJSArray(JSArray *arr)
+{
+    map<string, DataDescriptor *>::iterator it;
+    map<string, DataDescriptor *> m = arr->Properties;
+    cout << "[";
+    for (it = m.begin(); it != m.end();)
+    {
+        if (it->first == "length")
+        {
+            it++;
+            continue;
+        }
+
+        cout << " ";
+        JSValue value = it->second->Value;
+        if (value.isBaseObject())
+            cout << "[ Object ]";
+        else if (value.isArray())
+            cout << "[ Array ]";
+        else if (value.isString())
+            printString(value, "'");
+        else
+            printJSValue(value);
+
+        it++;
+        if (it != m.end())
+            cout << ",";
+    }
+    cout << " ]";
+}
 void printJSValue(JSValue &value)
 {
     switch (value.getTag())
@@ -216,14 +264,8 @@ void printJSValue(JSValue &value)
         cout << value.getNumber();
         break;
     case JS_TAG_STRING:
-    {
-        string s = value.getString();
-        if (s == "\\n")
-            cout << endl;
-        else
-            cout << s;
+        printString(value);
         break;
-    }
     case JS_TAG_FUNCTION:
     {
         JSFunction *fo = value.getFunction();
@@ -236,10 +278,12 @@ void printJSValue(JSValue &value)
     case JS_TAG_OBJECT:
         printJSObject(value.getObject());
         break;
+    case JS_TAG_ARRAY:
+        printJSArray(value.getArray());
+        break;
     default:
         throw ThrowRuntimeException(EXCEPTION_TYPE, "printJSValue");
     }
-    cout << " ";
 }
 
 void EnqueueTask(const Function_Data &fn_data)
@@ -340,4 +384,76 @@ JSValue Builtin_Process_Nexttick(const Function_Data &fn_data)
 
     EnqueueJob(Function_Data(fn_data.slow, delay_fo, fn_data.thisValue, args));
     return JS_UNDEFINED;
+}
+JSValue Builtin_Function(const Function_Data &fn_data)
+{
+    return JSException("TODO:");
+}
+JSValue Builtin_Array(const Function_Data &fn_data)
+{
+    vector<JSValue> args = fn_data.args;
+    JSArray *arr = new JSArray();
+    int args_count = (int)args.size();
+
+    if (args_count == 1)
+    {
+        JSValue first = args[0];
+        int len = 0;
+        if (first.isNumber())
+            len = (int)first.getNumber();
+        else
+        {
+            len = 1;
+            arr->Put("0", first);
+        }
+        arr->Put("length", JSNumber(len).ToJSValue());
+        return arr->ToJSValue();
+    }
+
+    for (size_t i = 0; i < args_count; i++)
+    {
+        arr->Put(to_string(i), args[i]);
+    }
+    arr->Put("length", JSNumber(args_count).ToJSValue());
+    return arr->ToJSValue();
+}
+JSValue Builtin_Array_IsArray(const Function_Data &fn_data)
+{
+    return JSBoolean(fn_data.args[0].isArray()).ToJSValue();
+}
+JSValue Builtin_Array_Prototype_Push(const Function_Data &fn_data)
+{
+    JSObject *O = fn_data.thisValue.getObject();
+    vector<JSValue> args = fn_data.args;
+    int n = (int)(O->Get("length").getNumber());
+    while (!args.empty())
+    {
+        JSValue E = args[0];
+        args.erase(args.begin());
+        O->Put(to_string(n), E);
+        n++;
+    }
+    JSValue v = JSNumber(n).ToJSValue();
+    O->Put("length", v);
+    return v;
+}
+JSValue Builtin_Array_Prototype_Pop(const Function_Data &fn_data)
+{
+    JSObject *O = fn_data.thisValue.getObject();
+    vector<JSValue> args = fn_data.args;
+    int len = (int)(O->Get("length").getNumber());
+    if (len == 0)
+    {
+        O->Put("length", JSNumber(0).ToJSValue());
+        return JS_UNDEFINED;
+    }
+    else
+    {
+        JSValue indx = JSNumber(len - 1).ToJSValue();
+        string indx_key = ToString(indx).getString();
+        JSValue element = O->Get(indx_key);
+        O->Delete(indx_key);
+        O->Put("length", indx);
+        return element;
+    }
 }
