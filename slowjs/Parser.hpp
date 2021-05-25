@@ -119,6 +119,7 @@ public:
     AST_Node *FunctionDeclaration();
     AST_Node *FunctionExpression();
     AST_Node *FormalParameterList();
+    AST_Node *FunctionTail(AST_Node *, AST_Node *);
 
     AST_Node *Expression();
     AST_Node *AssignmentExpression();

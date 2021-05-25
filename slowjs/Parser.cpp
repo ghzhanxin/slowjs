@@ -429,15 +429,9 @@ AST_Node *Parser::VariableDeclaration()
     return node;
 }
 
-// FunctionDeclaration : function Identifier (FormalParameterList[opt]) BlockStatement
-AST_Node *Parser::FunctionDeclaration()
+AST_Node *Parser::FunctionTail(AST_Node *node, AST_Node *id)
 {
-    check(eat("function"));
-
-    AST_Node *id = Identifier();
-    check(id);
     check(eat("("));
-
     AST_Node *param = nullptr;
     if (expectNot(")"))
         param = FormalParameterList();
@@ -449,11 +443,22 @@ AST_Node *Parser::FunctionDeclaration()
 
     AST_Node *block = BlockStatement();
 
-    AST_Node *node = new AST_Node(nt::FunctionDeclaration);
     node->childs.push_back(id);
     node->childs.push_back(param);
     node->childs.push_back(block);
     return node;
+}
+
+// FunctionDeclaration : function Identifier (FormalParameterList[opt]) BlockStatement
+AST_Node *Parser::FunctionDeclaration()
+{
+    check(eat("function"));
+
+    AST_Node *id = Identifier();
+    check(id);
+
+    AST_Node *node = new AST_Node(nt::FunctionDeclaration);
+    return FunctionTail(node, id);
 }
 
 // FunctionExpression : function Identifier[opt] (FormalParameterList[opt]) BlockStatement
@@ -468,24 +473,8 @@ AST_Node *Parser::FunctionExpression()
         check(id);
     }
 
-    check(eat("("));
-
-    AST_Node *param = nullptr;
-    if (expectNot(")"))
-        param = FormalParameterList();
-
-    if (!param)
-        param = new AST_Node(nt::FormalParameterList);
-
-    check(eat(")"));
-
-    AST_Node *block = BlockStatement();
-
     AST_Node *node = new AST_Node(nt::FunctionExpression);
-    node->childs.push_back(id);
-    node->childs.push_back(param);
-    node->childs.push_back(block);
-    return node;
+    return FunctionTail(node, id);
 }
 
 // FormalParameterList :
