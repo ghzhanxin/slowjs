@@ -49,6 +49,9 @@ namespace nt
         WhileStatement,
         DoWhileStatement,
         ConditionalExpression,
+        ArrayExpression,
+        ObjectExpression,
+        ObjectKeyValue,
     };
 }
 
@@ -116,7 +119,6 @@ public:
     AST_Node *FunctionDeclaration();
     AST_Node *FunctionExpression();
     AST_Node *FormalParameterList();
-    vector<AST_Node *> IdentifierList();
 
     AST_Node *Expression();
     AST_Node *AssignmentExpression();
@@ -137,6 +139,12 @@ public:
     AST_Node *PrimaryExpression();
     AST_Node *Literal();
     AST_Node *Identifier();
+    AST_Node *ArrayLiteral();
+    vector<AST_Node *> ElementList();
+    AST_Node *ObjectLiteral();
+    vector<AST_Node *> PropertyNameAndValueList();
+    AST_Node *PropertyAssignment();
+    AST_Node *PropertyName();
     vector<AST_Node *> ExpressionList();
 
     AST_Node *buildBinary(AST_Node *, AST_Node *, const string &);

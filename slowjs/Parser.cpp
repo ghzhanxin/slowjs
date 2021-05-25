@@ -39,16 +39,13 @@
 //          for (var AssignmentExpression ; Expression ; Expression) Statement
 //          for ( [Expression] ; Expression ; Expression) Statement
 // VariableDeclaration : var AssignmentExpression ;
-// FunctionDeclaration : function Identifier (FormalParameterList) BlockStatement
-// FunctionExpression : function [Identifier] (FormalParameterList) BlockStatement
+// FunctionDeclaration : function Identifier (FormalParameterList[opt]) BlockStatement
+// FunctionExpression : function Identifier[opt] (FormalParameterList[opt]) BlockStatement
+// FormalParameterList :
+//          Identifier
+//          FormalParameterList, Identifier
 // BlockStatement : { StatementList }
 // ExpressionStatement : Expression ;
-// FormalParameterList :
-//          [empty]
-//          IdentifierList
-// IdentifierList :
-//          Identifier
-//          IdentifierList, Identifier
 
 // Expression : AssignmentExpression
 // AssignmentExpression:
@@ -112,7 +109,27 @@
 //          this
 //          Identifier
 //          Literal
-//          (Expression)
+//          ArrayLiteral
+//          ObjectLiteral
+//          ( Expression )
+// ArrayLiteral :
+//          [ ElementList ]
+// ElementList :
+//          ,[opt] AssignmentExpression
+//          ElementList, AssignmentExpression
+// ObjectLiteral :
+//          { }
+//          { PropertyNameAndValueList }
+//          { PropertyNameAndValueList , }
+// PropertyNameAndValueList :
+//          PropertyAssignment
+//          PropertyNameAndValueList, PropertyAssignment
+// PropertyAssignment:
+//          PropertyName: AssignmentExpression
+// PropertyName :
+//          Identifier
+//          StringLiteral
+//          NumericLiteral
 
 // Identifier: a-z+
 // Literal :
@@ -412,7 +429,7 @@ AST_Node *Parser::VariableDeclaration()
     return node;
 }
 
-// FunctionDeclaration : function Identifier (FormalParameterList) BlockStatement
+// FunctionDeclaration : function Identifier (FormalParameterList[opt]) BlockStatement
 AST_Node *Parser::FunctionDeclaration()
 {
     check(eat("function"));
@@ -421,7 +438,13 @@ AST_Node *Parser::FunctionDeclaration()
     check(id);
     check(eat("("));
 
-    AST_Node *param = FormalParameterList();
+    AST_Node *param = nullptr;
+    if (expectNot(")"))
+        param = FormalParameterList();
+
+    if (!param)
+        param = new AST_Node(nt::FormalParameterList);
+
     check(eat(")"));
 
     AST_Node *block = BlockStatement();
@@ -433,7 +456,7 @@ AST_Node *Parser::FunctionDeclaration()
     return node;
 }
 
-// FunctionExpression : function [Identifier] (FormalParameterList) BlockStatement
+// FunctionExpression : function Identifier[opt] (FormalParameterList[opt]) BlockStatement
 AST_Node *Parser::FunctionExpression()
 {
     check(eat("function"));
@@ -447,7 +470,13 @@ AST_Node *Parser::FunctionExpression()
 
     check(eat("("));
 
-    AST_Node *param = FormalParameterList();
+    AST_Node *param = nullptr;
+    if (expectNot(")"))
+        param = FormalParameterList();
+
+    if (!param)
+        param = new AST_Node(nt::FormalParameterList);
+
     check(eat(")"));
 
     AST_Node *block = BlockStatement();
@@ -457,6 +486,34 @@ AST_Node *Parser::FunctionExpression()
     node->childs.push_back(param);
     node->childs.push_back(block);
     return node;
+}
+
+// FormalParameterList :
+//          Identifier
+//          FormalParameterList, Identifier
+AST_Node *Parser::FormalParameterList()
+{
+    AST_Node *node = new AST_Node(nt::FormalParameterList);
+    // if (expect(")"))
+    //     return node;
+
+    vector<AST_Node *> childs;
+    while (expectNot(")"))
+    {
+        AST_Node *id = Identifier();
+        check(id);
+        childs.push_back(id);
+
+        if (expect(")"))
+        {
+            node->childs = childs;
+            return node;
+        }
+
+        check(eat(","));
+    }
+    check(false);
+    return nullptr;
 }
 
 // BlockStatement : { StatementList }
@@ -481,40 +538,6 @@ AST_Node *Parser::ExpressionStatement()
     AST_Node *node = new AST_Node(nt::ExpressionStatement);
     node->childs.push_back(expr);
     return node;
-}
-
-// FormalParameterList :
-//          [empty]
-//          IdentifierList
-AST_Node *Parser::FormalParameterList()
-{
-    AST_Node *node = new AST_Node(nt::FormalParameterList);
-    if (expect(")"))
-        return node;
-
-    vector<AST_Node *> childs = IdentifierList();
-    node->childs = childs;
-    return node;
-}
-
-// IdentifierList :
-//          Identifier
-//          IdentifierList, Identifier
-vector<AST_Node *> Parser::IdentifierList()
-{
-    vector<AST_Node *> childs;
-    while (expectNot(")"))
-    {
-        AST_Node *id = Identifier();
-        check(id);
-        childs.push_back(id);
-
-        if (expect(")"))
-            return childs;
-
-        check(eat(","));
-    }
-    throw "IdentifierList Error";
 }
 
 // Expression : AssignmentExpression
@@ -828,7 +851,8 @@ vector<AST_Node *> Parser::ExpressionList()
 
         check(eat(","));
     }
-    throw "ExpressionList Error";
+    check(false);
+    return childs;
 }
 
 // NewExpression :
@@ -897,24 +921,130 @@ AST_Node *Parser::MemberExpression(AST_Node *node)
 //          this
 //          Identifier
 //          Literal
-//          (Expression)
+//          ArrayLiteral
+//          ObjectLiteral
+//          ( Expression )
 AST_Node *Parser::PrimaryExpression()
 {
     if (eat(tt::_this))
         return new AST_Node(nt::ThisExpression, "this");
     else if (expect(tt::name))
         return Identifier();
-    else if (expectNot("("))
-        return Literal();
+    else if (expect("["))
+        return ArrayLiteral();
+    else if (expect("{"))
+        return ObjectLiteral();
     else if (eat("("))
     {
         AST_Node *expr = Expression();
         check(eat(")"));
-
         return expr;
     }
     else
-        throw "PrimaryExpression";
+        return Literal();
+}
+
+// ArrayLiteral :
+//          [ ElementList ]
+AST_Node *Parser::ArrayLiteral()
+{
+    check(eat("["));
+    vector<AST_Node *> childs = ElementList();
+    check(eat("]"));
+
+    AST_Node *arrExpr = new AST_Node(nt::ArrayExpression);
+    arrExpr->childs = childs;
+    return arrExpr;
+}
+// ElementList :
+//          ,[opt] AssignmentExpression
+//          ElementList, ,[opt] AssignmentExpression
+vector<AST_Node *> Parser::ElementList()
+{
+    vector<AST_Node *> childs;
+    while (expectNot("]"))
+    {
+        while (eat(","))
+            childs.push_back(nullptr);
+
+        AST_Node *assign = AssignmentExpression();
+        check(assign);
+        childs.push_back(assign);
+
+        if (expect("]"))
+            return childs;
+
+        check(eat(","));
+    }
+    check(false);
+    return childs;
+}
+// ObjectLiteral :
+//          { }
+//          { PropertyNameAndValueList }
+AST_Node *Parser::ObjectLiteral()
+{
+    check(eat("{"));
+
+    AST_Node *obj = new AST_Node(nt::ObjectExpression);
+    if (eat("}"))
+        return obj;
+
+    obj->childs = PropertyNameAndValueList();
+
+    check(eat("}"));
+    return obj;
+}
+// PropertyNameAndValueList :
+//          PropertyAssignment
+//          PropertyNameAndValueList, PropertyAssignment
+vector<AST_Node *> Parser::PropertyNameAndValueList()
+{
+    vector<AST_Node *> childs;
+    while (expectNot("}"))
+    {
+        AST_Node *kv = PropertyAssignment();
+        childs.push_back(kv);
+
+        if (expect("}"))
+            return childs;
+
+        check(eat(","));
+    }
+    check(false);
+    return childs;
+}
+// PropertyAssignment:
+//          PropertyName: AssignmentExpression
+AST_Node *Parser::PropertyAssignment()
+{
+    AST_Node *key = PropertyName();
+    check(eat(":"));
+    AST_Node *value = AssignmentExpression();
+    check(value);
+
+    AST_Node *kv = new AST_Node(nt::ObjectKeyValue);
+    kv->childs.push_back(key);
+    kv->childs.push_back(value);
+    return kv;
+}
+// PropertyName :
+//          Identifier
+//          StringLiteral
+//          NumericLiteral
+AST_Node *Parser::PropertyName()
+{
+    switch (lookahead->type)
+    {
+    case tt::name:
+        return Identifier();
+    case tt::string:
+    case tt::num:
+        return Literal();
+    default:
+        check(false);
+        return nullptr;
+    }
 }
 
 // Literal :

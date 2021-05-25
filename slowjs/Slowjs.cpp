@@ -224,6 +224,10 @@ JSValue Slowjs::evaluate(AST_Node *node)
         return evaluateWhileStatement(node);
     case nt::ConditionalExpression:
         return evaluateConditionalExpression(node);
+    case nt::ArrayExpression:
+        return evaluateArrayExpression(node);
+    case nt::ObjectExpression:
+        return evaluateObjectExpression(node);
     default:
         throw string("Unknown AST Node");
     }
@@ -729,4 +733,48 @@ JSValue Slowjs::evaluateThrowStatement(AST_Node *node)
         return JSException("ThrowStatement Supported only string currently").ToJSValue();
 
     throw expr.getString();
+}
+JSValue Slowjs::evaluateArrayExpression(AST_Node *node)
+{
+    vector<JSValue> args;
+    JSValue arr_value = JSObject::Array->Construct(this, args);
+    vector<AST_Node *> list = node->childs;
+    int len = (int)(list.size());
+    JSArray *arr_o = arr_value.getArray();
+    arr_o->Put("length", JSNumber(len).ToJSValue());
+    for (size_t i = 0; i < len; i++)
+    {
+        string key = ToString(JSNumber((int)i).ToJSValue()).getString();
+        AST_Node *value_node = list[i];
+        JSValue value = value_node ? evaluate(value_node) : JS_UNDEFINED;
+        arr_o->Put(key, value);
+    }
+
+    return arr_value;
+}
+JSValue Slowjs::evaluateObjectExpression(AST_Node *node)
+
+{
+    vector<JSValue> args;
+    JSValue obj_value = JSObject::Object->Construct(this, args);
+    if (node->childs.size() == 0)
+        return obj_value;
+
+    vector<AST_Node *> kvs = node->childs;
+    JSObject *obj_o = obj_value.getObject();
+    for (size_t i = 0; i < kvs.size(); i++)
+    {
+        string key;
+        AST_Node *key_node = kvs[i]->childs[0];
+        if (key_node->type == nt::Identifier)
+            key = key_node->value;
+        else
+            key = ToString(evaluate(key_node)).getString();
+
+        AST_Node *value_node = kvs[i]->childs[1];
+
+        obj_o->Put(key, evaluate(value_node));
+    }
+
+    return obj_value;
 }

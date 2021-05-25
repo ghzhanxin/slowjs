@@ -302,7 +302,10 @@ JSValue Builtin_Console_log(const Function_Data &fn_data)
     vector<JSValue> args = fn_data.args;
 
     for (size_t i = 0; i < args.size(); i++)
+    {
         printJSValue(args[i]);
+        cout << " ";
+    }
 
     cout << endl;
     return JS_UNDEFINED;
