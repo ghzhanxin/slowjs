@@ -26,8 +26,12 @@ public:
         loop = new Event_Loop(this);
         global_obj = new JSObject();
         ctx_stack = new stack<Execution_Context *>;
+        JSObject::CreateBuiltinObject();
+        addIntrinsic();
     }
-    JSValue run(const string &);
+    string getContentFromFile(const string &fileName);
+    JSValue evalFile(const string &);
+    JSValue eval(const string &);
     queue<Token *> tokenize(const string &);
     AST_Node *parse(const queue<Token *> &);
 

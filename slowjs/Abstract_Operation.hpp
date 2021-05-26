@@ -79,5 +79,7 @@ JSValue Builtin_Array(const Function_Data &);
 JSValue Builtin_Array_IsArray(const Function_Data &);
 JSValue Builtin_Array_Prototype_Pop(const Function_Data &);
 JSValue Builtin_Array_Prototype_Push(const Function_Data &);
+JSValue Builtin_Worker(const Function_Data &);
+JSValue Builtin_Worker_PostMessage(const Function_Data &);
 
 #endif /* Abstract_Operation_hpp */

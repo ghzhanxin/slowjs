@@ -1121,18 +1121,9 @@ AST_Node *Parser::parse(const queue<Token *> &que)
     tokenQueue = que;
     nextToken();
 
-    if (Program())
-    {
-        cout << endl
-             << "---------- Congratulations! Parse Success!!! ----------" << endl
-             << endl;
-    }
-    else
-    {
+    if (!Program())
         cerr << endl
              << "---------- Parse Error ----------" << endl
              << endl;
-    };
-
     return root;
 }

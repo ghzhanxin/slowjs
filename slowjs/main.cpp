@@ -6,23 +6,11 @@
 //
 
 #include <iostream>
-#include <fstream>
 #include "Slowjs.hpp"
 
 using namespace std;
 
-string getContentFromFile(string fileName)
-{
-    ifstream in(fileName);
-    if (!in)
-        throw string("error: open file fail! file does not exist");
-
-    istreambuf_iterator<char> begin(in);
-    istreambuf_iterator<char> end;
-    string code(begin, end);
-    in.close();
-    return code;
-}
+string main_dir;
 
 int main(int argc, const char *argv[])
 {
@@ -31,12 +19,13 @@ int main(int argc, const char *argv[])
         if (argc == 1)
             throw string("error: no input file");
 
-        Slowjs slow = Slowjs();
-        slow.run(getContentFromFile(argv[1]));
+        string js_path = argv[1];
+        main_dir = js_path.substr(0, js_path.find_last_of('/') + 1);
+
+        Slowjs slow;
+        slow.evalFile(js_path);
         slow.loop->startLoop();
 
-        cout << endl;
-        cout << "---------- Congratulations! Evaluate Success!!! ----------" << endl;
         cout << endl;
     }
     catch (string &msg)

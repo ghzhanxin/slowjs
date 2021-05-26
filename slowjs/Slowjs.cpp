@@ -7,13 +7,27 @@
 
 #include "Slowjs.hpp"
 #include <iostream>
+#include <fstream>
 
-JSValue Slowjs::run(const string &input)
+string Slowjs::getContentFromFile(const string &fileName)
 {
-    queue<Token *> q = tokenize(input);
-    AST_Node *ast = parse(q);
-    addIntrinsic();
-    return evaluate(ast);
+    ifstream in(fileName);
+    if (!in)
+        throw string("error: open file fail! file does not exist");
+
+    istreambuf_iterator<char> begin(in);
+    istreambuf_iterator<char> end;
+    string code(begin, end);
+    in.close();
+    return code;
+}
+JSValue Slowjs::evalFile(const string &fileName)
+{
+    return eval(getContentFromFile(fileName));
+}
+JSValue Slowjs::eval(const string &input)
+{
+    return evaluate(parse(tokenize(input)));
 }
 queue<Token *> Slowjs::tokenize(const string &input)
 {
@@ -28,24 +42,15 @@ Execution_Context *Slowjs::getCurrentContext()
 {
     return ctx_stack->top();
 }
-void Slowjs::initFunctionExecutionContext(JSFunction *fo, const JSValue &thisValue, const vector<JSValue> &args)
-{
-    Lexical_Environment *outer = fo->Scope;
-    Lexical_Environment *local_env = new Lexical_Environment(new Declarative_ER(), outer);
-
-    Execution_Context *func_ctx = new Execution_Context(local_env, thisValue);
-
-    ctx_stack->push(func_ctx);
-    declarationBindingInstantiation(fo->Code, args);
-}
 void Slowjs::addIntrinsic()
 {
-    JSObject::CreateBuiltinObject();
-
     global_obj->Put("global", global_obj->ToJSValue());
     global_obj->Put("Object", JSObject::Object->ToJSValue());
     global_obj->Put("Function", JSObject::Function->ToJSValue());
     global_obj->Put("Array", JSObject::Array->ToJSValue());
+
+    JSFunction *Worker_fo = new JSFunction("Worker", (void *)Builtin_Worker);
+    global_obj->Put("Worker", Worker_fo->ToJSValue());
 
     JSObject *process = new JSObject();
     global_obj->Put("process", process->ToJSValue());
@@ -62,6 +67,16 @@ void Slowjs::addIntrinsic()
 
     JSFunction *cprint_JSFunction = new JSFunction("print", (void *)Builtin_Console_log);
     global_obj->Put("print", cprint_JSFunction->ToJSValue());
+}
+void Slowjs::initFunctionExecutionContext(JSFunction *fo, const JSValue &thisValue, const vector<JSValue> &args)
+{
+    Lexical_Environment *outer = fo->Scope;
+    Lexical_Environment *local_env = new Lexical_Environment(new Declarative_ER(), outer);
+
+    Execution_Context *func_ctx = new Execution_Context(local_env, thisValue);
+
+    ctx_stack->push(func_ctx);
+    declarationBindingInstantiation(fo->Code, args);
 }
 void Slowjs::initGlobalExecutionContext(AST_Node *node)
 {

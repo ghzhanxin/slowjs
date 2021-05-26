@@ -7,6 +7,7 @@
 
 #include "Abstract_Operation.hpp"
 #include "Slowjs.hpp"
+#include <thread>
 
 #define TypeErrorPrefix "TypeError: "
 #define ReferenceErrorPrefix "ReferenceError: "
@@ -459,4 +460,34 @@ JSValue Builtin_Array_Prototype_Pop(const Function_Data &fn_data)
         O->Put("length", indx);
         return element;
     }
+}
+void thread_function(const string &file_path)
+{
+    cout << "thread id" << this_thread::get_id() << endl;
+    Slowjs slow;
+    extern string main_dir;
+    slow.evalFile(main_dir + file_path);
+    slow.loop->startLoop();
+};
+JSValue Builtin_Worker(const Function_Data &fn_data)
+{
+    vector<JSValue> args = fn_data.args;
+    if (args.size() == 0)
+        return JSException(string("Failed to construct 'Worker': 1 argument required, but only 0 present."));
+
+    JSValue path = args[0];
+    string file_path = ToString(path).getString();
+    thread th(thread_function, file_path);
+    th.join();
+
+    JSObject *worker = new JSObject();
+    worker->Put("onmessage", JS_NULL);
+    JSFunction *postMessage_fo = new JSFunction("postMessage", (void *)Builtin_Worker_PostMessage);
+    worker->Put("postMessage", postMessage_fo->ToJSValue());
+
+    return worker->ToJSValue();
+}
+JSValue Builtin_Worker_PostMessage(const Function_Data &fn_data)
+{
+    return JS_UNDEFINED;
 }
