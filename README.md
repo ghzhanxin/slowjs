@@ -69,8 +69,8 @@
         - [x] a-z $ _ 0-9
       - [x] 字面量
         - [x] Primitive `undefined null true false 0-9 'singleQuoteString' "doubleQuoteString"`
-        - [ ] 对象字面量
-        - [ ] 数组字面量
+        - [x] 对象字面量
+        - [x] 数组字面量
       - [x] 括号表达式 如 `( expression )`
   - [ ] 注释
     - [x] 单行注释
