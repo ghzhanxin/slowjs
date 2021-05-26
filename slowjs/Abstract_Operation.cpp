@@ -243,7 +243,7 @@ void printJSArray(JSArray *arr)
             printJSValue(value);
 
         it++;
-        if (it != m.end())
+        if (it != m.end() && it->first != "length")
             cout << ",";
     }
     cout << " ]";

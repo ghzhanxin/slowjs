@@ -113,7 +113,7 @@
 //          ObjectLiteral
 //          ( Expression )
 // ArrayLiteral :
-//          [ ElementList ]
+//          [ ElementList[opt] ]
 // ElementList :
 //          ,[opt] AssignmentExpression
 //          ElementList, AssignmentExpression
@@ -934,11 +934,15 @@ AST_Node *Parser::PrimaryExpression()
 }
 
 // ArrayLiteral :
-//          [ ElementList ]
+//          [ ElementList[opt] ]
 AST_Node *Parser::ArrayLiteral()
 {
     check(eat("["));
-    vector<AST_Node *> childs = ElementList();
+
+    vector<AST_Node *> childs;
+    if (expectNot("]"))
+        childs = ElementList();
+
     check(eat("]"));
 
     AST_Node *arrExpr = new AST_Node(nt::ArrayExpression);
