@@ -25,21 +25,16 @@
     - [x] 单引号
     - [x] 双引号
   - [x] Object
-    - [x] 创建对象 `new Object() 或者 new 函数名()`
+    - [x] 创建对象 `new Object() 或者 new 函数名() 或 {}` 
     - [x] Function
+      - [x] 创建函数  `function name(){} 或 var name = function(){}`
       - [x] 普通调用
       - [x] new 调用
       - [x] 闭包
       - [x] 一等公民
       - [x] 对象方法
-      - [x] prototype
-        - [x] call
-        - [x] bind
     - [x] Array
-      - [x] 创建数组 `new Array([item [, ...] ]) 或者 new Array(length)`
-      - [x] prototype
-        - [x] push
-        - [x] pop
+      - [x] 创建数组 `new Array([item [, ...] ]) 或 new Array(length) 或 []`
 - [ ] 语法
   - [x] 自动分号
   - [x] 语句
@@ -53,7 +48,7 @@
     - [x] break
     - [x] continue
     - [x] throw
-  - [ ] 表达式
+  - [x] 表达式
     - [x] 函数表达式
     - [x] 函数调用表达式
     - [x] 成员表达式
@@ -106,6 +101,14 @@
     - [x] log
   - [x] Object
     - [x] prototype
+  - [x] Function
+    - [x] prototype
+      - [x] call
+      - [x] bind
+  - [x] Array
+    - [x] prototype
+      - [x] push
+      - [x] pop
   - [x] process
     - [x] nextTick
   - [x] setTimeout 目前只支持 0 ms
