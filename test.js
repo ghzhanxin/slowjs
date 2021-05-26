@@ -180,10 +180,13 @@ function testIteration(assert) {
 }
 
 function testObject(assert) {
-    Object.prototype.onObjectPrototype = 0
-    var obj = new Object()
-    assert(obj.onObjectPrototype, 0)
+    Object.prototype.proto_key = 'proto_key'
+    var obj = {}
+    var new_obj = new Object()
+    assert(obj.proto_key, 'proto_key')
     var obj__proto = Object.getPrototypeOf(obj)
+    var new_obj__proto = Object.getPrototypeOf(new_obj)
+    assert(new_obj__proto, obj__proto)
     assert(obj__proto, Object.prototype)
     var OPrototype__proto = Object.getPrototypeOf(Object.prototype)
     assert(OPrototype__proto, null)
@@ -197,7 +200,7 @@ function testObject(assert) {
     Person.prototype.canFly = false
 
     var per = new Person('zx', 18)
-    assert(per.onObjectPrototype, 0)
+    assert(per.proto_key, 'proto_key')
     assert(per.name, 'zx')
     assert(per.age, 18)
 
@@ -216,7 +219,7 @@ function testObject(assert) {
     Student.prototype = new Temp()
 
     var stu = new Student('zx', 18, 3)
-    assert(stu.onObjectPrototype, 0)
+    assert(stu.proto_key, 'proto_key')
     assert(stu.canWalk, true)
     assert(stu.canFly, false)
     assert(stu.name, 'zx')
@@ -386,7 +389,12 @@ function testCallAndBind(assert) {
 }
 
 function testArray(assert) {
-    var arr = new Array();
+    var arr = []
+    var new_arr = new Array()
+    var arr__proto = Object.getPrototypeOf(arr)
+    assert(arr__proto, Array.prototype)
+    assert(arr__proto, Object.getPrototypeOf(new_arr))
+    assert(Object.getPrototypeOf(arr__proto), Object.prototype)
     assert(arr.length, 0)
 
     arr.push(100)
@@ -432,4 +440,3 @@ describe('testMacroTask', testMacroTask)
 describe('testMicroTaskAndMacroTask', testMicroTaskAndMacroTask)
 describe('testPromiseLike', testPromiseLike)
 describe('testCallAndBind', testCallAndBind)
-
