@@ -151,9 +151,7 @@ JSValue JSFunction::Call(Slowjs *slow, const JSValue &thisValue, const vector<JS
     }
     catch (JSValue &value)
     {
-        slow->checkException(value);
-        slow->ctx_stack->pop();
-        return value;
+        normal_Result = value;
     }
     slow->checkException(normal_Result);
     slow->ctx_stack->pop();
