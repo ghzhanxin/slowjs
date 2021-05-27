@@ -405,14 +405,14 @@ function testArray(assert) {
     assert(arr.length, 2)
     assert(arr[1], true)
 
-    arr.push('s', undefined, null, new Object(), new Array());
+    arr.push('s', undefined, null, new Object(), new Array())
     assert(arr.length, 7)
 
     arr.pop()
     arr.pop()
-    var _null = arr.pop();
+    var _null = arr.pop()
     assert(_null, null)
-    var _unde = arr.pop();
+    var _unde = arr.pop()
     assert(_unde, undefined)
     var s = arr.pop()
     assert(s, 's')

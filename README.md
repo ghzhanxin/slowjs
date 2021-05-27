@@ -25,7 +25,7 @@
     - [x] 单引号
     - [x] 双引号
   - [x] Object
-    - [x] 创建对象 `new Object() 或者 new 函数名() 或 {}` 
+    - [x] 创建对象 `new Object() 或 new 函数名() 或 {}`
     - [x] Function
       - [x] 创建函数  `function name(){} 或 var name = function(){}`
       - [x] 普通调用
